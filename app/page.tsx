@@ -1,65 +1,136 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Bell, FileText, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { APP_NAME } from "@/lib/constants";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="container mx-auto px-4 py-8">
+      {/* Hero Section */}
+      <section className="text-center py-12 md:py-20">
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          Stay Informed About
+          <span className="text-primary block mt-2">
+            Fairfax County Schools
+          </span>
+        </h1>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+          {APP_NAME} summarizes FCPS School Board meetings so you can stay
+          informed in minutes, not hours. Get AI-powered summaries and keyword
+          alerts delivered to your inbox.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button asChild size="lg">
+            <Link href="/meetings">
+              Browse Meetings
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href="/alerts">
+              Set Up Alerts
+              <Bell className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-12">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-foreground mb-8">
+          How It Works
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle>AI-Powered Summaries</CardTitle>
+              <CardDescription>
+                We use AI to analyze meeting transcripts and extract key
+                decisions, votes, and action items.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Read a 2-minute summary instead of watching a 3-hour meeting.
+                Every summary links back to the original video.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Search className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle>Search & Filter</CardTitle>
+              <CardDescription>
+                Find discussions about topics you care about across all past
+                meetings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Search for &quot;bell schedules&quot;, &quot;budget&quot;, or
+                any topic. Filter by date or meeting type to find exactly what
+                you need.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Bell className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle>Keyword Alerts</CardTitle>
+              <CardDescription>
+                Get notified when topics you care about are discussed in
+                meetings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Set up alerts for keywords like your school name, &quot;property
+                tax&quot;, or &quot;transportation&quot;. We&apos;ll email you
+                when there&apos;s a match.
+              </p>
+            </CardContent>
+          </Card>
         </div>
-      </main>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-12 text-center">
+        <Card className="max-w-2xl mx-auto bg-primary/5 border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-2xl">Ready to Stay Informed?</CardTitle>
+            <CardDescription className="text-base">
+              Browse recent meeting summaries or create an account to set up
+              personalized keyword alerts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild>
+                <Link href="/meetings">View Recent Meetings</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/auth/signup">Create Free Account</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

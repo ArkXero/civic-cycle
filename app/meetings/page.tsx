@@ -23,7 +23,6 @@ async function getMeetings(page: number, body?: string) {
     `,
       { count: "exact" },
     )
-    .eq("status", "summarized")
     .order("meeting_date", { ascending: false });
 
   if (body) {

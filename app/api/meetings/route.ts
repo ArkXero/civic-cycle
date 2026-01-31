@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
       `,
         { count: "exact" },
       )
-      .eq("status", "summarized")
       .order("meeting_date", { ascending: false });
 
     // Apply body filter if provided

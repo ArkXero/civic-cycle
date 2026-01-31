@@ -32,6 +32,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/meetings", label: "Meetings" },
   { href: "/alerts", label: "My Alerts", protected: true },
+  { href: "/admin/youtube", label: "Import", protected: true },
 ];
 
 // External links
@@ -41,3 +42,6 @@ export const EXTERNAL_LINKS = {
   fcpsWebsite: "https://www.fcps.edu/",
   fairfaxCounty: "https://www.fairfaxcounty.gov/",
 } as const;
+
+// YouTube
+export const FCPS_YOUTUBE_PLAYLIST_ID = "PLSz76NCRDYQF3hPS2qS2SGEcoO4__Yd7Z";

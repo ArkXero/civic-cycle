@@ -14,23 +14,31 @@ interface UnsubscribePageProps {
   params: Promise<{ token: string }>
 }
 
+interface AlertRecord {
+  id: string
+  keyword: string
+  user_id: string
+}
+
 async function unsubscribeAlert(alertId: string) {
   // The token is the alert ID for simplicity
   // In production, you'd want a secure token system
   const supabase = createAdminClient()
 
-  const { data: alert, error: fetchError } = await supabase
-    .from('alert_preferences')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: alertData, error: fetchError } = await (supabase
+    .from('alert_preferences') as any)
     .select('id, keyword, user_id')
     .eq('id', alertId)
-    .single()
+    .single() as { data: AlertRecord | null; error: Error | null }
 
-  if (fetchError || !alert) {
+  if (fetchError || !alertData) {
     return { success: false, error: 'Alert not found' }
   }
 
-  const { error: deleteError } = await supabase
-    .from('alert_preferences')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: deleteError } = await (supabase
+    .from('alert_preferences') as any)
     .delete()
     .eq('id', alertId)
 
@@ -38,7 +46,7 @@ async function unsubscribeAlert(alertId: string) {
     return { success: false, error: 'Failed to unsubscribe' }
   }
 
-  return { success: true, keyword: alert.keyword }
+  return { success: true, keyword: alertData.keyword }
 }
 
 export default async function UnsubscribePage({ params }: UnsubscribePageProps) {

@@ -18,6 +18,11 @@ export type Database = {
           video_url: string | null
           transcript_url: string | null
           transcript_text: string | null
+          transcript_source: 'youtube_auto' | 'youtube_manual' | 'manual_upload' | 'whisper' | null
+          youtube_video_id: string | null
+          youtube_thumbnail_url: string | null
+          youtube_duration: string | null
+          youtube_published_at: string | null
           status: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message: string | null
           created_at: string
@@ -31,6 +36,11 @@ export type Database = {
           video_url?: string | null
           transcript_url?: string | null
           transcript_text?: string | null
+          transcript_source?: 'youtube_auto' | 'youtube_manual' | 'manual_upload' | 'whisper' | null
+          youtube_video_id?: string | null
+          youtube_thumbnail_url?: string | null
+          youtube_duration?: string | null
+          youtube_published_at?: string | null
           status?: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message?: string | null
           created_at?: string
@@ -44,6 +54,11 @@ export type Database = {
           video_url?: string | null
           transcript_url?: string | null
           transcript_text?: string | null
+          transcript_source?: 'youtube_auto' | 'youtube_manual' | 'manual_upload' | 'whisper' | null
+          youtube_video_id?: string | null
+          youtube_thumbnail_url?: string | null
+          youtube_duration?: string | null
+          youtube_published_at?: string | null
           status?: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message?: string | null
           created_at?: string

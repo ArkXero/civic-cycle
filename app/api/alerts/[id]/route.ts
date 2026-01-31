@@ -137,11 +137,11 @@ export async function PATCH(
 
     // Create a new admin client for the update to avoid type inference issues
     const updateClient = createAdminClient();
-    const updatePayload = { is_active: isActive };
 
-    const { data: updatedAlert, error: updateError } = await updateClient
-      .from("alert_preferences")
-      .update(updatePayload as Record<string, boolean>)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updatedAlert, error: updateError } = await (updateClient
+      .from("alert_preferences") as any)
+      .update({ is_active: isActive })
       .eq("id", id)
       .select()
       .single();

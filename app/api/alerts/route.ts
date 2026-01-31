@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Validation error', message: validationResult.error.errors[0].message },
+        { error: 'Validation error', message: validationResult.error.issues[0].message },
         { status: 400 }
       )
     }
@@ -86,8 +86,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: alert, error } = await supabase
-      .from('alert_preferences')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: alert, error } = await (supabase
+      .from('alert_preferences') as any)
       .insert({
         user_id: user.id,
         keyword: keyword.toLowerCase(),

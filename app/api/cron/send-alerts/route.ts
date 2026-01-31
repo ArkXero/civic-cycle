@@ -3,6 +3,33 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { sendAlertEmail } from '@/lib/resend'
 import { formatDate, truncate } from '@/lib/utils'
 
+interface Meeting {
+  id: string
+  title: string
+  body: string
+  meeting_date: string
+}
+
+interface Summary {
+  meeting_id: string
+  summary_text: string | null
+  topics: string[] | null
+  key_decisions: { decision: string }[] | null
+  action_items: { item: string }[] | null
+}
+
+interface Alert {
+  id: string
+  user_id: string
+  keyword: string
+  bodies: string[] | null
+}
+
+interface UserProfile {
+  id: string
+  email: string
+}
+
 // This endpoint is called by Vercel Cron to send alert emails
 // It should be protected by a secret in production
 export async function POST(request: NextRequest) {
@@ -25,8 +52,9 @@ export async function POST(request: NextRequest) {
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
 
-    const { data: recentMeetings, error: meetingsError } = await supabase
-      .from('meetings')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: recentMeetings, error: meetingsError } = await (supabase
+      .from('meetings') as any)
       .select(`
         id,
         title,
@@ -34,7 +62,7 @@ export async function POST(request: NextRequest) {
         meeting_date
       `)
       .eq('status', 'summarized')
-      .gte('updated_at', yesterday.toISOString())
+      .gte('updated_at', yesterday.toISOString()) as { data: Meeting[] | null; error: Error | null }
 
     if (meetingsError) {
       console.error('Error fetching recent meetings:', meetingsError)
@@ -50,10 +78,11 @@ export async function POST(request: NextRequest) {
 
     // Get summaries for these meetings
     const meetingIds = recentMeetings.map(m => m.id)
-    const { data: summaries, error: summariesError } = await supabase
-      .from('summaries')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: summaries, error: summariesError } = await (supabase
+      .from('summaries') as any)
       .select('*')
-      .in('meeting_id', meetingIds)
+      .in('meeting_id', meetingIds) as { data: Summary[] | null; error: Error | null }
 
     if (summariesError) {
       console.error('Error fetching summaries:', summariesError)
@@ -67,15 +96,16 @@ export async function POST(request: NextRequest) {
     const summaryMap = new Map(summaries?.map(s => [s.meeting_id, s]) || [])
 
     // Get all active alerts
-    const { data: alerts, error: alertsError } = await supabase
-      .from('alert_preferences')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: alerts, error: alertsError } = await (supabase
+      .from('alert_preferences') as any)
       .select(`
         id,
         user_id,
         keyword,
         bodies
       `)
-      .eq('is_active', true)
+      .eq('is_active', true) as { data: Alert[] | null; error: Error | null }
 
     if (alertsError) {
       console.error('Error fetching alerts:', alertsError)
@@ -91,10 +121,11 @@ export async function POST(request: NextRequest) {
 
     // Get user emails
     const userIds = [...new Set(alerts.map(a => a.user_id))]
-    const { data: userProfiles, error: usersError } = await supabase
-      .from('user_profiles')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: userProfiles, error: usersError } = await (supabase
+      .from('user_profiles') as any)
       .select('id, email')
-      .in('id', userIds)
+      .in('id', userIds) as { data: UserProfile[] | null; error: Error | null }
 
     if (usersError) {
       console.error('Error fetching user profiles:', usersError)
@@ -119,8 +150,8 @@ export async function POST(request: NextRequest) {
       const searchableText = [
         summary.summary_text || '',
         ...(summary.topics || []),
-        ...(summary.key_decisions || []).map((d: { decision: string }) => d.decision),
-        ...(summary.action_items || []).map((a: { item: string }) => a.item),
+        ...(summary.key_decisions || []).map((d) => d.decision),
+        ...(summary.action_items || []).map((a) => a.item),
       ].join(' ').toLowerCase()
 
       for (const alert of alerts) {
@@ -146,7 +177,6 @@ export async function POST(request: NextRequest) {
         if (!userEmail) continue
 
         // Find excerpt containing the keyword
-        const excerptStart = searchableText.indexOf(keyword)
         const excerptText = summary.summary_text || ''
         let excerpt = truncate(excerptText, 300)
 
@@ -172,7 +202,8 @@ export async function POST(request: NextRequest) {
           })
 
           // Record in alert history
-          await supabase.from('alert_history').insert({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from('alert_history') as any).insert({
             user_id: alert.user_id,
             meeting_id: meeting.id,
             alert_preference_id: alert.id,
@@ -189,7 +220,8 @@ export async function POST(request: NextRequest) {
           console.error('Error sending alert email:', emailError)
 
           // Record failed email
-          await supabase.from('alert_history').insert({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from('alert_history') as any).insert({
             user_id: alert.user_id,
             meeting_id: meeting.id,
             alert_preference_id: alert.id,

@@ -68,9 +68,13 @@ export default async function MeetingPage({ params }: MeetingPageProps) {
     notFound();
   }
 
+  // Check if user is authenticated
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <MeetingDetail meeting={meeting} />
+      <MeetingDetail meeting={meeting} isAuthenticated={!!user} />
     </div>
   );
 }

@@ -4,17 +4,18 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'i.ytimg.com',
-        pathname: '/vi/**',
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/vi/**",
       },
       {
-        protocol: 'https',
-        hostname: 'img.youtube.com',
-        pathname: '/vi/**',
+        protocol: "https",
+        hostname: "img.youtube.com",
+        pathname: "/vi/**",
       },
     ],
   },
+  output: "standalone",
 };
 
-export default nextConfig;
+module.exports = nextConfig;

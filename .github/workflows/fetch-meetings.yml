@@ -1,0 +1,55 @@
+name: Fetch FCPS School Board Meetings
+
+on:
+  # Run daily at 6 AM ET (11 AM UTC)
+  schedule:
+    - cron: '0 11 * * *'
+
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      max_meetings:
+        description: 'Maximum meetings to process'
+        required: false
+        default: '10'
+
+jobs:
+  fetch-and-process:
+    runs-on: ubuntu-latest
+
+    # Set timeout to prevent runaway jobs
+    timeout-minutes: 30
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+      APP_URL: ${{ secrets.APP_URL }}
+      ENVIRONMENT: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'pipeline/requirements.txt'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r pipeline/requirements.txt
+
+      - name: Run pipeline
+        run: |
+          python -m pipeline.main
+
+      - name: Report status
+        if: always()
+        run: |
+          echo "Pipeline finished with status: ${{ job.status }}"

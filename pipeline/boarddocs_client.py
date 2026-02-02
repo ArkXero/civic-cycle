@@ -63,15 +63,52 @@ class BoardDocsClient:
         logger.info(f"Initialized BoardDocs client for: {self.base_url}")
 
     def _init_session(self):
-        """Visit the public page to establish session cookies."""
+        """Visit the public page to establish session cookies and get committee info."""
         try:
             public_url = f"{self.base_url}/Public"
             logger.info(f"Initializing session by visiting: {public_url}")
-            response = self.session.get(public_url)
-            logger.info(f"Session init response: {response.status_code}")
+
+            # Temporarily remove XMLHttpRequest header for initial page load
+            headers = dict(self.session.headers)
+            headers.pop("x-requested-with", None)
+            headers["accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+
+            response = self.session.get(public_url, headers=headers)
+            logger.info(f"Session init response: {response.status_code}, length: {len(response.text)}")
             logger.info(f"Cookies received: {dict(self.session.cookies)}")
+
+            # Try to extract committee_id from the page
+            import re
+            committee_match = re.search(r'bd\.current_committee_id\s*=\s*["\']([^"\']*)["\']', response.text)
+            if committee_match:
+                found_committee = committee_match.group(1)
+                logger.info(f"Found committee_id in page: '{found_committee}'")
+
+            # Also try to get the committees list
+            self._get_committees()
+
         except Exception as e:
-            logger.warning(f"Failed to init session (continuing anyway): {e}")
+            logger.warning(f"Failed to init session: {e}")
+            import traceback
+            logger.warning(traceback.format_exc())
+
+    def _get_committees(self):
+        """Try to fetch list of committees."""
+        try:
+            url = f"{self.base_url}/BD-GetCommitteesList?open"
+            logger.info(f"Fetching committees from: {url}")
+            response = self.session.post(url, data="")
+            logger.info(f"Committees response status: {response.status_code}")
+            logger.info(f"Committees response (first 500): {response.text[:500]}")
+
+            if response.text.strip():
+                try:
+                    committees = response.json()
+                    logger.info(f"Available committees: {committees}")
+                except:
+                    pass
+        except Exception as e:
+            logger.warning(f"Failed to get committees: {e}")
 
     def get_meetings(self, limit: Optional[int] = None) -> list[Meeting]:
         """

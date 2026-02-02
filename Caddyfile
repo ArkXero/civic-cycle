@@ -1,0 +1,45 @@
+# Caddyfile
+# Caddy automatically handles HTTPS certificates via Let's Encrypt
+
+# ===========================================
+# PRODUCTION: Replace with your domain
+# ===========================================
+fairfaxdigest.com {
+    # Proxy all traffic to the Next.js app
+    reverse_proxy app:3000
+
+    # Enable compression
+    encode gzip
+
+    # Security headers
+    header {
+        # Prevent clickjacking
+        X-Frame-Options "DENY"
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+        # Enable XSS filter
+        X-XSS-Protection "1; mode=block"
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Logging
+    log {
+        output file /data/access.log
+        format json
+    }
+}
+
+# ===========================================
+# WWW REDIRECT: www.domain.com -> domain.com
+# ===========================================
+www.fairfaxdigest.com {
+    redir https://fairfaxdigest.com{uri} permanent
+}
+
+# ===========================================
+# LOCAL DEVELOPMENT: Uncomment for testing
+# ===========================================
+# :80 {
+#     reverse_proxy app:3000
+# }

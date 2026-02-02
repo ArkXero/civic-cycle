@@ -63,6 +63,8 @@ class BoardDocsClient:
 
     def _init_session(self):
         """Visit the public page to establish session cookies and get committee info."""
+        print("DEBUG: _init_session called", flush=True)
+        logger.info("DEBUG: _init_session starting")
         try:
             public_url = f"{self.base_url}/Public"
             logger.info(f"Initializing session by visiting: {public_url}")
@@ -124,9 +126,12 @@ class BoardDocsClient:
         logger.info(f"Committee ID: {self.committee_id}")
 
         # Initialize session if not done yet
+        print(f"DEBUG: _session_initialized = {self._session_initialized}", flush=True)
         if not self._session_initialized:
+            print("DEBUG: Calling _init_session", flush=True)
             self._init_session()
             self._session_initialized = True
+            print("DEBUG: Session init complete", flush=True)
 
         try:
             # Try the standard BoardDocs API endpoint

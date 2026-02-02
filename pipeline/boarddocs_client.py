@@ -76,40 +76,56 @@ class BoardDocsClient:
 
             response = self.session.get(public_url, headers=headers)
             logger.info(f"Session init response: {response.status_code}, length: {len(response.text)}")
-            logger.info(f"Cookies received: {dict(self.session.cookies)}")
 
-            # Try to extract committee_id from the page
-            import re
-            committee_match = re.search(r'bd\.current_committee_id\s*=\s*["\']([^"\']*)["\']', response.text)
-            if committee_match:
-                found_committee = committee_match.group(1)
-                logger.info(f"Found committee_id in page: '{found_committee}'")
+            # Store the public page HTML for potential parsing
+            self._public_page_html = response.text
 
-            # Also try to get the committees list
-            self._get_committees()
+            # Try to extract meeting data from the page JavaScript
+            self._extract_meetings_from_html(response.text)
 
         except Exception as e:
             logger.warning(f"Failed to init session: {e}")
             import traceback
             logger.warning(traceback.format_exc())
 
-    def _get_committees(self):
-        """Try to fetch list of committees."""
-        try:
-            url = f"{self.base_url}/BD-GetCommitteesList?open"
-            logger.info(f"Fetching committees from: {url}")
-            response = self.session.post(url, data="")
-            logger.info(f"Committees response status: {response.status_code}")
-            logger.info(f"Committees response (first 500): {response.text[:500]}")
+    def _extract_meetings_from_html(self, html: str):
+        """Try to extract meeting info from the public page HTML/JavaScript."""
+        import re
+        import json
 
-            if response.text.strip():
+        # Look for meeting data in JavaScript variables
+        # BoardDocs often embeds meeting list as JSON in the page
+        patterns = [
+            r'var\s+meetingsData\s*=\s*(\[.*?\]);',
+            r'bd\.meetings\s*=\s*(\[.*?\]);',
+            r'"meetings"\s*:\s*(\[.*?\])',
+            r'meetingsList\s*=\s*(\[.*?\]);',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, html, re.DOTALL)
+            if match:
                 try:
-                    committees = response.json()
-                    logger.info(f"Available committees: {committees}")
-                except:
-                    pass
-        except Exception as e:
-            logger.warning(f"Failed to get committees: {e}")
+                    data = json.loads(match.group(1))
+                    logger.info(f"Found meetings data with pattern '{pattern}': {len(data)} items")
+                    if data:
+                        logger.info(f"First item: {data[0]}")
+                        self._cached_meetings = data
+                        return
+                except json.JSONDecodeError:
+                    continue
+
+        # Look for meeting links in HTML
+        meeting_links = re.findall(r'goto\?open&id=([A-Z0-9]+)', html)
+        if meeting_links:
+            logger.info(f"Found {len(meeting_links)} meeting links in HTML: {meeting_links[:5]}")
+            self._cached_meeting_ids = list(set(meeting_links))
+        else:
+            logger.info("No meeting links found in HTML")
+
+        # Log a sample of the HTML to understand its structure
+        logger.info(f"HTML sample (chars 5000-6000): {html[5000:6000]}")
+
 
     def get_meetings(self, limit: Optional[int] = None) -> list[Meeting]:
         """
@@ -134,27 +150,35 @@ class BoardDocsClient:
             print("DEBUG: Session init complete", flush=True)
 
         try:
-            # Try the standard BoardDocs API endpoint
-            url = f"{self.base_url}/BD-GetMeetingsList?open"
-            # Send as raw string, not dict (matches llama-index implementation)
-            data = f"current_committee_id={self.committee_id}"
+            # Check if we have cached meetings from HTML parsing
+            if hasattr(self, '_cached_meetings') and self._cached_meetings:
+                logger.info(f"Using {len(self._cached_meetings)} cached meetings from HTML")
+                raw_meetings = self._cached_meetings
+            elif hasattr(self, '_cached_meeting_ids') and self._cached_meeting_ids:
+                # We have meeting IDs but need to construct meeting objects
+                logger.info(f"Using {len(self._cached_meeting_ids)} meeting IDs from HTML")
+                raw_meetings = [{"unique": mid, "unid": mid} for mid in self._cached_meeting_ids]
+            else:
+                # Try the standard BoardDocs API endpoint as fallback
+                url = f"{self.base_url}/BD-GetMeetingsList?open"
+                data = f"current_committee_id={self.committee_id}"
 
-            logger.info(f"POST request to: {url}")
-            logger.info(f"POST data: {data}")
-            response = self.session.post(url, data=data)
-            logger.info(f"Response status: {response.status_code}")
-            logger.info(f"Response content (first 500 chars): {response.text[:500]}")
+                logger.info(f"POST request to: {url}")
+                logger.info(f"POST data: {data}")
+                response = self.session.post(url, data=data)
+                logger.info(f"Response status: {response.status_code}")
+                logger.info(f"Response content (first 500 chars): {response.text[:500]}")
 
-            if response.status_code != 200:
-                raise Exception(f"BoardDocs returned status {response.status_code}")
+                if response.status_code != 200:
+                    raise Exception(f"BoardDocs returned status {response.status_code}")
 
-            # Try to parse as JSON
-            try:
-                raw_meetings = response.json()
-            except Exception as json_err:
-                logger.error(f"Failed to parse JSON: {json_err}")
-                logger.error(f"Raw response: {response.text[:1000]}")
-                raise
+                # Try to parse as JSON
+                try:
+                    raw_meetings = response.json()
+                except Exception as json_err:
+                    logger.error(f"Failed to parse JSON: {json_err}")
+                    logger.error(f"Raw response: {response.text[:1000]}")
+                    raise
 
             logger.info(f"Found {len(raw_meetings)} meetings")
             if raw_meetings:

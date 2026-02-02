@@ -37,13 +37,13 @@ class BoardDocsClient:
     """Client for fetching and processing BoardDocs meetings."""
 
     def __init__(self):
+        # BoardDocsReader takes site (e.g., "vsba/fairfax") and committee_id
         self.reader = BoardDocsReader(
             site=boarddocs_config.site,
-            org=boarddocs_config.org,
-            committee=boarddocs_config.committee
+            committee_id=boarddocs_config.committee_id
         )
         logger.info(
-            f"Initialized BoardDocs client for {boarddocs_config.org}/{boarddocs_config.committee}"
+            f"Initialized BoardDocs client for site: {boarddocs_config.site}"
         )
 
     def get_meetings(self, limit: Optional[int] = None) -> list[Meeting]:
@@ -59,16 +59,18 @@ class BoardDocsClient:
         logger.info("Fetching meeting list from BoardDocs...")
 
         try:
-            raw_meetings = self.reader.get_meetings()
+            raw_meetings = self.reader.get_meeting_list()
             logger.info(f"Found {len(raw_meetings)} meetings")
 
             meetings = []
             for m in raw_meetings:
+                # Handle different possible field names
+                meeting_id = m.get("meetingID", m.get("meeting_id", m.get("id", "")))
                 meeting = Meeting(
-                    meeting_id=m.get("meetingID", ""),
-                    date=m.get("date", ""),
-                    unid=m.get("unid", m.get("meetingID", "")),
-                    title=m.get("title")
+                    meeting_id=meeting_id,
+                    date=m.get("date", m.get("meeting_date", "")),
+                    unid=m.get("unid", meeting_id),
+                    title=m.get("title", m.get("name", None))
                 )
                 meetings.append(meeting)
 
@@ -98,10 +100,8 @@ class BoardDocsClient:
         logger.info(f"Processing meeting: {meeting.unid} ({meeting.date})")
 
         try:
-            documents = self.reader.process_meeting(
-                meeting_id=meeting.unid,
-                index_pdfs=index_pdfs
-            )
+            # Use load_data with specific meeting ID
+            documents = self.reader.load_data(meeting_ids=[meeting.unid])
 
             logger.info(f"Extracted {len(documents)} documents")
 

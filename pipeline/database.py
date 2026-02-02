@@ -56,8 +56,8 @@ class Database:
             Created meeting record
         """
         source_url = (
-            f"https://{boarddocs_config.site}/{boarddocs_config.org}/"
-            f"{boarddocs_config.committee}/Board.nsf/goto?open&id={meeting.unid}"
+            f"https://go.boarddocs.com/{boarddocs_config.site}/"
+            f"Board.nsf/goto?open&id={meeting.unid}"
         )
 
         data = {

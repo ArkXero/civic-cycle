@@ -12,9 +12,10 @@ load_dotenv()
 
 @dataclass
 class BoardDocsConfig:
-    site: str = "go.boarddocs.com"
-    org: str = "vsba"
-    committee: str = "fairfax"
+    # Site format: "org/committee" e.g., "vsba/fairfax"
+    site: str = "vsba/fairfax"
+    # Committee ID - for FCPS this is typically "FCPS" or found in BoardDocs URLs
+    committee_id: str = "FCPS"
     body_name: str = "FCPS School Board"
 
 

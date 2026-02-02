@@ -41,10 +41,19 @@ class BoardDocsClient:
         self.committee_id = boarddocs_config.committee_id
         self.base_url = f"https://go.boarddocs.com/{self.site}/Board.nsf"
         self.session = requests.Session()
+        # These headers are required - BoardDocs checks for XMLHttpRequest
         self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json, text/plain, */*",
-            "Content-Type": "application/x-www-form-urlencoded",
+            "accept": "application/json, text/javascript, */*; q=0.01",
+            "accept-language": "en-US,en;q=0.9",
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "sec-ch-ua": '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"macOS"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "x-requested-with": "XMLHttpRequest",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
         })
         logger.info(f"Initialized BoardDocs client for: {self.base_url}")
 
@@ -65,9 +74,11 @@ class BoardDocsClient:
         try:
             # Try the standard BoardDocs API endpoint
             url = f"{self.base_url}/BD-GetMeetingsList?open"
-            data = {"current_committee_id": self.committee_id}
+            # Send as raw string, not dict (matches llama-index implementation)
+            data = f"current_committee_id={self.committee_id}"
 
             logger.info(f"POST request to: {url}")
+            logger.info(f"POST data: {data}")
             response = self.session.post(url, data=data)
             logger.info(f"Response status: {response.status_code}")
             logger.info(f"Response content (first 500 chars): {response.text[:500]}")

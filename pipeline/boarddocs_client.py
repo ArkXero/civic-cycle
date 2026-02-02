@@ -93,27 +93,25 @@ class BoardDocsClient:
         import re
         import json
 
-        # Look for meeting data in JavaScript variables
-        # BoardDocs often embeds meeting list as JSON in the page
-        patterns = [
-            r'var\s+meetingsData\s*=\s*(\[.*?\]);',
-            r'bd\.meetings\s*=\s*(\[.*?\]);',
-            r'"meetings"\s*:\s*(\[.*?\])',
-            r'meetingsList\s*=\s*(\[.*?\]);',
+        # Look for committee information
+        committee_patterns = [
+            r'bd\.committees\s*=\s*(\[.*?\]);',
+            r'"committees"\s*:\s*(\[.*?\])',
+            r'committeesList\s*=\s*(\[.*?\]);',
         ]
 
-        for pattern in patterns:
+        for pattern in committee_patterns:
             match = re.search(pattern, html, re.DOTALL)
             if match:
                 try:
                     data = json.loads(match.group(1))
-                    logger.info(f"Found meetings data with pattern '{pattern}': {len(data)} items")
-                    if data:
-                        logger.info(f"First item: {data[0]}")
-                        self._cached_meetings = data
-                        return
-                except json.JSONDecodeError:
-                    continue
+                    logger.info(f"Found committees with pattern: {data}")
+                    self._committees = data
+                except:
+                    pass
+
+        # Try to fetch committees via API
+        self._fetch_committees_api()
 
         # Look for meeting links in HTML
         meeting_links = re.findall(r'goto\?open&id=([A-Z0-9]+)', html)
@@ -125,6 +123,57 @@ class BoardDocsClient:
 
         # Log a sample of the HTML to understand its structure
         logger.info(f"HTML sample (chars 5000-6000): {html[5000:6000]}")
+
+    def _fetch_committees_api(self):
+        """Try various API endpoints to get committees."""
+        endpoints = [
+            "/BD-GetCommittees?open",
+            "/f?open&getCommittees",
+            "/getCommittees?open",
+            "/?open&getCommittees",
+        ]
+
+        for endpoint in endpoints:
+            try:
+                url = f"{self.base_url}{endpoint}"
+                logger.info(f"Trying committees endpoint: {url}")
+                response = self.session.post(url, data="")
+                logger.info(f"Response: {response.status_code}, content: {response.text[:200]}")
+                if response.status_code == 200 and response.text.strip():
+                    try:
+                        data = response.json()
+                        if data:
+                            logger.info(f"Found committees: {data}")
+                            self._committees = data
+                            # Try to get meetings with first committee
+                            if isinstance(data, list) and len(data) > 0:
+                                first_committee = data[0]
+                                cid = first_committee.get('id', first_committee.get('unique', ''))
+                                if cid:
+                                    self._try_meetings_with_committee(cid)
+                            return
+                    except:
+                        pass
+            except Exception as e:
+                logger.debug(f"Endpoint {endpoint} failed: {e}")
+
+    def _try_meetings_with_committee(self, committee_id: str):
+        """Try to get meetings with a specific committee ID."""
+        url = f"{self.base_url}/BD-GetMeetingsList?open"
+        data = f"current_committee_id={committee_id}"
+        logger.info(f"Trying meetings with committee_id={committee_id}")
+        response = self.session.post(url, data=data)
+        logger.info(f"Response: {response.status_code}, length: {len(response.text)}")
+        if response.text.strip():
+            logger.info(f"Content preview: {response.text[:300]}")
+            try:
+                meetings = response.json()
+                if meetings:
+                    logger.info(f"SUCCESS! Found {len(meetings)} meetings with committee {committee_id}")
+                    self._cached_meetings = meetings
+                    self._working_committee_id = committee_id
+            except:
+                pass
 
 
     def get_meetings(self, limit: Optional[int] = None) -> list[Meeting]:

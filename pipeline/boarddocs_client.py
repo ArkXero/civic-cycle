@@ -54,8 +54,24 @@ class BoardDocsClient:
             "sec-fetch-site": "same-origin",
             "x-requested-with": "XMLHttpRequest",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+            "Referer": f"https://go.boarddocs.com/{self.site}/Board.nsf/Public",
+            "Origin": "https://go.boarddocs.com",
         })
+
+        # Initialize session by visiting the public page first
+        self._init_session()
         logger.info(f"Initialized BoardDocs client for: {self.base_url}")
+
+    def _init_session(self):
+        """Visit the public page to establish session cookies."""
+        try:
+            public_url = f"{self.base_url}/Public"
+            logger.info(f"Initializing session by visiting: {public_url}")
+            response = self.session.get(public_url)
+            logger.info(f"Session init response: {response.status_code}")
+            logger.info(f"Cookies received: {dict(self.session.cookies)}")
+        except Exception as e:
+            logger.warning(f"Failed to init session (continuing anyway): {e}")
 
     def get_meetings(self, limit: Optional[int] = None) -> list[Meeting]:
         """

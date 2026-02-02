@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { FileText, Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -19,7 +18,6 @@ export function TranscriptFetcher({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const router = useRouter()
 
   const handleFetch = async (force: boolean = false) => {
     setIsLoading(true)
@@ -40,8 +38,7 @@ export function TranscriptFetcher({
       }
 
       setSuccess(true)
-      // Force a hard reload to update server component data
-      window.location.reload()
+      setTimeout(() => window.location.reload(), 1000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {

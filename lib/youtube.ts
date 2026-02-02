@@ -1,5 +1,4 @@
 import { google } from 'googleapis'
-import { YoutubeTranscript } from 'youtube-transcript'
 
 const youtube = google.youtube({
   version: 'v3',
@@ -147,35 +146,188 @@ export async function getVideoDetails(videoId: string): Promise<YouTubeVideo | n
 }
 
 /**
+ * Fetch transcript using innertube API (more reliable)
+ */
+async function fetchTranscriptViaInnertube(videoId: string): Promise<Array<{ text: string; start: number; duration: number }>> {
+  // Get the video page to extract necessary tokens
+  const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}`
+
+  console.log('Fetching video page for innertube:', videoPageUrl)
+
+  const pageResponse = await fetch(videoPageUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+  })
+
+  if (!pageResponse.ok) {
+    throw new Error(`Failed to fetch video page: ${pageResponse.status}`)
+  }
+
+  const html = await pageResponse.text()
+
+  // Extract ytInitialPlayerResponse
+  const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/)
+  if (!playerResponseMatch) {
+    throw new Error('Could not find player response in page')
+  }
+
+  let playerData
+  try {
+    playerData = JSON.parse(playerResponseMatch[1])
+  } catch (e) {
+    throw new Error('Failed to parse player response')
+  }
+
+  const captions = playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks
+  if (!captions || captions.length === 0) {
+    throw new Error('No caption tracks available for this video')
+  }
+
+  console.log('Available caption tracks:', captions.map((c: { languageCode: string; kind?: string }) =>
+    `${c.languageCode}${c.kind ? ` (${c.kind})` : ''}`
+  ).join(', '))
+
+  // Prefer manual English, then auto-generated English, then any English, then first available
+  const englishManual = captions.find((t: { languageCode: string; kind?: string }) =>
+    (t.languageCode === 'en' || t.languageCode?.startsWith('en')) && !t.kind
+  )
+  const englishAuto = captions.find((t: { languageCode: string; kind?: string }) =>
+    (t.languageCode === 'en' || t.languageCode?.startsWith('en')) && t.kind === 'asr'
+  )
+  const anyEnglish = captions.find((t: { languageCode: string }) =>
+    t.languageCode === 'en' || t.languageCode?.startsWith('en')
+  )
+
+  const selectedTrack = englishManual || englishAuto || anyEnglish || captions[0]
+  console.log('Selected track:', selectedTrack.languageCode, selectedTrack.kind || 'manual')
+
+  if (!selectedTrack?.baseUrl) {
+    throw new Error('No caption URL found')
+  }
+
+  // Fetch with srv1 format (simpler XML)
+  const captionUrl = selectedTrack.baseUrl + '&fmt=srv1'
+  console.log('Fetching caption URL:', captionUrl.substring(0, 100) + '...')
+
+  const captionResponse = await fetch(captionUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    },
+  })
+
+  if (!captionResponse.ok) {
+    throw new Error(`Failed to fetch captions: ${captionResponse.status}`)
+  }
+
+  const captionText = await captionResponse.text()
+  console.log('Caption response length:', captionText.length)
+
+  if (captionText.length > 0) {
+    console.log('Caption preview:', captionText.substring(0, 300))
+  }
+
+  return parseCaptionResponse(captionText)
+}
+
+/**
+ * Parse caption response (handles both XML and JSON formats)
+ */
+function parseCaptionResponse(content: string): Array<{ text: string; start: number; duration: number }> {
+  const segments: Array<{ text: string; start: number; duration: number }> = []
+
+  // Try JSON format first (srv3)
+  if (content.trim().startsWith('{')) {
+    try {
+      const json = JSON.parse(content)
+      const events = json.events || []
+      for (const event of events) {
+        if (event.segs) {
+          const text = event.segs.map((s: { utf8: string }) => s.utf8 || '').join('').trim()
+          if (text && text !== '\n') {
+            segments.push({
+              text,
+              start: (event.tStartMs || 0) / 1000,
+              duration: (event.dDurationMs || 0) / 1000,
+            })
+          }
+        }
+      }
+      return segments
+    } catch (e) {
+      console.log('Failed to parse as JSON:', e)
+    }
+  }
+
+  // Try XML format
+  // Match <text start="..." dur="...">content</text>
+  const textPattern = /<text\s+start="([\d.]+)"\s+dur="([\d.]+)"[^>]*>([^<]*)<\/text>/g
+  let match
+
+  while ((match = textPattern.exec(content)) !== null) {
+    const start = parseFloat(match[1])
+    const duration = parseFloat(match[2])
+    // Decode HTML entities
+    const text = match[3]
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\n/g, ' ')
+      .trim()
+
+    if (text) {
+      segments.push({ text, start, duration })
+    }
+  }
+
+  return segments
+}
+
+/**
  * Extract transcript from YouTube video using auto-generated captions
  */
 export async function extractTranscript(videoId: string): Promise<string> {
   try {
-    const transcriptSegments = await YoutubeTranscript.fetchTranscript(videoId)
+    console.log('Fetching transcript for video:', videoId)
 
-    // Combine segments into a single transcript
-    // Group by approximate time to create paragraphs
+    // Use innertube method
+    const segments = await fetchTranscriptViaInnertube(videoId)
+    console.log('Final segment count:', segments.length)
+
+    if (segments.length === 0) {
+      throw new Error('No caption segments found in response')
+    }
+
+    // Combine segments into paragraphs (every ~60 seconds)
     const paragraphs: string[] = []
     let currentParagraph: string[] = []
-    let lastOffset = 0
+    let lastStart = 0
 
-    for (const segment of transcriptSegments) {
-      // Start a new paragraph every ~60 seconds
-      if (segment.offset - lastOffset > 60000 && currentParagraph.length > 0) {
+    for (const segment of segments) {
+      if (segment.start - lastStart > 60 && currentParagraph.length > 0) {
         paragraphs.push(currentParagraph.join(' '))
         currentParagraph = []
       }
 
       currentParagraph.push(segment.text)
-      lastOffset = segment.offset
+      lastStart = segment.start
     }
 
-    // Add remaining text
     if (currentParagraph.length > 0) {
       paragraphs.push(currentParagraph.join(' '))
     }
 
-    return paragraphs.join('\n\n')
+    const fullTranscript = paragraphs.join('\n\n')
+    console.log('Transcript extracted, length:', fullTranscript.length)
+
+    if (!fullTranscript || fullTranscript.trim().length === 0) {
+      throw new Error('Transcript was empty after processing')
+    }
+
+    return fullTranscript
   } catch (error) {
     console.error('Failed to extract transcript:', error)
     throw new Error(

@@ -58,8 +58,7 @@ class BoardDocsClient:
             "Origin": "https://go.boarddocs.com",
         })
 
-        # Initialize session by visiting the public page first
-        self._init_session()
+        self._session_initialized = False
         logger.info(f"Initialized BoardDocs client for: {self.base_url}")
 
     def _init_session(self):
@@ -123,6 +122,11 @@ class BoardDocsClient:
         logger.info("Fetching meeting list from BoardDocs...")
         logger.info(f"Base URL: {self.base_url}")
         logger.info(f"Committee ID: {self.committee_id}")
+
+        # Initialize session if not done yet
+        if not self._session_initialized:
+            self._init_session()
+            self._session_initialized = True
 
         try:
             # Try the standard BoardDocs API endpoint

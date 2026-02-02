@@ -1,13 +1,14 @@
 """
 BoardDocs client for fetching meeting data.
-Wraps llama-index-readers-boarddocs with error handling and logging.
+Custom implementation that directly queries BoardDocs API.
 """
 
 import logging
-from typing import Optional
+import requests
+import re
+from typing import Optional, Any
 from dataclasses import dataclass
-from llama_index.readers.boarddocs import BoardDocsReader
-from llama_index.core.schema import Document
+from markdownify import markdownify as md
 
 from .config import boarddocs_config
 
@@ -27,7 +28,6 @@ class Meeting:
 class MeetingContent:
     """Processed content from a meeting."""
     meeting: Meeting
-    documents: list[Document]
     combined_text: str
     agenda_items: list[str]
     attachment_count: int
@@ -37,14 +37,16 @@ class BoardDocsClient:
     """Client for fetching and processing BoardDocs meetings."""
 
     def __init__(self):
-        # BoardDocsReader takes site (e.g., "vsba/fairfax") and committee_id
-        self.reader = BoardDocsReader(
-            site=boarddocs_config.site,
-            committee_id=boarddocs_config.committee_id
-        )
-        logger.info(
-            f"Initialized BoardDocs client for site: {boarddocs_config.site}"
-        )
+        self.site = boarddocs_config.site
+        self.committee_id = boarddocs_config.committee_id
+        self.base_url = f"https://go.boarddocs.com/{self.site}/Board.nsf"
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Content-Type": "application/x-www-form-urlencoded",
+        })
+        logger.info(f"Initialized BoardDocs client for: {self.base_url}")
 
     def get_meetings(self, limit: Optional[int] = None) -> list[Meeting]:
         """
@@ -57,20 +59,42 @@ class BoardDocsClient:
             List of Meeting objects
         """
         logger.info("Fetching meeting list from BoardDocs...")
+        logger.info(f"Base URL: {self.base_url}")
+        logger.info(f"Committee ID: {self.committee_id}")
 
         try:
-            raw_meetings = self.reader.get_meeting_list()
+            # Try the standard BoardDocs API endpoint
+            url = f"{self.base_url}/BD-GetMeetingsList?open"
+            data = {"current_committee_id": self.committee_id}
+
+            logger.info(f"POST request to: {url}")
+            response = self.session.post(url, data=data)
+            logger.info(f"Response status: {response.status_code}")
+            logger.info(f"Response content (first 500 chars): {response.text[:500]}")
+
+            if response.status_code != 200:
+                raise Exception(f"BoardDocs returned status {response.status_code}")
+
+            # Try to parse as JSON
+            try:
+                raw_meetings = response.json()
+            except Exception as json_err:
+                logger.error(f"Failed to parse JSON: {json_err}")
+                logger.error(f"Raw response: {response.text[:1000]}")
+                raise
+
             logger.info(f"Found {len(raw_meetings)} meetings")
+            if raw_meetings:
+                logger.info(f"First meeting sample: {raw_meetings[0]}")
 
             meetings = []
             for m in raw_meetings:
-                # Handle different possible field names
-                meeting_id = m.get("meetingID", m.get("meeting_id", m.get("id", "")))
+                meeting_id = m.get("unique", m.get("meetingID", m.get("id", "")))
                 meeting = Meeting(
                     meeting_id=meeting_id,
-                    date=m.get("date", m.get("meeting_date", "")),
-                    unid=m.get("unid", meeting_id),
-                    title=m.get("title", m.get("name", None))
+                    date=m.get("numberdate", m.get("date", "")),
+                    unid=m.get("unique", meeting_id),
+                    title=m.get("name", m.get("title", None))
                 )
                 meetings.append(meeting)
 
@@ -86,13 +110,12 @@ class BoardDocsClient:
             logger.error(f"Failed to fetch meetings: {e}")
             raise
 
-    def process_meeting(self, meeting: Meeting, index_pdfs: bool = True) -> MeetingContent:
+    def process_meeting(self, meeting: Meeting) -> MeetingContent:
         """
         Extract all content from a meeting.
 
         Args:
             meeting: Meeting to process
-            index_pdfs: Whether to extract text from PDF attachments
 
         Returns:
             MeetingContent with all extracted data
@@ -100,40 +123,49 @@ class BoardDocsClient:
         logger.info(f"Processing meeting: {meeting.unid} ({meeting.date})")
 
         try:
-            # Use load_data with specific meeting ID
-            documents = self.reader.load_data(meeting_ids=[meeting.unid])
+            # Fetch the detailed agenda
+            url = f"{self.base_url}/PRINT-AgendaDetailed"
+            data = {
+                "id": meeting.unid,
+                "current_committee_id": self.committee_id
+            }
 
-            logger.info(f"Extracted {len(documents)} documents")
+            logger.info(f"Fetching agenda from: {url}")
+            response = self.session.post(url, data=data)
 
-            # Combine all text
-            combined_text = "\n\n---\n\n".join([doc.text for doc in documents])
+            if response.status_code != 200:
+                raise Exception(f"Failed to fetch agenda: status {response.status_code}")
 
-            # Extract agenda items (documents that aren't PDFs)
-            agenda_items = [
-                doc.metadata.get("title", "Untitled")
-                for doc in documents
-                if doc.metadata.get("type") != "attachment"
-            ]
+            html_content = response.text
+            logger.info(f"Received {len(html_content)} bytes of HTML")
 
-            # Count attachments
-            attachment_count = sum(
-                1 for doc in documents
-                if doc.metadata.get("type") == "attachment"
-            )
+            # Convert HTML to markdown/text
+            text_content = md(html_content)
 
-            # Try to get meeting title from first document
-            if documents and not meeting.title:
-                meeting.title = documents[0].metadata.get(
-                    "meeting_title",
-                    f"FCPS School Board Meeting - {meeting.date}"
-                )
+            # Clean up the text
+            text_content = re.sub(r'\n{3,}', '\n\n', text_content)
+            text_content = text_content.strip()
+
+            logger.info(f"Converted to {len(text_content)} chars of text")
+
+            # Extract title from HTML if not set
+            if not meeting.title:
+                title_match = re.search(r'<title>([^<]+)</title>', html_content, re.IGNORECASE)
+                if title_match:
+                    meeting.title = title_match.group(1).strip()
+                else:
+                    meeting.title = f"FCPS School Board Meeting - {meeting.date}"
+
+            # Try to extract agenda items from the content
+            agenda_items = []
+            item_matches = re.findall(r'(?:^|\n)(\d+\.\s+[^\n]+)', text_content)
+            agenda_items = item_matches[:20]  # Limit to first 20
 
             return MeetingContent(
                 meeting=meeting,
-                documents=documents,
-                combined_text=combined_text,
+                combined_text=text_content,
                 agenda_items=agenda_items,
-                attachment_count=attachment_count
+                attachment_count=0  # Would need additional parsing
             )
 
         except Exception as e:

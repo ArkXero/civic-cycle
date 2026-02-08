@@ -1,5 +1,5 @@
 // App metadata
-export const APP_NAME = "Fairfax Civic Digest";
+export const APP_NAME = "Fairfax Civic";
 export const APP_DESCRIPTION =
   "Stay informed about FCPS School Board meetings with AI-powered summaries and keyword alerts.";
 

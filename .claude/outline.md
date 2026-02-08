@@ -1,4 +1,4 @@
-# Fairfax Civic Digest - Implementation Plan
+# Fairfax Civic - Implementation Plan
 
 ## Project Overview
 
@@ -53,7 +53,7 @@ npm install lucide-react zod @supabase/ssr
 ### 1.2 Supabase Setup (User Action Required)
 1. Go to https://supabase.com and create account/sign in
 2. Create new project:
-   - Name: `fairfax-civic-digest`
+   - Name: `fairfax-civic`
    - Region: `us-east-1` (N. Virginia)
    - Generate strong database password (save it!)
 3. Wait for project to provision (~2 minutes)

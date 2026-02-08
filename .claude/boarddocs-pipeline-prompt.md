@@ -1,8 +1,8 @@
-# Fairfax Civic Digest — BoardDocs Data Pipeline
+# Fairfax Civic — BoardDocs Data Pipeline
 
 ## What This Document Is
 
-This is a standalone prompt for building the **data fetching and processing pipeline** for Fairfax Civic Digest. This pipeline runs separately from the main Next.js web app.
+This is a standalone prompt for building the **data fetching and processing pipeline** for Fairfax Civic. This pipeline runs separately from the main Next.js web app.
 
 **The pipeline's job:**
 1. Fetch meeting data from FCPS BoardDocs
@@ -73,7 +73,7 @@ This is a standalone prompt for building the **data fetching and processing pipe
 This pipeline lives inside the main project repository but is self-contained:
 
 ```
-fairfax-civic-digest/
+fairfax-civic/
 ├── .github/
 │   └── workflows/
 │       └── fetch-meetings.yml      # GitHub Actions workflow definition
@@ -151,10 +151,10 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 # Resend
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=alerts@fairfaxdigest.com
+RESEND_FROM_EMAIL=alerts@fairfaxcivic.com
 
 # App Configuration
-APP_URL=https://fairfaxdigest.com
+APP_URL=https://fairfaxcivic.com
 ENVIRONMENT=production
 ```
 
@@ -331,7 +331,7 @@ class SupabaseConfig:
 @dataclass
 class AnthropicConfig:
     api_key: str = ""
-    model: str = "claude-sonnet-4-20250514"
+    model: str = "claude-sonnet-4-5-20250929"
     max_tokens: int = 4096
     
     def __post_init__(self):
@@ -348,7 +348,7 @@ class ResendConfig:
     
     def __post_init__(self):
         self.api_key = os.environ.get("RESEND_API_KEY", "")
-        self.from_email = os.environ.get("RESEND_FROM_EMAIL", "alerts@fairfaxdigest.com")
+        self.from_email = os.environ.get("RESEND_FROM_EMAIL", "alerts@fairfaxcivic.com")
 
 
 @dataclass
@@ -1079,7 +1079,7 @@ class AlertService:
             
             <p style="color: #999; font-size: 12px;">
                 You're receiving this because you set up an alert for "{match.keyword}" 
-                on Fairfax Civic Digest.
+                on Fairfax Civic.
                 <a href="{settings_url}" style="color: #999;">Manage your alerts</a>
             </p>
         </div>
@@ -1163,7 +1163,7 @@ def get_alert_service() -> AlertService:
 ```python
 #!/usr/bin/env python3
 """
-Main entry point for the Fairfax Civic Digest data pipeline.
+Main entry point for the Fairfax Civic data pipeline.
 
 This script orchestrates the entire data fetching and processing workflow:
 1. Fetch new meetings from BoardDocs
@@ -1305,7 +1305,7 @@ def fetch_and_process_meetings() -> dict:
 
 def main():
     """Main entry point."""
-    logger.info("Starting Fairfax Civic Digest pipeline")
+    logger.info("Starting Fairfax Civic pipeline")
     logger.info(f"Environment: {app_config.environment}")
     
     try:
@@ -1396,7 +1396,7 @@ jobs:
 
 ```bash
 # 1. Navigate to project root
-cd fairfax-civic-digest
+cd fairfax-civic
 
 # 2. Create virtual environment
 python -m venv .venv
@@ -1411,7 +1411,7 @@ SUPABASE_URL=https://xxxxx.supabase.co
 SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIs...
 ANTHROPIC_API_KEY=sk-ant-...
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=alerts@fairfaxdigest.com
+RESEND_FROM_EMAIL=alerts@fairfaxcivic.com
 APP_URL=http://localhost:3000
 ENVIRONMENT=development
 EOF

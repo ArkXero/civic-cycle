@@ -38,7 +38,7 @@ export async function sendAlertEmail({
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background-color: #3cb371; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">Fairfax Civic Digest</h1>
+    <h1 style="color: white; margin: 0; font-size: 24px;">Fairfax Civic</h1>
   </div>
 
   <div style="background-color: #ffffff; padding: 24px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
@@ -63,7 +63,7 @@ export async function sendAlertEmail({
     <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
 
     <p style="color: #9a9a9a; font-size: 12px; margin: 0;">
-      You're receiving this because you set up an alert for "${keyword}" on Fairfax Civic Digest.
+      You're receiving this because you set up an alert for "${keyword}" on Fairfax Civic.
       <br><br>
       <a href="${unsubscribeUrl}" style="color: #9a9a9a;">Unsubscribe from this alert</a>
     </p>
@@ -73,7 +73,7 @@ export async function sendAlertEmail({
 `;
 
   const text = `
-Fairfax Civic Digest - Keyword Alert
+Fairfax Civic - Keyword Alert
 
 Your keyword "${keyword}" was mentioned in a recent meeting.
 
@@ -86,12 +86,12 @@ ${summaryExcerpt}
 Read the full summary: ${meetingUrl}
 
 ---
-You're receiving this because you set up an alert for "${keyword}" on Fairfax Civic Digest.
+You're receiving this because you set up an alert for "${keyword}" on Fairfax Civic.
 Unsubscribe: ${unsubscribeUrl}
 `;
 
   return resend.emails.send({
-    from: `Fairfax Civic Digest <${FROM_EMAIL}>`,
+    from: `Fairfax Civic <${FROM_EMAIL}>`,
     to,
     subject,
     html,

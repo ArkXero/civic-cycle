@@ -1,18 +1,19 @@
-import { Resend } from 'resend'
+import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY)
+export const resend = new Resend(process.env.RESEND_API_KEY || "dummy");
 
-export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+export const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
 interface AlertEmailParams {
-  to: string
-  keyword: string
-  meetingTitle: string
-  meetingDate: string
-  meetingBody: string
-  summaryExcerpt: string
-  meetingUrl: string
-  unsubscribeUrl: string
+  to: string;
+  keyword: string;
+  meetingTitle: string;
+  meetingDate: string;
+  meetingBody: string;
+  summaryExcerpt: string;
+  meetingUrl: string;
+  unsubscribeUrl: string;
 }
 
 export async function sendAlertEmail({
@@ -25,7 +26,7 @@ export async function sendAlertEmail({
   meetingUrl,
   unsubscribeUrl,
 }: AlertEmailParams) {
-  const subject = `Alert: "${keyword}" mentioned in ${meetingBody} meeting`
+  const subject = `Alert: "${keyword}" mentioned in ${meetingBody} meeting`;
 
   const html = `
 <!DOCTYPE html>
@@ -69,7 +70,7 @@ export async function sendAlertEmail({
   </div>
 </body>
 </html>
-`
+`;
 
   const text = `
 Fairfax Civic Digest - Keyword Alert
@@ -87,7 +88,7 @@ Read the full summary: ${meetingUrl}
 ---
 You're receiving this because you set up an alert for "${keyword}" on Fairfax Civic Digest.
 Unsubscribe: ${unsubscribeUrl}
-`
+`;
 
   return resend.emails.send({
     from: `Fairfax Civic Digest <${FROM_EMAIL}>`,
@@ -95,5 +96,5 @@ Unsubscribe: ${unsubscribeUrl}
     subject,
     html,
     text,
-  })
+  });
 }

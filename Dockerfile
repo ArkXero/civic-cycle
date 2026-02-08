@@ -13,6 +13,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_SUPABASE_URL=http://placeholder.com
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder
 RUN npm run build
 
 # Stage 3: Production image

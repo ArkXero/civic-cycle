@@ -2,7 +2,10 @@
 
 #API stuff
 .env.*
-
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # dependencies
 /node_modules

@@ -62,36 +62,13 @@ services:
     networks:
       - internal
 
-  # ===========================================
-  # PYTHON PIPELINE (for BoardDocs fetching)
-  # Optional: Can also run via GitHub Actions
-  # ===========================================
-  pipeline:
-    build:
-      context: ./pipeline
-      dockerfile: Dockerfile
-    restart: "no"  # Only runs when triggered
-    environment:
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/fairfax
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - RESEND_API_KEY=${RESEND_API_KEY}
-      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL}
-      - APP_URL=${APP_URL}
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - internal
-    profiles:
-      - pipeline  # Only runs with: docker compose --profile pipeline run pipeline
-
 # ===========================================
 # VOLUMES (persistent data)
 # ===========================================
 volumes:
-  postgres_data:    # Database files survive restarts
-  caddy_data:       # SSL certificates
-  caddy_config:     # Caddy config cache
+  postgres_data: # Database files survive restarts
+  caddy_data: # SSL certificates
+  caddy_config: # Caddy config cache
 
 # ===========================================
 # NETWORKS

@@ -1,13 +1,11 @@
 import Link from 'next/link'
-import Image from 'next/image'
-import { Calendar, Building2, ExternalLink, ArrowLeft, Clock } from 'lucide-react'
+import { Calendar, Building2, ExternalLink, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { KeyDecisions } from './key-decisions'
 import { ActionItems } from './action-items'
 import { SummarizeButton } from './summarize-button'
-import { TranscriptFetcher } from '@/components/youtube/transcript-fetcher'
 import { formatDate } from '@/lib/utils'
 import type { MeetingWithSummary } from '@/types'
 
@@ -54,11 +52,6 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
         {/* Actions for authenticated users */}
         {isAuthenticated && (
           <div className="mt-4 flex flex-wrap gap-4">
-            <TranscriptFetcher
-              meetingId={meeting.id}
-              hasTranscript={!!meeting.transcript_text}
-              hasVideoUrl={!!meeting.video_url}
-            />
             <SummarizeButton
               meetingId={meeting.id}
               hasSummary={!!meeting.summary}
@@ -69,37 +62,18 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
         )}
       </div>
 
-      {/* Video card with thumbnail */}
-      {meeting.video_url && (
-        <Card className="bg-primary/5 border-primary/20 overflow-hidden">
-          <CardContent className="p-0">
+      {/* BoardDocs source link */}
+      {meeting.source_url && (
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="p-4">
             <a
-              href={meeting.video_url}
+              href={meeting.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col sm:flex-row"
+              className="flex items-center gap-2 text-primary hover:underline"
             >
-              {meeting.youtube_thumbnail_url ? (
-                <div className="relative w-full sm:w-48 h-32 bg-muted flex-shrink-0">
-                  <Image
-                    src={meeting.youtube_thumbnail_url}
-                    alt={meeting.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, 192px"
-                  />
-                  {meeting.youtube_duration && (
-                    <Badge className="absolute bottom-2 right-2 bg-black/80 text-white text-xs">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {meeting.youtube_duration}
-                    </Badge>
-                  )}
-                </div>
-              ) : null}
-              <div className="p-4 flex items-center gap-2 text-primary hover:underline">
-                <ExternalLink className="h-4 w-4 flex-shrink-0" />
-                <span>Watch the full meeting video</span>
-              </div>
+              <ExternalLink className="h-4 w-4 flex-shrink-0" />
+              <span>View the full agenda on BoardDocs</span>
             </a>
           </CardContent>
         </Card>
@@ -132,9 +106,48 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
       ) : (
         <Card>
           <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">
-              Summary is being processed. Check back soon.
-            </p>
+            {meeting.status === 'processing' && (
+              <div className="space-y-2">
+                <p className="text-muted-foreground font-medium">
+                  Summary is being generated.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Check back in a few minutes.
+                </p>
+              </div>
+            )}
+            {meeting.status === 'failed' && (
+              <div className="space-y-2">
+                <p className="text-muted-foreground font-medium">
+                  Summary generation failed.
+                </p>
+                {meeting.error_message && (
+                  <p className="text-sm text-destructive">{meeting.error_message}</p>
+                )}
+                {isAuthenticated && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Use the Regenerate button above to try again.
+                  </p>
+                )}
+              </div>
+            )}
+            {(meeting.status === 'pending' || meeting.status === 'summarized') && (
+              <div className="space-y-2">
+                <p className="text-muted-foreground font-medium">
+                  No summary available yet.
+                </p>
+                {!meeting.transcript_text && (
+                  <p className="text-sm text-muted-foreground">
+                    Import meeting content first using the admin panel.
+                  </p>
+                )}
+                {meeting.transcript_text && !isAuthenticated && (
+                  <p className="text-sm text-muted-foreground">
+                    Sign in to generate a summary.
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -142,19 +155,19 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
       {/* Source info */}
       <div className="text-sm text-muted-foreground border-t border-border pt-4">
         <p>
-          This summary was generated using AI from the official meeting transcript.
+          This summary was generated using AI from the official meeting agenda.
           Always refer to the{' '}
-          {meeting.video_url ? (
+          {meeting.source_url ? (
             <a
-              href={meeting.video_url}
+              href={meeting.source_url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              original video
+              original agenda on BoardDocs
             </a>
           ) : (
-            'original recording'
+            'original source'
           )}{' '}
           for official information.
         </p>

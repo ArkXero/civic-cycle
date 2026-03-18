@@ -8,6 +8,7 @@ interface Meeting {
   title: string
   transcript_text: string | null
   status: string
+  updated_at: string
 }
 
 // POST /api/meetings/[id]/summarize - Generate AI summary for a meeting
@@ -19,7 +20,7 @@ export async function POST(
     const { id } = await params
     const supabase = await createClient()
 
-    // Check if user is authenticated (optional: add admin check)
+    // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
@@ -35,7 +36,7 @@ export async function POST(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: meeting, error: fetchError } = await (adminClient
       .from('meetings') as any)
-      .select('id, title, transcript_text, status')
+      .select('id, title, transcript_text, status, updated_at')
       .eq('id', id)
       .single() as { data: Meeting | null; error: Error | null }
 
@@ -51,6 +52,24 @@ export async function POST(
         { error: 'No transcript', message: 'This meeting has no transcript to summarize' },
         { status: 400 }
       )
+    }
+
+    // Check if already processing — allow retry if stuck for over 10 minutes
+    if (meeting.status === 'processing') {
+      const updatedAt = new Date(meeting.updated_at)
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000)
+      if (updatedAt < tenMinutesAgo) {
+        // Stuck — reset so we can retry
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (adminClient.from('meetings') as any)
+          .update({ status: 'pending' })
+          .eq('id', id)
+      } else {
+        return NextResponse.json(
+          { error: 'Processing', message: 'Summary is already being generated' },
+          { status: 409 }
+        )
+      }
     }
 
     // Check if already summarized
@@ -74,76 +93,62 @@ export async function POST(
       .update({ status: 'processing' })
       .eq('id', id)
 
-    // Generate summary using Claude
-    let summary
+    let savedSummary
     try {
-      // Check if transcript needs to be chunked (for very long meetings)
+      // Generate summary using Claude
+      let summary
       const chunks = chunkTranscript(meeting.transcript_text)
 
       if (chunks.length === 1) {
-        // Single transcript, summarize directly
         summary = await summarizeMeeting(meeting.transcript_text, meeting.title)
       } else {
-        // Multiple chunks - summarize each, then combine
-        // For now, just use the first chunk with a note
-        // In production, you'd want to summarize all chunks and combine
+        // Multiple chunks - use first chunk with a note
         console.log(`Transcript split into ${chunks.length} chunks, using first chunk`)
         summary = await summarizeMeeting(
           chunks[0] + '\n\n[Note: This is a partial transcript due to length]',
           meeting.title
         )
       }
-    } catch (aiError) {
-      console.error('AI summarization failed:', aiError)
 
-      // Reset meeting status
+      // Save the summary
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error: saveError } = await (adminClient
+        .from('summaries') as any)
+        .insert({
+          meeting_id: id,
+          summary_text: summary.summary_text,
+          topics: summary.topics,
+          key_decisions: summary.key_decisions,
+          action_items: summary.action_items,
+        })
+        .select()
+        .single()
+
+      if (saveError) {
+        throw new Error(`Failed to save summary: ${saveError.message}`)
+      }
+
+      savedSummary = data
+
+      // Update meeting status to summarized
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (adminClient.from('meetings') as any)
-        .update({ status: 'pending' })
+        .update({ status: 'summarized' })
         .eq('id', id)
+    } catch (error) {
+      console.error('Summarization failed:', error)
 
-      return NextResponse.json(
-        { error: 'AI error', message: 'Failed to generate summary. Please try again.' },
-        { status: 500 }
-      )
-    }
-
-    // Save the summary
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: savedSummary, error: saveError } = await (adminClient
-      .from('summaries') as any)
-      .insert({
-        meeting_id: id,
-        summary_text: summary.summary_text,
-        topics: summary.topics,
-        key_decisions: summary.key_decisions,
-        action_items: summary.action_items,
-        sentiment: summary.sentiment,
-        model_version: 'claude-sonnet-4-20250514',
-      })
-      .select()
-      .single()
-
-    if (saveError) {
-      console.error('Failed to save summary:', saveError)
-
-      // Reset meeting status
+      // Always set status to failed so the meeting is not stuck
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (adminClient.from('meetings') as any)
-        .update({ status: 'pending' })
+        .update({
+          status: 'failed',
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+        })
         .eq('id', id)
 
-      return NextResponse.json(
-        { error: 'Save error', message: 'Generated summary but failed to save it' },
-        { status: 500 }
-      )
+      throw error // re-throw so the route returns a 500
     }
-
-    // Update meeting status to summarized
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (adminClient.from('meetings') as any)
-      .update({ status: 'summarized' })
-      .eq('id', id)
 
     return NextResponse.json({
       message: 'Summary generated successfully',
@@ -152,7 +157,7 @@ export async function POST(
   } catch (error) {
     console.error('Unexpected error in summarize:', error)
     return NextResponse.json(
-      { error: 'Internal server error', message: 'An unexpected error occurred' },
+      { error: 'Internal server error', message: error instanceof Error ? error.message : 'An unexpected error occurred' },
       { status: 500 }
     )
   }

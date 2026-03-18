@@ -8,9 +8,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { MeetingCard } from "@/components/meetings/meeting-card";
+import { createClient } from "@/lib/supabase/server";
 import { APP_NAME } from "@/lib/constants";
+import type { MeetingWithSummary } from "@/types";
 
-export default function Home() {
+async function getRecentMeetings(): Promise<MeetingWithSummary[]> {
+  const supabase = await createClient();
+
+  const { data: meetings } = await supabase
+    .from("meetings")
+    .select("*, summary:summaries(*)")
+    .eq("status", "summarized")
+    .order("meeting_date", { ascending: false })
+    .limit(3);
+
+  return (meetings || []).map((meeting) => {
+    const m = meeting as { summary?: unknown[] };
+    return Object.assign({}, meeting, { summary: m.summary?.[0] || null });
+  }) as MeetingWithSummary[];
+}
+
+export default async function Home() {
+  const recentMeetings = await getRecentMeetings();
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Hero Section */}
@@ -42,6 +63,28 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Recent Meetings */}
+      {recentMeetings.length > 0 && (
+        <section className="py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-foreground">
+              Recent Meeting Summaries
+            </h2>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/meetings">
+                View all
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recentMeetings.map((meeting) => (
+              <MeetingCard key={meeting.id} meeting={meeting} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Features Section */}
       <section className="py-12">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-foreground mb-8">
@@ -61,8 +104,8 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Read a 2-minute summary instead of watching a 3-hour meeting.
-                Every summary links back to the original video.
+                Read a 2-minute summary instead of reading a lengthy agenda.
+                Every summary links back to the original BoardDocs agenda.
               </p>
             </CardContent>
           </Card>

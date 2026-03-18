@@ -15,7 +15,11 @@ export function Header() {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const supabase = createClient()
+  // Use useState initializer so createClient() runs once per mount — not on
+  // every render. React does not re-call useState initializers during hydration,
+  // which keeps the fiber tree identical between SSR and client, preventing
+  // the Radix useId() mismatch on the Sheet trigger's aria-controls attribute.
+  const [supabase] = useState(() => createClient())
 
   useEffect(() => {
     const getUser = async () => {
@@ -29,7 +33,7 @@ export function Header() {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()

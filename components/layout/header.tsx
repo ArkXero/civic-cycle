@@ -15,10 +15,6 @@ export function Header() {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  // Use useState initializer so createClient() runs once per mount — not on
-  // every render. React does not re-call useState initializers during hydration,
-  // which keeps the fiber tree identical between SSR and client, preventing
-  // the Radix useId() mismatch on the Sheet trigger's aria-controls attribute.
   const [supabase] = useState(() => createClient())
 
   useEffect(() => {
@@ -45,82 +41,134 @@ export function Header() {
   )
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <header
+      className="sticky top-0 z-50 w-full nav-blur"
+      style={{
+        borderBottom: '1px solid rgba(26, 138, 154, 0.25)',
+      }}
+    >
+      <div className="max-w-[1200px] mx-auto flex h-16 items-center justify-between px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold text-primary">{APP_NAME}</span>
+        <Link
+          href="/"
+          className="flex items-center gap-2 group"
+        >
+          {/* FCPS-inspired icon: two color squares */}
+          <div className="flex gap-0.5" aria-hidden="true">
+            <div
+              className="w-2 h-5 rounded-sm"
+              style={{ background: '#1A8A9A' }}
+            />
+            <div
+              className="w-2 h-5 rounded-sm"
+              style={{ background: '#F5A623' }}
+            />
+          </div>
+          <span
+            className="text-lg text-white"
+            style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}
+          >
+            {APP_NAME}
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav className="hidden md:flex items-center gap-8">
           {visibleLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                'text-sm font-medium transition-colors hover:text-primary',
+                'text-sm font-medium tracking-wide transition-colors relative pb-0.5',
                 pathname === link.href
-                  ? 'text-primary'
-                  : 'text-muted-foreground'
+                  ? 'text-white'
+                  : 'text-white/60 hover:text-white/90'
               )}
+              style={{
+                fontFamily: 'var(--font-body-var), monospace',
+                letterSpacing: '0.05em',
+                borderBottom: pathname === link.href ? '2px solid #F5A623' : '2px solid transparent',
+              }}
             >
               {link.label}
             </Link>
           ))}
 
           {user ? (
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
+            <button
+              onClick={handleSignOut}
+              className="text-sm font-medium tracking-wide text-white/60 hover:text-white/90 transition-colors"
+              style={{ fontFamily: 'var(--font-body-var), monospace', letterSpacing: '0.05em' }}
+            >
               Sign Out
-            </Button>
+            </button>
           ) : (
-            <Button asChild size="sm">
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white transition-all hover:-translate-y-px"
+              style={{
+                background: '#1A8A9A',
+                fontFamily: 'var(--font-body-var), monospace',
+              }}
+            >
+              Sign In
+            </Link>
           )}
         </nav>
 
         {/* Mobile Navigation */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-            <nav className="flex flex-col space-y-4 mt-8">
+          <SheetContent
+            side="right"
+            className="w-[300px] sm:w-[400px]"
+            style={{ background: '#0D5E6B', borderLeft: '1px solid rgba(26,138,154,0.3)' }}
+          >
+            <nav className="flex flex-col space-y-6 mt-12 px-2">
               {visibleLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    'text-lg font-medium transition-colors hover:text-primary',
+                    'text-2xl transition-colors',
                     pathname === link.href
-                      ? 'text-primary'
-                      : 'text-muted-foreground'
+                      ? 'text-white'
+                      : 'text-white/50 hover:text-white/80'
                   )}
+                  style={{ fontFamily: 'var(--font-display-var), Georgia, serif' }}
                 >
                   {link.label}
                 </Link>
               ))}
 
-              <div className="pt-4 border-t border-border">
+              <div className="pt-6" style={{ borderTop: '1px solid rgba(26,138,154,0.3)' }}>
                 {user ? (
-                  <Button
-                    variant="outline"
-                    className="w-full"
+                  <button
                     onClick={handleSignOut}
+                    className="text-lg font-medium text-white/50 hover:text-white transition-colors"
+                    style={{ fontFamily: 'var(--font-display-var), Georgia, serif' }}
                   >
                     Sign Out
-                  </Button>
+                  </button>
                 ) : (
-                  <Button asChild className="w-full">
-                    <Link href="/auth/login" onClick={() => setIsOpen(false)}>
-                      Sign In
-                    </Link>
-                  </Button>
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setIsOpen(false)}
+                    className="inline-flex items-center px-6 py-3 rounded-lg text-lg text-white transition-all"
+                    style={{
+                      background: '#1A8A9A',
+                      fontFamily: 'var(--font-display-var), Georgia, serif',
+                      fontWeight: 400,
+                    }}
+                  >
+                    Sign In
+                  </Link>
                 )}
               </div>
             </nav>

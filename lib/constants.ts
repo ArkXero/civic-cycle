@@ -1,7 +1,7 @@
 // App metadata
-export const APP_NAME = "Fairfax Civic";
+export const APP_NAME = "Civic Sync";
 export const APP_DESCRIPTION =
-  "Stay informed about FCPS School Board meetings with AI-powered summaries and keyword alerts.";
+  "Every School Board meeting, automatically summarized — key decisions, budget items, and policy changes surfaced for residents who don't have three hours.";
 
 // Meeting bodies
 export const MEETING_BODIES = [
@@ -32,16 +32,12 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/meetings", label: "Meetings" },
   { href: "/alerts", label: "My Alerts", protected: true },
-  { href: "/admin/youtube", label: "Import", protected: true },
+  { href: "/admin/boarddocs", label: "Import", protected: true },
 ];
 
 // External links
 export const EXTERNAL_LINKS = {
-  fcpsYoutube:
-    "https://www.youtube.com/playlist?list=PLSz76NCRDYQF3hPS2qS2SGEcoO4__Yd7Z",
+  fcpsBoardDocs: "https://go.boarddocs.com/vsba/fairfax/Board.nsf/Public",
   fcpsWebsite: "https://www.fcps.edu/",
   fairfaxCounty: "https://www.fairfaxcounty.gov/",
 } as const;
-
-// YouTube
-export const FCPS_YOUTUBE_PLAYLIST_ID = "PLSz76NCRDYQF3hPS2qS2SGEcoO4__Yd7Z";

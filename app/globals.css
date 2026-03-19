@@ -6,8 +6,10 @@
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
+    --font-sans: var(--font-body-var), 'Courier New', monospace;
+    --font-mono: var(--font-body-var), 'Courier New', monospace;
+    --font-display: var(--font-display-var), Georgia, serif;
+    --font-body: var(--font-body-var), 'Courier New', monospace;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -44,104 +46,70 @@
     --radius-2xl: calc(var(--radius) + 8px);
     --radius-3xl: calc(var(--radius) + 12px);
     --radius-4xl: calc(var(--radius) + 16px);
+    /* Civic Sync design token colors */
+    --color-teal-primary: #1A8A9A;
+    --color-teal-dark: #0D5E6B;
+    --color-teal-light: #2BBDD4;
+    --color-amber: #F5A623;
+    --color-off-white: #F4F8F9;
+    --color-text-dark: #0A3038;
+    --color-text-muted: #5B8A94;
 }
 
 :root {
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    /* Fairfax Civic Custom Theme */
-    /* Primary: Medium Sea Green #3CB371 */
-    /* Secondary: Gray #B6B6B6 */
-    /* Background: Warm Light Gray #E0D8D8 */
-    /* Surface: White #FFFFFF */
-    /* Text: Near Black #1A1A1A */
+    /* Civic Sync Color System — derived from FCPS palette */
+    --color-teal-primary: #1A8A9A;
+    --color-teal-dark: #0D5E6B;
+    --color-teal-light: #2BBDD4;
+    --color-amber: #F5A623;
+    --color-off-white: #F4F8F9;
+    --color-text-dark: #0A3038;
+    --color-text-muted: #5B8A94;
 
-    --background: #e0d8d8;
-    --foreground: #1a1a1a;
+    /* Semantic tokens — dark base theme */
+    --background: #0A1A1F;
+    --foreground: #F4F8F9;
 
-    --card: #ffffff;
-    --card-foreground: #1a1a1a;
+    --card: rgba(13, 94, 107, 0.15);
+    --card-foreground: #F4F8F9;
 
-    --popover: #ffffff;
-    --popover-foreground: #1a1a1a;
+    --popover: #0D2B33;
+    --popover-foreground: #F4F8F9;
 
-    --primary: #3cb371;
-    --primary-foreground: #ffffff;
+    --primary: #1A8A9A;
+    --primary-foreground: #FFFFFF;
 
-    --secondary: #f5f5f5;
-    --secondary-foreground: #1a1a1a;
+    --secondary: #0D5E6B;
+    --secondary-foreground: #F4F8F9;
 
-    --muted: #e8e8e8;
-    --muted-foreground: #6b6b6b;
+    --muted: #0D5E6B;
+    --muted-foreground: #5B8A94;
 
-    --accent: #3cb371;
-    --accent-foreground: #ffffff;
-
-    --destructive: #dc2626;
-
-    --border: #b6b6b6;
-    --input: #b6b6b6;
-    --ring: #3cb371;
-
-    /* Chart colors - green palette variations */
-    --chart-1: #3cb371;
-    --chart-2: #2e8b57;
-    --chart-3: #228b22;
-    --chart-4: #6b8e23;
-    --chart-5: #9acd32;
-
-    --sidebar: #ffffff;
-    --sidebar-foreground: #1a1a1a;
-    --sidebar-primary: #3cb371;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #f0f0f0;
-    --sidebar-accent-foreground: #1a1a1a;
-    --sidebar-border: #b6b6b6;
-    --sidebar-ring: #3cb371;
-}
-
-.dark {
-    --background: #1a1a1a;
-    --foreground: #f5f5f5;
-
-    --card: #262626;
-    --card-foreground: #f5f5f5;
-
-    --popover: #262626;
-    --popover-foreground: #f5f5f5;
-
-    --primary: #4ade80;
-    --primary-foreground: #1a1a1a;
-
-    --secondary: #3a3a3a;
-    --secondary-foreground: #f5f5f5;
-
-    --muted: #3a3a3a;
-    --muted-foreground: #a1a1a1;
-
-    --accent: #4ade80;
-    --accent-foreground: #1a1a1a;
+    --accent: #F5A623;
+    --accent-foreground: #0A3038;
 
     --destructive: #ef4444;
 
-    --border: #4a4a4a;
-    --input: #4a4a4a;
-    --ring: #4ade80;
+    --border: rgba(26, 138, 154, 0.25);
+    --input: rgba(26, 138, 154, 0.3);
+    --ring: #1A8A9A;
 
-    --chart-1: #4ade80;
-    --chart-2: #34d399;
-    --chart-3: #2dd4bf;
-    --chart-4: #22d3ee;
-    --chart-5: #a3e635;
+    --chart-1: #1A8A9A;
+    --chart-2: #2BBDD4;
+    --chart-3: #F5A623;
+    --chart-4: #0D5E6B;
+    --chart-5: #5B8A94;
 
-    --sidebar: #262626;
-    --sidebar-foreground: #f5f5f5;
-    --sidebar-primary: #4ade80;
-    --sidebar-primary-foreground: #1a1a1a;
-    --sidebar-accent: #3a3a3a;
-    --sidebar-accent-foreground: #f5f5f5;
-    --sidebar-border: #4a4a4a;
-    --sidebar-ring: #4ade80;
+    --sidebar: #061820;
+    --sidebar-foreground: #F4F8F9;
+    --sidebar-primary: #1A8A9A;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #0D5E6B;
+    --sidebar-accent-foreground: #F4F8F9;
+    --sidebar-border: rgba(26, 138, 154, 0.25);
+    --sidebar-ring: #1A8A9A;
 }
 
 @layer base {
@@ -150,5 +118,38 @@
     }
     body {
         @apply bg-background text-foreground;
+        font-family: var(--font-body-var), 'Courier New', monospace;
     }
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-display-var), Georgia, serif;
+        font-weight: 400;
+    }
+}
+
+/* Civic Sync custom utility classes */
+.hero-gradient {
+    background: radial-gradient(
+        ellipse at 60% 50%,
+        #0D3A42 0%,
+        #061820 60%,
+        #020C10 100%
+    );
+}
+
+.glass-card {
+    background: rgba(13, 94, 107, 0.15);
+    border: 1px solid rgba(26, 138, 154, 0.25);
+    backdrop-filter: blur(12px);
+}
+
+.text-gradient-teal {
+    background: linear-gradient(135deg, #2BBDD4 0%, #1A8A9A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.nav-blur {
+    background: rgba(13, 94, 107, 0.9);
+    backdrop-filter: blur(12px);
 }

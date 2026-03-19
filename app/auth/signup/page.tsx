@@ -4,7 +4,7 @@ import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = {
   title: "Sign Up",
-  description: "Create a Fairfax Civic account",
+  description: "Create a Civic Sync account",
 };
 
 interface SignupPageProps {

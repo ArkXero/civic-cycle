@@ -12,17 +12,16 @@ export type Database = {
       meetings: {
         Row: {
           id: string
+          external_id: string
           title: string
           body: 'FCPS School Board' | 'Board of Supervisors'
           meeting_date: string
-          video_url: string | null
-          transcript_url: string | null
+          source_url: string | null
+          raw_content: string | null
           transcript_text: string | null
-          transcript_source: 'youtube_auto' | 'youtube_manual' | 'manual_upload' | 'whisper' | null
-          youtube_video_id: string | null
-          youtube_thumbnail_url: string | null
-          youtube_duration: string | null
-          youtube_published_at: string | null
+          transcript_source: 'boarddocs' | 'manual_upload' | null
+          source: 'boarddocs' | null
+          boarddocs_id: string | null
           status: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message: string | null
           created_at: string
@@ -30,17 +29,16 @@ export type Database = {
         }
         Insert: {
           id?: string
+          external_id?: string
           title: string
           body: 'FCPS School Board' | 'Board of Supervisors'
           meeting_date: string
-          video_url?: string | null
-          transcript_url?: string | null
+          source_url?: string | null
+          raw_content?: string | null
           transcript_text?: string | null
-          transcript_source?: 'youtube_auto' | 'youtube_manual' | 'manual_upload' | 'whisper' | null
-          youtube_video_id?: string | null
-          youtube_thumbnail_url?: string | null
-          youtube_duration?: string | null
-          youtube_published_at?: string | null
+          transcript_source?: 'boarddocs' | 'manual_upload' | null
+          source?: 'boarddocs' | null
+          boarddocs_id?: string | null
           status?: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message?: string | null
           created_at?: string
@@ -48,17 +46,16 @@ export type Database = {
         }
         Update: {
           id?: string
+          external_id?: string
           title?: string
           body?: 'FCPS School Board' | 'Board of Supervisors'
           meeting_date?: string
-          video_url?: string | null
-          transcript_url?: string | null
+          source_url?: string | null
+          raw_content?: string | null
           transcript_text?: string | null
-          transcript_source?: 'youtube_auto' | 'youtube_manual' | 'manual_upload' | 'whisper' | null
-          youtube_video_id?: string | null
-          youtube_thumbnail_url?: string | null
-          youtube_duration?: string | null
-          youtube_published_at?: string | null
+          transcript_source?: 'boarddocs' | 'manual_upload' | null
+          source?: 'boarddocs' | null
+          boarddocs_id?: string | null
           status?: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message?: string | null
           created_at?: string

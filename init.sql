@@ -102,6 +102,15 @@ CREATE TRIGGER users_updated_at
     EXECUTE FUNCTION update_updated_at();
 
 -- ===========================================
+-- BOARDDOCS SUPPORT
+-- ===========================================
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS source VARCHAR(20) DEFAULT NULL;
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS boarddocs_id VARCHAR(100);
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS source_url TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_meetings_boarddocs_id ON meetings(boarddocs_id);
+
+-- ===========================================
 -- DONE
 -- ===========================================
 SELECT 'Database initialized successfully!' AS status;

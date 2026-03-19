@@ -1,5 +1,5 @@
 {
-  "name": "fairfax-civic",
+  "name": "civic-sync",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,16 +14,21 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.72.1",
+    "@paper-design/shaders-react": "^0.0.72",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.98.0",
+    "@types/three": "^0.183.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^0.563.0",
     "next": "^16.1.6",
     "pdf-parse": "^2.4.5",
@@ -31,6 +36,7 @@
     "react-dom": "19.2.3",
     "resend": "^6.9.3",
     "tailwind-merge": "^3.4.0",
+    "three": "^0.183.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

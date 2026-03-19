@@ -10,7 +10,8 @@ const mockMeetings = [
     title: 'FCPS School Board Regular Meeting - January 2025',
     body: 'FCPS School Board',
     meeting_date: '2025-01-23',
-    video_url: 'https://www.youtube.com/watch?v=example1',
+    source_url: 'https://go.boarddocs.com/vsba/fairfax/Board.nsf/Public',
+    source: 'boarddocs',
     status: 'summarized',
     transcript_text: 'This is a mock transcript for the January 2025 FCPS School Board meeting discussing budget proposals and school safety initiatives.'
   },
@@ -18,7 +19,8 @@ const mockMeetings = [
     title: 'FCPS School Board Work Session - Bell Schedule Review',
     body: 'FCPS School Board',
     meeting_date: '2025-01-16',
-    video_url: 'https://www.youtube.com/watch?v=example2',
+    source_url: 'https://go.boarddocs.com/vsba/fairfax/Board.nsf/Public',
+    source: 'boarddocs',
     status: 'summarized',
     transcript_text: 'Mock transcript covering the bell schedule review work session with community input and staff presentations.'
   },
@@ -26,7 +28,8 @@ const mockMeetings = [
     title: 'FCPS School Board Regular Meeting - December 2024',
     body: 'FCPS School Board',
     meeting_date: '2024-12-12',
-    video_url: 'https://www.youtube.com/watch?v=example3',
+    source_url: 'https://go.boarddocs.com/vsba/fairfax/Board.nsf/Public',
+    source: 'boarddocs',
     status: 'summarized',
     transcript_text: 'Mock transcript for the December meeting discussing winter break policies and facilities updates.'
   }

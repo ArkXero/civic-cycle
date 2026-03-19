@@ -4,7 +4,7 @@ import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   title: "Sign In",
-  description: "Sign in to your Fairfax Civic account",
+  description: "Sign in to your Civic Sync account",
 };
 
 interface LoginPageProps {

@@ -68,7 +68,7 @@ export function DitheringHero() {
             >
               Fairfax County,
               <br />
-              <span style={{ color: 'rgba(244,248,249,0.65)' }}>
+              <span style={{ color: 'rgba(244,248,249,0.65)', fontStyle: 'italic' }}>
                 Made Clear.
               </span>
             </motion.h1>

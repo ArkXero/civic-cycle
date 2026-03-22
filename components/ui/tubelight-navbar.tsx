@@ -89,87 +89,49 @@ export function TubelightNavbar() {
   }
 
   return (
-    <>
-      {/* Logo - fixed top-left */}
-      <div className="fixed top-4 left-6 z-50 md:top-6 md:left-6 flex items-center gap-2">
-        <div className="flex gap-0.5" aria-hidden="true">
-          <div
-            className="w-2 h-5 rounded-sm"
-            style={{ background: '#1A8A9A' }}
-          />
-          <div
-            className="w-2 h-5 rounded-sm"
-            style={{ background: '#F5A623' }}
-          />
-        </div>
-        <span
-          className="text-sm md:text-lg text-white"
-          style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}
-        >
-          {APP_NAME}
-        </span>
-      </div>
-
-      {/* Tubelight Navbar Pill */}
-      <div
-        className={cn(
-          'fixed left-1/2 -translate-x-1/2 z-40 mb-6 sm:pt-6',
-          isMobile ? 'bottom-0' : 'top-0'
-        )}
+    <div
+      className={cn(
+        'fixed right-6 z-40',
+        isMobile ? 'bottom-6' : 'top-6'
+      )}
+    >
+      <div className="flex items-center gap-2 backdrop-blur-lg py-2 px-3 pr-4 rounded-full shadow-lg"
+        style={{
+          background: 'rgba(13, 94, 107, 0.15)',
+          border: '1px solid rgba(26, 138, 154, 0.25)',
+        }}
       >
-        <div className="flex items-center gap-3 backdrop-blur-lg py-1 px-1 rounded-full shadow-lg"
-          style={{
-            background: 'rgba(13, 94, 107, 0.15)',
-            border: '1px solid rgba(26, 138, 154, 0.25)',
-          }}
-        >
-          {navItems.map((item) => {
-            const isActive = pathname === item.url && item.url !== '#'
+        {/* Logo - inside pill */}
+        <Link href="/" className="flex items-center gap-1.5 flex-shrink-0 pr-2" style={{ borderRight: '1px solid rgba(26, 138, 154, 0.25)' }}>
+          <div className="flex gap-0.5" aria-hidden="true">
+            <div
+              className="w-2 h-4 rounded-sm"
+              style={{ background: '#1A8A9A' }}
+            />
+            <div
+              className="w-2 h-4 rounded-sm"
+              style={{ background: '#F5A623' }}
+            />
+          </div>
+          <span
+            className="text-xs md:text-sm text-white whitespace-nowrap hidden sm:inline"
+            style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}
+          >
+            {APP_NAME}
+          </span>
+        </Link>
 
-            if (item.action) {
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavClick(item)}
-                  className={cn(
-                    'relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors',
-                    'text-white/80 hover:text-white',
-                    isActive && 'text-white'
-                  )}
-                >
-                  <span className="hidden md:inline">{item.name}</span>
-                  <span className="md:hidden flex items-center justify-center">
-                    {item.icon}
-                  </span>
-                  {isActive && (
-                    <motion.div
-                      layoutId="lamp"
-                      className="absolute inset-0 w-full rounded-full -z-10"
-                      initial={false}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 300,
-                        damping: 30,
-                      }}
-                      style={{ background: 'rgba(26,138,154,0.2)' }}
-                    >
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-t-full" style={{ background: '#1A8A9A' }}>
-                        <div className="absolute w-12 h-6 rounded-full blur-md -top-2 -left-2" style={{ background: 'rgba(26,138,154,0.2)' }} />
-                        <div className="absolute w-8 h-6 rounded-full blur-md -top-1" style={{ background: 'rgba(26,138,154,0.2)' }} />
-                        <div className="absolute w-4 h-4 rounded-full blur-sm top-0 left-2" style={{ background: 'rgba(26,138,154,0.2)' }} />
-                      </div>
-                    </motion.div>
-                  )}
-                </button>
-              )
-            }
+        {/* Nav items */}
+        {navItems.map((item) => {
+          const isActive = pathname === item.url && item.url !== '#'
 
+          if (item.action) {
             return (
-              <Link
+              <button
                 key={item.name}
-                href={item.url}
+                onClick={() => handleNavClick(item)}
                 className={cn(
-                  'relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors',
+                  'relative cursor-pointer text-sm font-semibold px-4 py-2 rounded-full transition-colors flex-shrink-0',
                   'text-white/80 hover:text-white',
                   isActive && 'text-white'
                 )}
@@ -197,11 +159,47 @@ export function TubelightNavbar() {
                     </div>
                   </motion.div>
                 )}
-              </Link>
+              </button>
             )
-          })}
-        </div>
+          }
+
+          return (
+            <Link
+              key={item.name}
+              href={item.url}
+              className={cn(
+                'relative cursor-pointer text-sm font-semibold px-4 py-2 rounded-full transition-colors flex-shrink-0',
+                'text-white/80 hover:text-white',
+                isActive && 'text-white'
+              )}
+            >
+              <span className="hidden md:inline">{item.name}</span>
+              <span className="md:hidden flex items-center justify-center">
+                {item.icon}
+              </span>
+              {isActive && (
+                <motion.div
+                  layoutId="lamp"
+                  className="absolute inset-0 w-full rounded-full -z-10"
+                  initial={false}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 30,
+                  }}
+                  style={{ background: 'rgba(26,138,154,0.2)' }}
+                >
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-t-full" style={{ background: '#1A8A9A' }}>
+                    <div className="absolute w-12 h-6 rounded-full blur-md -top-2 -left-2" style={{ background: 'rgba(26,138,154,0.2)' }} />
+                    <div className="absolute w-8 h-6 rounded-full blur-md -top-1" style={{ background: 'rgba(26,138,154,0.2)' }} />
+                    <div className="absolute w-4 h-4 rounded-full blur-sm top-0 left-2" style={{ background: 'rgba(26,138,154,0.2)' }} />
+                  </div>
+                </motion.div>
+              )}
+            </Link>
+          )
+        })}
       </div>
-    </>
+    </div>
   )
 }

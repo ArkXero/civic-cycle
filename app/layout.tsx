@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/header";
+import { TubelightNavbar } from "@/components/ui/tubelight-navbar";
 import { Footer } from "@/components/layout/footer";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 
@@ -44,8 +44,8 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${jetbrainsMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Header />
-        <main className="flex-1">{children}</main>
+        <TubelightNavbar />
+        <main className="flex-1 pt-20 sm:pt-0">{children}</main>
         <Footer />
       </body>
     </html>

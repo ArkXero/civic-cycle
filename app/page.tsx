@@ -37,11 +37,11 @@ function RecentMeetings() {
   if (meetings.length === 0) return null
 
   return (
-    <section style={{ background: '#0d333b' }} className="py-24">
+    <section style={{ background: '#0A1A1F' }} className="py-24">
       <div className="max-w-[1200px] mx-auto px-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 32, scale: 0.97 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: easing }}
           className="flex items-end justify-between mb-10"
@@ -71,8 +71,8 @@ function RecentMeetings() {
           {meetings.map((meeting, i) => (
             <motion.div
               key={meeting.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 32, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: i * 0.15, ease: easing }}
             >
@@ -108,8 +108,8 @@ export default function Home() {
       <section className="py-24" style={{ background: '#0A1A1F' }}>
         <div className="max-w-[1200px] mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 32, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: easing }}
             className="text-center mb-14"
@@ -148,8 +148,8 @@ export default function Home() {
             ].map((feature, i) => (
               <motion.div
                 key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 32, scale: 0.97 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.7, delay: i * 0.15, ease: easing }}
                 className="glass-card rounded-xl p-8 transition-all duration-200 hover:-translate-y-0.5"
@@ -187,11 +187,11 @@ export default function Home() {
       </section>
 
       {/* ── CTA Section ── */}
-      <section className="py-24" style={{ background: '#0d333b' }}>
+      <section className="py-24" style={{ background: '#0A1A1F' }}>
         <div className="max-w-[900px] mx-auto px-6 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 32, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: easing }}
           >

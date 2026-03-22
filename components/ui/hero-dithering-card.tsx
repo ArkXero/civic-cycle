@@ -21,7 +21,10 @@ export function DitheringHero() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.9, ease: easing }}
           className="relative overflow-hidden rounded-[48px] border shadow-lg min-h-[600px] md:min-h-[680px] flex flex-col items-center justify-center"
           style={{
             background: '#020C10',
@@ -139,7 +142,7 @@ export function DitheringHero() {
               </Link>
             </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

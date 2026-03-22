@@ -54,7 +54,7 @@ export async function POST(
         source: 'boarddocs',
         source_url: sourceUrl,
         status: 'pending',
-      })
+      } as any)
       .select()
       .single()
 

@@ -89,38 +89,13 @@ export function TubelightNavbar() {
   }
 
   return (
-    <div
-      className={cn(
-        'fixed right-6 z-40',
-        isMobile ? 'bottom-6' : 'top-6'
-      )}
-    >
-      <div className="flex items-center gap-2 backdrop-blur-lg py-2 px-3 pr-4 rounded-full shadow-lg"
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+      <div className="flex items-center gap-1 backdrop-blur-lg py-2 px-4 rounded-full shadow-lg"
         style={{
           background: 'rgba(13, 94, 107, 0.15)',
           border: '1px solid rgba(26, 138, 154, 0.25)',
         }}
       >
-        {/* Logo - inside pill */}
-        <Link href="/" className="flex items-center gap-1.5 flex-shrink-0 pr-2" style={{ borderRight: '1px solid rgba(26, 138, 154, 0.25)' }}>
-          <div className="flex gap-0.5" aria-hidden="true">
-            <div
-              className="w-2 h-4 rounded-sm"
-              style={{ background: '#1A8A9A' }}
-            />
-            <div
-              className="w-2 h-4 rounded-sm"
-              style={{ background: '#F5A623' }}
-            />
-          </div>
-          <span
-            className="text-xs md:text-sm text-white whitespace-nowrap hidden sm:inline"
-            style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}
-          >
-            {APP_NAME}
-          </span>
-        </Link>
-
         {/* Nav items */}
         {navItems.map((item) => {
           const isActive = pathname === item.url && item.url !== '#'
@@ -152,10 +127,10 @@ export function TubelightNavbar() {
                     }}
                     style={{ background: 'rgba(26,138,154,0.2)' }}
                   >
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-t-full" style={{ background: '#1A8A9A' }}>
-                      <div className="absolute w-12 h-6 rounded-full blur-md -top-2 -left-2" style={{ background: 'rgba(26,138,154,0.2)' }} />
-                      <div className="absolute w-8 h-6 rounded-full blur-md -top-1" style={{ background: 'rgba(26,138,154,0.2)' }} />
-                      <div className="absolute w-4 h-4 rounded-full blur-sm top-0 left-2" style={{ background: 'rgba(26,138,154,0.2)' }} />
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-t-full" style={{ background: '#F5A623' }}>
+                      <div className="absolute w-12 h-6 rounded-full blur-md -top-2 -left-2" style={{ background: 'rgba(245,166,35,0.25)' }} />
+                      <div className="absolute w-8 h-6 rounded-full blur-md -top-1" style={{ background: 'rgba(245,166,35,0.25)' }} />
+                      <div className="absolute w-4 h-4 rounded-full blur-sm top-0 left-2" style={{ background: 'rgba(245,166,35,0.25)' }} />
                     </div>
                   </motion.div>
                 )}

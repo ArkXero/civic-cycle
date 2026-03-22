@@ -127,10 +127,10 @@ export function TubelightNavbar() {
                     }}
                     style={{ background: 'rgba(26,138,154,0.2)' }}
                   >
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-t-full" style={{ background: '#F5A623' }}>
-                      <div className="absolute w-12 h-6 rounded-full blur-md -top-2 -left-2" style={{ background: 'rgba(245,166,35,0.25)' }} />
-                      <div className="absolute w-8 h-6 rounded-full blur-md -top-1" style={{ background: 'rgba(245,166,35,0.25)' }} />
-                      <div className="absolute w-4 h-4 rounded-full blur-sm top-0 left-2" style={{ background: 'rgba(245,166,35,0.25)' }} />
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-t-full" style={{ background: '#f3a623' }}>
+                      <div className="absolute w-12 h-6 rounded-full blur-md -top-2 -left-2" style={{ background: 'rgba(243,166,35,0.25)' }} />
+                      <div className="absolute w-8 h-6 rounded-full blur-md -top-1" style={{ background: 'rgba(243,166,35,0.25)' }} />
+                      <div className="absolute w-4 h-4 rounded-full blur-sm top-0 left-2" style={{ background: 'rgba(243,166,35,0.25)' }} />
                     </div>
                   </motion.div>
                 )}

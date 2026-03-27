@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getMeetingAgenda } from '@/lib/boarddocs'
+import { isAdminEmail } from '@/lib/is-admin'
 
 // GET /api/boarddocs/meetings/[id] - Fetch agenda items for a meeting
 export async function GET(
@@ -17,6 +18,10 @@ export async function GET(
         { error: 'Unauthorized', message: 'You must be logged in' },
         { status: 401 }
       )
+    }
+
+    if (!isAdminEmail(user.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const agendaItems = await getMeetingAgenda(id)

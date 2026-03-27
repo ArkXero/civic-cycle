@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
 import { summarizeMeeting, chunkTranscript } from '@/lib/anthropic'
+import { isAdminEmail } from '@/lib/is-admin'
 
 interface Meeting {
   id: string
@@ -20,7 +21,7 @@ export async function POST(
     const { id } = await params
     const supabase = await createClient()
 
-    // Check if user is authenticated
+    // Check if user is authenticated and is an admin
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
@@ -28,6 +29,10 @@ export async function POST(
         { error: 'Unauthorized', message: 'You must be logged in to summarize meetings' },
         { status: 401 }
       )
+    }
+
+    if (!isAdminEmail(user.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Get the meeting with its transcript
@@ -172,7 +177,7 @@ export async function DELETE(
     const { id } = await params
     const supabase = await createClient()
 
-    // Check if user is authenticated
+    // Check if user is authenticated and is an admin
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
@@ -180,6 +185,10 @@ export async function DELETE(
         { error: 'Unauthorized', message: 'You must be logged in to delete summaries' },
         { status: 401 }
       )
+    }
+
+    if (!isAdminEmail(user.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const adminClient = createAdminClient()

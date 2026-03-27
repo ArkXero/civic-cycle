@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getMeetingContent, getBoardDocsUrl } from '@/lib/boarddocs'
+import { isAdminEmail } from '@/lib/is-admin'
 
 // POST /api/boarddocs/meetings/[id]/import - Import a BoardDocs meeting
 export async function POST(
@@ -17,6 +18,10 @@ export async function POST(
         { error: 'Unauthorized', message: 'You must be logged in' },
         { status: 401 }
       )
+    }
+
+    if (!isAdminEmail(user.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const sourceUrl = getBoardDocsUrl(id)

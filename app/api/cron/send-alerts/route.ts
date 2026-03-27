@@ -30,15 +30,18 @@ interface UserProfile {
   email: string
 }
 
-// This endpoint is called by Vercel Cron to send alert emails
-// It should be protected by a secret in production
+// This endpoint is called by a cron scheduler to send alert emails.
+// CRON_SECRET must be set in production — requests without the correct
+// Bearer token are rejected unconditionally.
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization')
+    // Require CRON_SECRET — if the env var is absent the route is locked down.
+    // Previously this was conditional (`if (cronSecret && ...)`), meaning an
+    // unset CRON_SECRET left the endpoint completely open to anyone.
     const cronSecret = process.env.CRON_SECRET
+    const authHeader = request.headers.get('authorization')
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -245,7 +248,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Also allow GET for manual testing
-export async function GET(request: NextRequest) {
-  return POST(request)
-}

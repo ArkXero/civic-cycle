@@ -25,7 +25,7 @@ export async function GET(
       }
       console.error("Error fetching meeting:", meetingError);
       return NextResponse.json(
-        { error: "Failed to fetch meeting", message: meetingError.message },
+        { error: "Failed to fetch meeting" },
         { status: 500 },
       );
     }

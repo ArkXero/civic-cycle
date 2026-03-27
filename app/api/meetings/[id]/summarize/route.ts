@@ -162,7 +162,7 @@ export async function POST(
   } catch (error) {
     console.error('Unexpected error in summarize:', error)
     return NextResponse.json(
-      { error: 'Internal server error', message: error instanceof Error ? error.message : 'An unexpected error occurred' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

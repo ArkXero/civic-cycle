@@ -58,7 +58,7 @@ export async function DELETE(
     if (deleteError) {
       console.error("Error deleting alert:", deleteError);
       return NextResponse.json(
-        { error: "Failed to delete alert", message: deleteError.message },
+        { error: "Failed to delete alert" },
         { status: 500 },
       );
     }
@@ -149,7 +149,7 @@ export async function PATCH(
     if (updateError) {
       console.error("Error updating alert:", updateError);
       return NextResponse.json(
-        { error: "Failed to update alert", message: updateError.message },
+        { error: "Failed to update alert" },
         { status: 500 },
       );
     }

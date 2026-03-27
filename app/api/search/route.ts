@@ -23,6 +23,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Cap search query length to prevent overly large pattern matching
+    if (query.length > 200) {
+      return NextResponse.json(
+        { error: "Bad request", message: "Search query must be 200 characters or fewer" },
+        { status: 400 },
+      );
+    }
+
     const supabase = await createClient();
     const searchTerms = query.trim().toLowerCase();
 
@@ -62,7 +70,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error("Error searching meetings:", error);
       return NextResponse.json(
-        { error: "Search failed", message: error.message },
+        { error: "Search failed" },
         { status: 500 },
       );
     }

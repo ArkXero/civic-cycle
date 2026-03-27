@@ -30,7 +30,7 @@ export async function GET() {
     if (error) {
       console.error('Error fetching alerts:', error)
       return NextResponse.json(
-        { error: 'Failed to fetch alerts', message: error.message },
+        { error: 'Failed to fetch alerts' },
         { status: 500 }
       )
     }
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error creating alert:', error)
       return NextResponse.json(
-        { error: 'Failed to create alert', message: error.message },
+        { error: 'Failed to create alert' },
         { status: 500 }
       )
     }

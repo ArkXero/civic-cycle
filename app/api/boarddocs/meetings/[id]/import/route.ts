@@ -66,7 +66,7 @@ export async function POST(
     if (insertError) {
       console.error('Failed to insert meeting:', insertError)
       return NextResponse.json(
-        { error: 'Insert error', message: insertError.message || 'Failed to save meeting to database' },
+        { error: 'Failed to save meeting to database' },
         { status: 500 }
       )
     }
@@ -79,7 +79,7 @@ export async function POST(
   } catch (error) {
     console.error('Error importing meeting:', error)
     return NextResponse.json(
-      { error: 'Import failed', message: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Import failed' },
       { status: 500 }
     )
   }

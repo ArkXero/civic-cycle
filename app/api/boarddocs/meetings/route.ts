@@ -59,7 +59,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching BoardDocs meetings:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch meetings', message: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to fetch meetings' },
       { status: 500 }
     )
   }

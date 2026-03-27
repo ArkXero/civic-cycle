@@ -56,6 +56,7 @@
     --color-text-muted: #5B8A94;
 }
 
+/* Light mode (default) */
 :root {
     --radius: 0.75rem;
 
@@ -68,7 +69,52 @@
     --color-text-dark: #0A3038;
     --color-text-muted: #5B8A94;
 
-    /* Semantic tokens — dark base theme */
+    /* Semantic tokens — light theme */
+    --background: #F4F8F9;
+    --foreground: #0A3038;
+
+    --card: #FFFFFF;
+    --card-foreground: #0A3038;
+
+    --popover: #FFFFFF;
+    --popover-foreground: #0A3038;
+
+    --primary: #1A8A9A;
+    --primary-foreground: #FFFFFF;
+
+    --secondary: #E8F0F1;
+    --secondary-foreground: #0A3038;
+
+    --muted: #D8E8EA;
+    --muted-foreground: #5B8A94;
+
+    --accent: #F5A623;
+    --accent-foreground: #0A3038;
+
+    --destructive: #ef4444;
+
+    --border: rgba(26, 138, 154, 0.2);
+    --input: rgba(26, 138, 154, 0.15);
+    --ring: #1A8A9A;
+
+    --chart-1: #1A8A9A;
+    --chart-2: #2BBDD4;
+    --chart-3: #F5A623;
+    --chart-4: #0D5E6B;
+    --chart-5: #5B8A94;
+
+    --sidebar: #EBF3F5;
+    --sidebar-foreground: #0A3038;
+    --sidebar-primary: #1A8A9A;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #D8E8EA;
+    --sidebar-accent-foreground: #0A3038;
+    --sidebar-border: rgba(26, 138, 154, 0.2);
+    --sidebar-ring: #1A8A9A;
+}
+
+/* Dark mode */
+.dark {
     --background: #0A1A1F;
     --foreground: #F4F8F9;
 
@@ -126,8 +172,24 @@
     }
 }
 
+/* Unlayered override — ensures html/body background always tracks --background,
+   which is overridden by .dark when next-themes applies class="dark" to <html> */
+html, body {
+    background-color: var(--background);
+    color: var(--foreground);
+}
+
 /* Civic Sync custom utility classes */
 .hero-gradient {
+    background: radial-gradient(
+        ellipse at 60% 50%,
+        #C8E6EA 0%,
+        #E8F4F6 60%,
+        #F4F8F9 100%
+    );
+}
+
+.dark .hero-gradient {
     background: radial-gradient(
         ellipse at 60% 50%,
         #0D3A42 0%,
@@ -137,6 +199,12 @@
 }
 
 .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(26, 138, 154, 0.2);
+    backdrop-filter: blur(12px);
+}
+
+.dark .glass-card {
     background: rgba(13, 94, 107, 0.15);
     border: 1px solid rgba(26, 138, 154, 0.25);
     backdrop-filter: blur(12px);
@@ -150,6 +218,11 @@
 }
 
 .nav-blur {
+    background: rgba(244, 248, 249, 0.9);
+    backdrop-filter: blur(12px);
+}
+
+.dark .nav-blur {
     background: rgba(13, 94, 107, 0.9);
     backdrop-filter: blur(12px);
 }

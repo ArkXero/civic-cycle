@@ -55,7 +55,7 @@ export function ScrollAwareLogo() {
           />
         </div>
         <span
-          className="text-sm md:text-base text-white whitespace-nowrap"
+          className="text-sm md:text-base text-foreground whitespace-nowrap"
           style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}
         >
           {APP_NAME}

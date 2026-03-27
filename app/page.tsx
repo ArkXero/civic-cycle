@@ -37,7 +37,7 @@ function RecentMeetings() {
   if (meetings.length === 0) return null
 
   return (
-    <section style={{ background: '#0A1A1F' }} className="py-24">
+    <section className="py-24 bg-background">
       <div className="max-w-[1200px] mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 32, scale: 0.97 }}
@@ -53,14 +53,14 @@ function RecentMeetings() {
             >
               RECENT ACTIVITY
             </p>
-            <h2 style={{ color: '#F4F8F9' }}>
+            <h2 className="text-foreground">
               Recent Meeting Summaries
             </h2>
           </div>
           <Link
             href="/meetings"
-            className="hidden sm:flex items-center gap-2 text-sm font-medium transition-colors"
-            style={{ color: 'rgba(244,248,249,0.75)', fontFamily: 'var(--font-body-var), monospace' }}
+            className="hidden sm:flex items-center gap-2 text-sm font-medium transition-colors text-foreground/75"
+            style={{ fontFamily: 'var(--font-body-var), monospace' }}
           >
             View all
             <ArrowRight className="h-4 w-4" />
@@ -84,8 +84,8 @@ function RecentMeetings() {
         <div className="mt-8 text-center sm:hidden">
           <Link
             href="/meetings"
-            className="inline-flex items-center gap-2 text-sm font-medium"
-            style={{ color: 'rgba(244,248,249,0.75)', fontFamily: 'var(--font-body-var), monospace' }}
+            className="inline-flex items-center gap-2 text-sm font-medium text-foreground/75"
+            style={{ fontFamily: 'var(--font-body-var), monospace' }}
           >
             View all meetings <ArrowRight className="h-4 w-4" />
           </Link>
@@ -97,7 +97,7 @@ function RecentMeetings() {
 
 export default function Home() {
   return (
-    <div style={{ background: '#0A1A1F' }}>
+    <div className="bg-background">
       {/* ── Hero (dithering shader) ── */}
       <DitheringHero />
 
@@ -105,7 +105,7 @@ export default function Home() {
       <RecentMeetings />
 
       {/* ── How It Works ── */}
-      <section className="py-24" style={{ background: '#0A1A1F' }}>
+      <section className="py-24 bg-background">
         <div className="max-w-[1200px] mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 32, scale: 0.97 }}
@@ -121,8 +121,8 @@ export default function Home() {
               HOW IT WORKS
             </p>
             <h2
-              className="text-4xl md:text-5xl"
-              style={{ color: '#F4F8F9', maxWidth: '700px', margin: '0 auto' }}
+              className="text-4xl md:text-5xl text-foreground"
+              style={{ maxWidth: '700px', margin: '0 auto' }}
             >
               Public infrastructure deserves public clarity.
             </h2>
@@ -168,15 +168,12 @@ export default function Home() {
                 >
                   <feature.icon className="h-6 w-6" style={{ color: '#2BBDD4' }} />
                 </div>
-                <h3
-                  className="text-xl mb-3"
-                  style={{ color: '#F4F8F9' }}
-                >
+                <h3 className="text-xl mb-3 text-foreground">
                   {feature.title}
                 </h3>
                 <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: '#5B8A94', fontFamily: 'var(--font-body-var), monospace' }}
+                  className="text-sm leading-relaxed text-muted-foreground"
+                  style={{ fontFamily: 'var(--font-body-var), monospace' }}
                 >
                   {feature.body}
                 </p>
@@ -187,7 +184,7 @@ export default function Home() {
       </section>
 
       {/* ── CTA Section ── */}
-      <section className="py-24" style={{ background: '#0A1A1F' }}>
+      <section className="py-24 bg-background">
         <div className="max-w-[900px] mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 32, scale: 0.97 }}
@@ -195,15 +192,12 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: easing }}
           >
-            <h2
-              className="text-4xl md:text-5xl mb-4"
-              style={{ color: '#F4F8F9' }}
-            >
+            <h2 className="text-4xl md:text-5xl mb-4 text-foreground">
               Ready to Stay Informed?
             </h2>
             <p
-              className="text-lg mb-10"
-              style={{ color: 'rgba(244,248,249,0.75)', fontFamily: 'var(--font-body-var), monospace' }}
+              className="text-lg mb-10 text-foreground/75"
+              style={{ fontFamily: 'var(--font-body-var), monospace' }}
             >
               Browse recent meeting summaries or create a free account to set up
               personalized keyword alerts.
@@ -222,12 +216,8 @@ export default function Home() {
               </Link>
               <Link
                 href="/auth/signup"
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all hover:scale-105 active:scale-95"
-                style={{
-                  border: '1px solid rgba(255,255,255,0.35)',
-                  color: '#F4F8F9',
-                  fontFamily: 'var(--font-body-var), monospace',
-                }}
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium transition-all hover:scale-105 active:scale-95 border border-border text-foreground"
+                style={{ fontFamily: 'var(--font-body-var), monospace' }}
               >
                 Create Free Account
               </Link>

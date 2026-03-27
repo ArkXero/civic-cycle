@@ -5,28 +5,16 @@ import type { MeetingWithSummary } from '@/types'
 
 interface MeetingCardProps {
   meeting: MeetingWithSummary
-  /** Pass true when rendering on a light background section */
-  light?: boolean
 }
 
-export function MeetingCard({ meeting, light = false }: MeetingCardProps) {
-  const cardBg = light
-    ? 'rgba(255,255,255,0.9)'
-    : 'rgba(13, 94, 107, 0.15)'
-  const cardBorder = light
-    ? 'rgba(26,138,154,0.2)'
-    : 'rgba(26,138,154,0.25)'
-  const titleColor = light ? '#0A3038' : '#F4F8F9'
-  const metaColor = light ? '#5B8A94' : '#5B8A94'
-  const bodyColor = light ? '#0A3038' : 'rgba(244,248,249,0.70)'
-
+export function MeetingCard({ meeting }: MeetingCardProps) {
   return (
     <Link href={`/meetings/${meeting.id}`} className="block group">
       <div
         className="h-full rounded-xl p-6 transition-all duration-200 group-hover:-translate-y-0.5 cursor-pointer"
         style={{
-          background: cardBg,
-          border: `1px solid ${cardBorder}`,
+          background: 'rgba(13, 94, 107, 0.12)',
+          border: '1px solid rgba(26,138,154,0.25)',
           backdropFilter: 'blur(12px)',
         }}
         onMouseEnter={(e) => {
@@ -34,32 +22,26 @@ export function MeetingCard({ meeting, light = false }: MeetingCardProps) {
           e.currentTarget.style.boxShadow = '0 8px 32px rgba(26,138,154,0.2)'
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = cardBorder
+          e.currentTarget.style.borderColor = 'rgba(26,138,154,0.25)'
           e.currentTarget.style.boxShadow = 'none'
         }}
       >
         {/* Date + body metadata */}
         <div
-          className="flex items-center gap-2 text-xs mb-4"
-          style={{
-            color: metaColor,
-            fontFamily: 'var(--font-body-var), monospace',
-          }}
+          className="flex items-center gap-2 text-xs mb-4 text-muted-foreground"
+          style={{ fontFamily: 'var(--font-body-var), monospace' }}
         >
           <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
           <span className="truncate">{meeting.body}</span>
-          <span className="text-current opacity-40">•</span>
+          <span className="opacity-40">•</span>
           <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
           <span>{formatDate(meeting.meeting_date)}</span>
         </div>
 
         {/* Title */}
         <h3
-          className="text-lg leading-snug line-clamp-2 mb-3"
-          style={{
-            color: titleColor,
-            fontFamily: 'var(--font-display-var), Georgia, serif',
-          }}
+          className="text-lg leading-snug line-clamp-2 mb-3 text-foreground"
+          style={{ fontFamily: 'var(--font-display-var), Georgia, serif' }}
         >
           {meeting.title}
         </h3>
@@ -67,11 +49,8 @@ export function MeetingCard({ meeting, light = false }: MeetingCardProps) {
         {/* Summary excerpt */}
         {meeting.summary && (
           <p
-            className="text-sm leading-relaxed line-clamp-3 mb-4"
-            style={{
-              color: bodyColor,
-              fontFamily: 'var(--font-body-var), monospace',
-            }}
+            className="text-sm leading-relaxed line-clamp-3 mb-4 text-foreground/70"
+            style={{ fontFamily: 'var(--font-body-var), monospace' }}
           >
             {truncate(meeting.summary.summary_text, 200)}
           </p>
@@ -112,11 +91,8 @@ export function MeetingCard({ meeting, light = false }: MeetingCardProps) {
         <div className="flex items-center justify-between mt-auto pt-1">
           {meeting.source_url ? (
             <span
-              className="text-xs flex items-center gap-1"
-              style={{
-                color: metaColor,
-                fontFamily: 'var(--font-body-var), monospace',
-              }}
+              className="text-xs flex items-center gap-1 text-muted-foreground"
+              style={{ fontFamily: 'var(--font-body-var), monospace' }}
             >
               <ExternalLink className="h-3 w-3" />
               Agenda on BoardDocs

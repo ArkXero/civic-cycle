@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Home, FileText, Bell, Upload, LogIn, LogOut } from 'lucide-react'
+import { Home, FileText, Bell, Upload, LogIn, LogOut, Sun, Moon } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { APP_NAME, NAV_LINKS } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
@@ -29,7 +30,13 @@ export function TubelightNavbar() {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [supabase] = useState(() => createClient())
+  const { theme, setTheme } = useTheme()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const getUser = async () => {
@@ -57,6 +64,10 @@ export function TubelightNavbar() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+  }
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
   }
 
   // Build nav items from NAV_LINKS + auth items
@@ -90,12 +101,7 @@ export function TubelightNavbar() {
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
-      <div className="flex items-center gap-1 backdrop-blur-lg py-2 px-4 rounded-full shadow-lg"
-        style={{
-          background: 'rgba(13, 94, 107, 0.15)',
-          border: '1px solid rgba(26, 138, 154, 0.25)',
-        }}
-      >
+      <div className="flex items-center gap-1 backdrop-blur-lg py-2 px-4 rounded-full shadow-lg bg-card border border-border">
         {/* Nav items */}
         {navItems.map((item) => {
           const isActive = pathname === item.url && item.url !== '#'
@@ -107,8 +113,8 @@ export function TubelightNavbar() {
                 onClick={() => handleNavClick(item)}
                 className={cn(
                   'relative cursor-pointer text-sm font-semibold px-4 py-2 rounded-full transition-colors flex-shrink-0',
-                  'text-white/80 hover:text-white',
-                  isActive && 'text-white'
+                  'text-foreground/70 hover:text-foreground',
+                  isActive && 'text-foreground'
                 )}
               >
                 <span className="hidden md:inline">{item.name}</span>
@@ -144,8 +150,8 @@ export function TubelightNavbar() {
               href={item.url}
               className={cn(
                 'relative cursor-pointer text-sm font-semibold px-4 py-2 rounded-full transition-colors flex-shrink-0',
-                'text-white/80 hover:text-white',
-                isActive && 'text-white'
+                'text-foreground/70 hover:text-foreground',
+                isActive && 'text-foreground'
               )}
             >
               <span className="hidden md:inline">{item.name}</span>
@@ -174,6 +180,22 @@ export function TubelightNavbar() {
             </Link>
           )
         })}
+
+        {/* Divider */}
+        <div className="w-px h-5 bg-border mx-1" />
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="cursor-pointer p-2 rounded-full transition-colors text-foreground/70 hover:text-foreground hover:bg-muted"
+          aria-label="Toggle theme"
+        >
+          {mounted && theme === 'dark' ? (
+            <Sun size={18} strokeWidth={2.5} />
+          ) : (
+            <Moon size={18} strokeWidth={2.5} />
+          )}
+        </button>
       </div>
     </div>
   )

@@ -33,8 +33,8 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
       return
     }
 
@@ -162,11 +162,11 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
           <Input
             id="password"
             type="password"
-            placeholder="Create a password (min 6 characters)"
+            placeholder="Create a password (min 8 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
             disabled={isLoading || isGoogleLoading}
           />
         </div>

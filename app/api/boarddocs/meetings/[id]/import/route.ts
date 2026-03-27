@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getMeetingContent, getBoardDocsUrl } from '@/lib/boarddocs'
 import { isAdminEmail } from '@/lib/is-admin'
+import { runSummarize } from '@/lib/run-summarize'
 
 // POST /api/boarddocs/meetings/[id]/import - Import a BoardDocs meeting
 export async function POST(
@@ -70,6 +71,11 @@ export async function POST(
         { status: 500 }
       )
     }
+
+    // Kick off summarization in the background — import returns immediately
+    runSummarize(meeting.id, content.fullText, content.title, adminClient).catch((err) => {
+      console.error('Auto-summarization failed for meeting', meeting.id, err)
+    })
 
     return NextResponse.json({
       message: 'Meeting imported successfully',

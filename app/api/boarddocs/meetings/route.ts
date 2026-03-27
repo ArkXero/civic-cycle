@@ -22,16 +22,13 @@ export async function GET() {
 
     const meetings = await listMeetings()
 
-    // Check which meetings are already imported, and get their DB id + status
-    const sourceUrls = meetings.map((m) => getBoardDocsUrl(m.id))
-
-    // `as any` still needed: `supabase` uses @supabase/ssr which doesn't fully
-    // propagate the Database generic. Use adminClient to avoid this if RLS allows.
+    // Fetch all already-imported BoardDocs meetings from the DB in one small query.
+    // Using .in() with thousands of URLs silently fails in Supabase — cross-reference locally instead.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingMeetings } = await (supabase
       .from('meetings') as any)
       .select('id, source_url, status')
-      .in('source_url', sourceUrls)
+      .eq('source', 'boarddocs')
 
     const importedMap = new Map<string, { id: string; status: string }>(
       existingMeetings?.map((m: { id: string; source_url: string; status: string }) => [

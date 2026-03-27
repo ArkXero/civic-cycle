@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
-import { summarizeMeeting, chunkTranscript } from '@/lib/anthropic'
 import { isAdminEmail } from '@/lib/is-admin'
+import { runSummarize } from '@/lib/run-summarize'
 
 interface Meeting {
   id: string
@@ -92,73 +92,9 @@ export async function POST(
       )
     }
 
-    // Update meeting status to processing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (adminClient.from('meetings') as any)
-      .update({ status: 'processing' })
-      .eq('id', id)
+    await runSummarize(id, meeting.transcript_text, meeting.title, adminClient)
 
-    let savedSummary
-    try {
-      // Generate summary using Claude
-      let summary
-      const chunks = chunkTranscript(meeting.transcript_text)
-
-      if (chunks.length === 1) {
-        summary = await summarizeMeeting(meeting.transcript_text, meeting.title)
-      } else {
-        // Multiple chunks - use first chunk with a note
-        console.log(`Transcript split into ${chunks.length} chunks, using first chunk`)
-        summary = await summarizeMeeting(
-          chunks[0] + '\n\n[Note: This is a partial transcript due to length]',
-          meeting.title
-        )
-      }
-
-      // Save the summary
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error: saveError } = await (adminClient
-        .from('summaries') as any)
-        .insert({
-          meeting_id: id,
-          summary_text: summary.summary_text,
-          topics: summary.topics,
-          key_decisions: summary.key_decisions,
-          action_items: summary.action_items,
-        })
-        .select()
-        .single()
-
-      if (saveError) {
-        throw new Error(`Failed to save summary: ${saveError.message}`)
-      }
-
-      savedSummary = data
-
-      // Update meeting status to summarized
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (adminClient.from('meetings') as any)
-        .update({ status: 'summarized' })
-        .eq('id', id)
-    } catch (error) {
-      console.error('Summarization failed:', error)
-
-      // Always set status to failed so the meeting is not stuck
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (adminClient.from('meetings') as any)
-        .update({
-          status: 'failed',
-          error_message: error instanceof Error ? error.message : 'Unknown error',
-        })
-        .eq('id', id)
-
-      throw error // re-throw so the route returns a 500
-    }
-
-    return NextResponse.json({
-      message: 'Summary generated successfully',
-      data: savedSummary,
-    })
+    return NextResponse.json({ message: 'Summary generated successfully' })
   } catch (error) {
     console.error('Unexpected error in summarize:', error)
     return NextResponse.json(

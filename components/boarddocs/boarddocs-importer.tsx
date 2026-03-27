@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { RefreshCw, Loader2, AlertCircle, Calendar, FileText, Check, Download, Sparkles } from 'lucide-react'
+import { RefreshCw, Loader2, AlertCircle, Calendar, FileText, CheckCircle2, Download, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+
+type FilterMode = 'all' | 'imported' | 'available'
 
 interface BoardDocsMeeting {
   id: string
@@ -23,6 +25,7 @@ export function BoardDocsImporter() {
   const [importingId, setImportingId] = useState<string | null>(null)
   const [summarizingId, setSummarizingId] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<FilterMode>('all')
 
   const fetchMeetings = async () => {
     setIsLoading(true)
@@ -67,7 +70,7 @@ export function BoardDocsImporter() {
       setMeetings((prev) =>
         prev.map((m) =>
           m.id === meetingId
-            ? { ...m, isImported: true, dbId: data.data?.id ?? null, dbStatus: 'pending' }
+            ? { ...m, isImported: true, dbId: data.data?.id ?? null, dbStatus: 'processing' }
             : m
         )
       )
@@ -134,18 +137,42 @@ export function BoardDocsImporter() {
   const importedCount = meetings.filter((m) => m.isImported).length
   const availableCount = meetings.length - importedCount
 
+  const visibleMeetings = meetings.filter((m) => {
+    if (filter === 'imported') return m.isImported
+    if (filter === 'available') return !m.isImported
+    return true
+  })
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            {meetings.length} meetings found &middot; {importedCount} imported &middot; {availableCount} available
+            {meetings.length} meetings found &middot;{' '}
+            <span className="text-green-500 font-medium">{importedCount} imported</span>
+            {' '}&middot; {availableCount} available
           </p>
         </div>
         <Button variant="outline" onClick={fetchMeetings} disabled={isLoading}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
+      </div>
+
+      <div className="flex gap-2 mb-6">
+        {(['all', 'imported', 'available'] as FilterMode[]).map((mode) => (
+          <Button
+            key={mode}
+            size="sm"
+            variant={filter === mode ? 'default' : 'outline'}
+            onClick={() => setFilter(mode)}
+            className="capitalize"
+          >
+            {mode === 'all' && `All (${meetings.length})`}
+            {mode === 'imported' && `Imported (${importedCount})`}
+            {mode === 'available' && `Available (${availableCount})`}
+          </Button>
+        ))}
       </div>
 
       {importError && (
@@ -158,7 +185,7 @@ export function BoardDocsImporter() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {meetings.map((meeting) => {
+        {visibleMeetings.map((meeting) => {
           const formattedDate = new Date(meeting.date).toLocaleDateString('en-US', {
             weekday: 'short',
             year: 'numeric',
@@ -173,23 +200,22 @@ export function BoardDocsImporter() {
             (meeting.dbStatus === 'pending' || meeting.dbStatus === 'failed')
 
           return (
-            <Card key={meeting.id} className="overflow-hidden">
+            <Card key={meeting.id} className="overflow-hidden relative">
+              {meeting.isImported && (
+                <div className="absolute top-2 right-2 z-10">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                </div>
+              )}
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-3">
-                  <h3 className="font-medium text-sm line-clamp-2" title={meeting.name}>
+                  <h3 className="font-medium text-sm line-clamp-2 pr-6" title={meeting.name}>
                     {meeting.name}
                   </h3>
-                  <div className="flex flex-col gap-1 shrink-0">
-                    {meeting.isImported && (
-                      <Badge className="bg-primary text-primary-foreground">
-                        <Check className="h-3 w-3 mr-1" />
-                        Imported
-                      </Badge>
-                    )}
-                    {meeting.dbStatus && (
+                  {meeting.dbStatus && (
+                    <div className="shrink-0">
                       <StatusBadge status={meeting.dbStatus} />
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                   <span className="flex items-center gap-1">
@@ -263,9 +289,13 @@ export function BoardDocsImporter() {
         })}
       </div>
 
-      {meetings.length === 0 && (
+      {visibleMeetings.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No meetings found on BoardDocs.</p>
+          <p className="text-muted-foreground">
+            {filter === 'imported' ? 'No meetings imported yet.' :
+             filter === 'available' ? 'All meetings have been imported.' :
+             'No meetings found on BoardDocs.'}
+          </p>
         </div>
       )}
     </div>

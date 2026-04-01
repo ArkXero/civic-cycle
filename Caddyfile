@@ -4,7 +4,7 @@
 # ===========================================
 # PRODUCTION: Replace with your domain
 # ===========================================
-fairfaxcivic.com {
+civiccycle.net {
     # Proxy all traffic to the Next.js app
     reverse_proxy app:3000
 
@@ -33,8 +33,8 @@ fairfaxcivic.com {
 # ===========================================
 # WWW REDIRECT: www.domain.com -> domain.com
 # ===========================================
-www.fairfaxcivic.com {
-    redir https://fairfaxcivic.com{uri} permanent
+www.civiccycle.net {
+    redir https://civiccycle.net{uri} permanent
 }
 
 # ===========================================

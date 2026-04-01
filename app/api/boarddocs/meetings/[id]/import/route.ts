@@ -50,7 +50,10 @@ export async function POST(
     // Insert meeting — only using columns that exist in the current schema
     const meetingDate = content.date.toISOString().split('T')[0]
 
-    const { data: meeting, error: insertError } = await adminClient
+    // Cast adminClient as any to bypass Supabase's type inference — insert with
+    // schema-mismatched columns makes the whole chain infer as never otherwise.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: meeting, error: insertError } = await (adminClient as any)
       .from('meetings')
       .insert({
         title: content.title,
@@ -60,7 +63,7 @@ export async function POST(
         source: 'boarddocs',
         source_url: sourceUrl,
         status: 'pending',
-      } as any)
+      })
       .select()
       .single()
 

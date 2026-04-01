@@ -24,14 +24,16 @@ export async function GET() {
 
     // Fetch all already-imported BoardDocs meetings from the DB in one small query.
     // Using .in() with thousands of URLs silently fails in Supabase — cross-reference locally instead.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existingMeetings } = await (supabase
-      .from('meetings') as any)
+    // SSR client infers never for meetings table — adminClient avoids the cast.
+    const { data: existingMeetings } = await supabase
+      .from('meetings')
       .select('id, source_url, status')
-      .eq('source', 'boarddocs')
+      .eq('source', 'boarddocs') as unknown as {
+        data: { id: string; source_url: string; status: string }[] | null
+      }
 
     const importedMap = new Map<string, { id: string; status: string }>(
-      existingMeetings?.map((m: { id: string; source_url: string; status: string }) => [
+      existingMeetings?.map((m) => [
         m.source_url,
         { id: m.id, status: m.status },
       ]) || []

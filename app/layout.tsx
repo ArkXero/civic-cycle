@@ -34,6 +34,9 @@ export const metadata: Metadata = {
     "civic tech",
     "Civic Sync",
   ],
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

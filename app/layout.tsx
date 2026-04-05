@@ -35,7 +35,9 @@ export const metadata: Metadata = {
     "Civic Sync",
   ],
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+    ],
   },
 };
 

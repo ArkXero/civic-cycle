@@ -54,7 +54,7 @@ export function Header() {
           href="/"
           className="flex items-center gap-2 group"
         >
-          <Image src="/logo.png" alt={APP_NAME} width={32} height={32} priority unoptimized />
+          <Image src="/favicon.png" alt={APP_NAME} width={32} height={32} priority unoptimized />
           <span
             className="text-lg text-white"
             style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}

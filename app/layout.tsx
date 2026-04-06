@@ -34,11 +34,6 @@ export const metadata: Metadata = {
     "civic tech",
     "Civic Sync",
   ],
-  icons: {
-    icon: [
-      { url: "/favicon.png", type: "image/png" },
-    ],
-  },
 };
 
 export default function RootLayout({

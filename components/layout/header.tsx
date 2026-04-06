@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -53,17 +54,7 @@ export function Header() {
           href="/"
           className="flex items-center gap-2 group"
         >
-          {/* FCPS-inspired icon: two color squares */}
-          <div className="flex gap-0.5" aria-hidden="true">
-            <div
-              className="w-2 h-5 rounded-sm"
-              style={{ background: '#1A8A9A' }}
-            />
-            <div
-              className="w-2 h-5 rounded-sm"
-              style={{ background: '#F5A623' }}
-            />
-          </div>
+          <Image src="/logo.png" alt={APP_NAME} width={32} height={32} priority />
           <span
             className="text-lg text-white"
             style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}

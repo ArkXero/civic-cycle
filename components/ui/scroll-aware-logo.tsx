@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { APP_NAME } from '@/lib/constants'
 
 export function ScrollAwareLogo() {
-  const [scrollY, setScrollY] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
 
@@ -24,7 +24,6 @@ export function ScrollAwareLogo() {
         setIsVisible(true)
       }
 
-      setScrollY(currentScrollY)
       setLastScrollY(currentScrollY)
     }
 
@@ -44,16 +43,7 @@ export function ScrollAwareLogo() {
       className="fixed top-6 left-1/2 -translate-x-1/2 z-30"
     >
       <Link href="/" className="flex items-center gap-2">
-        <div className="flex gap-0.5" aria-hidden="true">
-          <div
-            className="w-2.5 h-6 rounded-sm"
-            style={{ background: '#1A8A9A' }}
-          />
-          <div
-            className="w-2.5 h-6 rounded-sm"
-            style={{ background: '#F5A623' }}
-          />
-        </div>
+        <Image src="/logo.png" alt={APP_NAME} width={28} height={28} priority />
         <span
           className="text-sm md:text-base text-foreground whitespace-nowrap"
           style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}

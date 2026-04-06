@@ -43,7 +43,7 @@ export function ScrollAwareLogo() {
       className="fixed top-6 left-1/2 -translate-x-1/2 z-30"
     >
       <Link href="/" className="flex items-center gap-2">
-        <Image src="/logo.png" alt={APP_NAME} width={28} height={28} priority />
+        <Image src="/logo.png" alt={APP_NAME} width={28} height={28} priority unoptimized />
         <span
           className="text-sm md:text-base text-foreground whitespace-nowrap"
           style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}

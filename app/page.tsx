@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, FileText, Search, Bell } from 'lucide-react'
+import { ArrowRight, Brain, Search, Bell, CircuitBoard } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { MeetingCard } from '@/components/meetings/meeting-card'
 import { DitheringHero } from '@/components/ui/hero-dithering-card'
+
+import { ContainerTextFlip } from '@/components/ui/container-text-flip'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import type { MeetingWithSummary } from '@/types'
@@ -129,56 +131,113 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: FileText,
-                title: 'AI-Powered Summaries',
-                body: 'We use Claude AI to analyze meeting agendas and extract key decisions, votes, and action items — so you can read a 2-minute summary instead of a 3-hour agenda.',
-              },
-              {
-                icon: Search,
-                title: 'Search & Filter',
-                body: 'Find discussions about topics you care about across all past meetings. Search for "bell schedules", "budget", or any topic and filter by date or meeting type.',
-              },
-              {
-                icon: Bell,
-                title: 'Keyword Alerts',
-                body: "Set up alerts for keywords like your school name, \"property tax\", or \"transportation\". We'll email you when there's a match in a new meeting summary.",
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 32, scale: 0.97 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, delay: i * 0.15, ease: easing }}
-                className="glass-card rounded-xl p-8 transition-all duration-200 hover:-translate-y-0.5"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(43,189,212,0.5)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(26,138,154,0.2)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(26,138,154,0.25)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
+
+            {/* ── Card 1: AI-Powered Summaries ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 32, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0, ease: easing }}
+              className="relative overflow-hidden glass-card rounded-xl p-8 transition-all duration-200 hover:-translate-y-0.5"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(43,189,212,0.5)'
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(26,138,154,0.2)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(26,138,154,0.25)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              {/* Decorative chip — top-right, intentionally partially out of frame */}
+              <CircuitBoard
+                className="absolute -top-5 -right-5 opacity-[0.09] pointer-events-none"
+                style={{ width: 130, height: 130, color: '#2BBDD4' }}
+                strokeWidth={1}
+                aria-hidden="true"
+              />
+              <div
+                className="w-12 h-12 rounded-lg flex items-center justify-center mb-6"
+                style={{ background: 'rgba(26,138,154,0.15)' }}
               >
+                <Brain className="h-6 w-6" style={{ color: '#2BBDD4' }} />
+              </div>
+              <h3 className="text-xl mb-3 text-foreground">AI-Powered Summaries</h3>
+              <p
+                className="text-sm leading-relaxed text-muted-foreground"
+                style={{ fontFamily: 'var(--font-body-var), monospace' }}
+              >
+                We use Claude AI to analyze meeting agendas and extract key decisions, votes, and action items — so you can read a 2-minute summary instead of a 3-hour agenda.
+              </p>
+            </motion.div>
+
+            {/* ── Card 2: Search & Filter ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 32, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.15, ease: easing }}
+              className="glass-card rounded-xl p-8 transition-all duration-200 hover:-translate-y-0.5"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(43,189,212,0.5)'
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(26,138,154,0.2)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(26,138,154,0.25)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <div
+                className="w-12 h-12 rounded-lg flex items-center justify-center mb-6"
+                style={{ background: 'rgba(26,138,154,0.15)' }}
+              >
+                <Search className="h-6 w-6" style={{ color: '#2BBDD4' }} />
+              </div>
+              <h3 className="text-xl mb-3 text-foreground">Search & Filter</h3>
+              <p
+                className="text-sm leading-relaxed text-muted-foreground"
+                style={{ fontFamily: 'var(--font-body-var), monospace' }}
+              >
+                Find discussions about topics you care about across all past meetings. Search for &ldquo;bell schedules&rdquo;, &ldquo;budget&rdquo;, or any topic and filter by date or meeting type.
+              </p>
+            </motion.div>
+
+            {/* ── Card 3: Keyword Alerts ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 32, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.3, ease: easing }}
+              className="glass-card rounded-xl p-8 transition-all duration-200 hover:-translate-y-0.5"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(43,189,212,0.5)'
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(26,138,154,0.2)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(26,138,154,0.25)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <div className="flex items-center gap-4 mb-6">
                 <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-6"
+                  className="w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center"
                   style={{ background: 'rgba(26,138,154,0.15)' }}
                 >
-                  <feature.icon className="h-6 w-6" style={{ color: '#2BBDD4' }} />
+                  <Bell className="h-6 w-6" style={{ color: '#2BBDD4' }} />
                 </div>
-                <h3 className="text-xl mb-3 text-foreground">
-                  {feature.title}
-                </h3>
-                <p
-                  className="text-sm leading-relaxed text-muted-foreground"
-                  style={{ fontFamily: 'var(--font-body-var), monospace' }}
-                >
-                  {feature.body}
-                </p>
-              </motion.div>
-            ))}
+                <ContainerTextFlip
+                  words={["taxes", "zoning", "curriculum", "budget", "transportation", "redistricting", "hiring", "athletics"]}
+                  interval={2500}
+                />
+              </div>
+              <h3 className="text-xl mb-3 text-foreground">Keyword Alerts</h3>
+              <p
+                className="text-sm leading-relaxed text-muted-foreground"
+                style={{ fontFamily: 'var(--font-body-var), monospace' }}
+              >
+                Set up alerts for keywords like your school name, &ldquo;property tax&rdquo;, or &ldquo;transportation&rdquo;. We&apos;ll email you when there&apos;s a match in a new meeting summary.
+              </p>
+            </motion.div>
+
           </div>
         </div>
       </section>

@@ -46,7 +46,7 @@
     --radius-2xl: calc(var(--radius) + 8px);
     --radius-3xl: calc(var(--radius) + 12px);
     --radius-4xl: calc(var(--radius) + 16px);
-    /* Civic Sync design token colors */
+    /* Civic Cycle design token colors */
     --color-teal-primary: #1A8A9A;
     --color-teal-dark: #0D5E6B;
     --color-teal-light: #2BBDD4;
@@ -60,7 +60,11 @@
 :root {
     --radius: 0.75rem;
 
-    /* Civic Sync Color System — derived from FCPS palette */
+    /* Declared here for IDE resolution; actual values injected at runtime by next/font via body className */
+    --font-body-var: 'JetBrains Mono', monospace;
+    --font-display-var: 'Playfair Display', serif;
+
+    /* Civic Cycle Color System — derived from FCPS palette */
     --color-teal-primary: #1A8A9A;
     --color-teal-dark: #0D5E6B;
     --color-teal-light: #2BBDD4;
@@ -179,7 +183,7 @@ html, body {
     color: var(--foreground);
 }
 
-/* Civic Sync custom utility classes */
+/* Civic Cycle custom utility classes */
 .hero-gradient {
     background: radial-gradient(
         ellipse at 60% 50%,

@@ -1,5 +1,5 @@
 // App metadata
-export const APP_NAME = "Civic Sync";
+export const APP_NAME = "Civic Cycle";
 export const APP_DESCRIPTION =
   "Every School Board meeting, automatically summarized — key decisions, budget items, and policy changes surfaced for residents who don't have three hours.";
 

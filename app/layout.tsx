@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     "meetings",
     "local government",
     "civic tech",
-    "Civic Sync",
+    "Civic Cycle",
   ],
 };
 

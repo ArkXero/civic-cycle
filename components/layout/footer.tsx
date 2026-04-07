@@ -16,10 +16,8 @@ export function Footer() {
           {/* About */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="flex gap-0.5" aria-hidden="true">
-                <div className="w-2 h-5 rounded-sm" style={{ background: '#1A8A9A' }} />
-                <div className="w-2 h-5 rounded-sm" style={{ background: '#F5A623' }} />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/favicon.png" alt="" width={32} height={32} aria-hidden="true" />
               <h3
                 className="text-lg text-white"
                 style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}

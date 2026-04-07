@@ -1,4 +1,4 @@
-# Civic Sync
+# Civic Cycle
 
 Civic tech app summarizing FCPS School Board meetings for Fairfax County residents.
 Self-hosted locally via Docker + Caddy. Not on Vercel.

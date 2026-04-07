@@ -54,15 +54,15 @@ export async function sendAlertEmail({
 
   const html = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${safeKeyword} - Civic Sync Alert</title>
+  <title>${safeKeyword} - Civic Cycle Alert</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background-color: #1A8A9A; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">Civic Sync</h1>
+    <h1 style="color: white; margin: 0; font-size: 24px;">Civic Cycle</h1>
   </div>
 
   <div style="background-color: #ffffff; padding: 24px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;">
@@ -87,7 +87,7 @@ export async function sendAlertEmail({
     <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
 
     <p style="color: #9a9a9a; font-size: 12px; margin: 0;">
-      You&rsquo;re receiving this because you set up an alert for &ldquo;${safeKeyword}&rdquo; on Civic Sync.
+      You&rsquo;re receiving this because you set up an alert for &ldquo;${safeKeyword}&rdquo; on Civic Cycle.
       <br><br>
       <a href="${safeUnsubscribeUrl}" style="color: #9a9a9a;">Unsubscribe from this alert</a>
     </p>
@@ -97,7 +97,7 @@ export async function sendAlertEmail({
 `;
 
   const text = `
-Civic Sync - Keyword Alert
+Civic Cycle - Keyword Alert
 
 Your keyword "${keyword}" was mentioned in a recent meeting.
 
@@ -110,12 +110,12 @@ ${summaryExcerpt}
 Read the full summary: ${meetingUrl}
 
 ---
-You're receiving this because you set up an alert for "${keyword}" on Civic Sync.
+You're receiving this because you set up an alert for "${keyword}" on Civic Cycle.
 Unsubscribe: ${unsubscribeUrl}
 `;
 
   return resend.emails.send({
-    from: `Civic Sync <${FROM_EMAIL}>`,
+    from: `Civic Cycle <${FROM_EMAIL}>`,
     to,
     subject,
     html,

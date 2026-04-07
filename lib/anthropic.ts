@@ -7,7 +7,7 @@ export const anthropic = new Anthropic({
 export interface MeetingSummary {
   summary_text: string
   topics: string[]
-  key_decisions: { decision: string; context: string }[]
+  key_decisions: { decision: string; vote_yes: number; vote_no: number; vote_abstain: number }[]
   action_items: { item: string; responsible_party: string | null; deadline: string | null }[]
   sentiment: 'positive' | 'neutral' | 'negative' | 'mixed'
 }
@@ -33,8 +33,10 @@ Return your response as a valid JSON object with this exact structure:
   "topics": ["Array of 3-8 main topics discussed, e.g., 'Budget allocation', 'Mental health services'"],
   "key_decisions": [
     {
-      "decision": "Brief description of decision made",
-      "context": "Why this decision matters or what led to it"
+      "decision": "Brief description of the decision, starting with an action verb (e.g. Approved, Denied, Accepted, Directed, Adopted)",
+      "vote_yes": 9,
+      "vote_no": 0,
+      "vote_abstain": 0
     }
   ],
   "action_items": [
@@ -51,6 +53,7 @@ Important:
 - Return ONLY the JSON object, no additional text or markdown formatting
 - Ensure all strings are properly escaped for JSON
 - Include at least 1 key decision and 1 action item if any are present in the transcript
+- For key_decisions, extract the exact vote tally from the transcript (e.g. "9-0", "8-1-0" → vote_yes/vote_no/vote_abstain). If no tally is stated but the motion clearly passed, use vote_yes: 1, vote_no: 0. If it failed, use vote_yes: 0, vote_no: 1
 - If the transcript is too short or unclear, still provide what you can
 
 Here is the transcript:
@@ -99,7 +102,7 @@ export async function summarizeMeeting(
     jsonText = jsonText.trim()
 
     parsed = JSON.parse(jsonText)
-  } catch (parseError) {
+  } catch {
     console.error('Failed to parse Claude response:', textContent.text)
     throw new Error('Failed to parse summary response as JSON')
   }

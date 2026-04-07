@@ -70,6 +70,7 @@ export type Database = {
           key_decisions: KeyDecision[]
           action_items: ActionItem[]
           topics: string[]
+          published: boolean
           created_at: string
         }
         Insert: {
@@ -79,6 +80,7 @@ export type Database = {
           key_decisions?: KeyDecision[]
           action_items?: ActionItem[]
           topics?: string[]
+          published?: boolean
           created_at?: string
         }
         Update: {
@@ -88,6 +90,7 @@ export type Database = {
           key_decisions?: KeyDecision[]
           action_items?: ActionItem[]
           topics?: string[]
+          published?: boolean
           created_at?: string
         }
       }
@@ -166,6 +169,84 @@ export type Database = {
           email_status?: 'sent' | 'failed' | 'bounced'
         }
       }
+      activity_logs: {
+        Row: {
+          id: number
+          action: string
+          description: string
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          action: string
+          description: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          action?: string
+          description?: string
+          metadata?: Json | null
+          created_at?: string
+        }
+      }
+      api_usage: {
+        Row: {
+          id: number
+          meeting_id: string | null
+          model: string
+          input_tokens: number
+          output_tokens: number
+          cost_cents: number
+          success: boolean
+          error_message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          meeting_id?: string | null
+          model: string
+          input_tokens: number
+          output_tokens: number
+          cost_cents: number
+          success?: boolean
+          error_message?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          meeting_id?: string | null
+          model?: string
+          input_tokens?: number
+          output_tokens?: number
+          cost_cents?: number
+          success?: boolean
+          error_message?: string | null
+          created_at?: string
+        }
+      }
+      user_roles: {
+        Row: {
+          id: number
+          user_id: string
+          role: 'admin' | 'user'
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          role?: 'admin' | 'user'
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          role?: 'admin' | 'user'
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -174,7 +255,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: 'admin' | 'user'
     }
   }
 }

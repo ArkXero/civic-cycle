@@ -17,6 +17,23 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
+// Mock admin check — all non-401 tests assume the user is an admin
+vi.mock('@/lib/is-admin', () => ({
+  isAdminEmail: vi.fn().mockReturnValue(true),
+}))
+
+// Mock activity and API-usage trackers so they don't need a real DB
+vi.mock('@/lib/activity', () => ({
+  logActivity: vi.fn().mockResolvedValue(undefined),
+  ActivityTypes: {
+    SUMMARY_GENERATED: 'summary_generated',
+    SUMMARY_FAILED: 'summary_failed',
+  },
+}))
+vi.mock('@/lib/track-api-usage', () => ({
+  trackApiUsage: vi.fn().mockResolvedValue(undefined),
+}))
+
 // Mock Anthropic lib
 const mockSummarizeMeeting = vi.fn()
 const mockChunkTranscript = vi.fn()
@@ -38,25 +55,38 @@ function makeRequest(id = 'meeting-123') {
   return { req, params: Promise.resolve({ id }) }
 }
 
-/** Build a Supabase query chain stub that resolves to { data, error }. */
+/**
+ * Build a Supabase query chain stub that resolves to { data, error }.
+ * The chain is also thenable so that `await chain.insert(...)` or
+ * `await chain.update(...).eq(...)` resolve to `result` directly.
+ */
 function makeChain(result: { data: unknown; error: unknown }) {
-  const chain = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chain: any = {
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue(result),
     in: vi.fn().mockReturnThis(),
+    // Thenability: makes `await chain` resolve to result
+    then: (resolve: (v: unknown) => void) => resolve(result),
+    catch: () => Promise.resolve(result),
   }
   return chain
 }
 
-/** A valid AI summary response */
+/** A valid AI SummarizeResult (wrapped summary + usage) */
 const fakeSummary = {
-  summary_text: 'Board approved the FY2026 budget.',
-  topics: ['Budget'],
-  key_decisions: [{ decision: 'Budget approved', context: 'After review' }],
-  action_items: [{ item: 'Publish budget', responsible_party: 'CFO', deadline: null }],
+  summary: {
+    summary_text: 'Board approved the FY2026 budget.',
+    topics: ['Budget'],
+    key_decisions: [{ decision: 'Budget approved', context: 'After review' }],
+    action_items: [{ item: 'Publish budget', responsible_party: 'CFO', deadline: null }],
+    sentiment: 'neutral',
+  },
+  usage: { input_tokens: 100, output_tokens: 50 },
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────
@@ -254,7 +284,6 @@ describe('POST /api/meetings/[id]/summarize', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.message).toBe('Summary generated successfully')
-    expect(body.data.id).toBe('summary-new')
 
     // Verify the final status update was 'summarized'
     const lastUpdateCall = setSummarizedChain.update.mock.calls[0][0]

@@ -18,7 +18,7 @@ export default async function BoardDocsAdminPage() {
   }
 
   if (!isAdminEmail(user.email)) {
-    redirect('/')
+    redirect('/unauthorized')
   }
 
   return (

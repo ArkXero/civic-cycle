@@ -9,24 +9,30 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { APP_NAME, NAV_LINKS } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
+import { isAdminJwt } from '@/lib/auth/get-role'
 import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 
 export function Header() {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [supabase] = useState(() => createClient())
 
   useEffect(() => {
-    const getUser = async () => {
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      // Decode JWT to get user_role claim (UI only — security enforced server-side)
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsAdmin(session ? isAdminJwt(session.access_token) : false)
     }
-    getUser()
+    init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      setIsAdmin(session ? isAdminJwt(session.access_token) : false)
     })
 
     return () => subscription.unsubscribe()
@@ -38,7 +44,7 @@ export function Header() {
   }
 
   const visibleLinks = NAV_LINKS.filter(
-    (link) => !link.protected || user
+    (link) => (!link.protected || user) && (!link.adminOnly || isAdmin)
   )
 
   return (

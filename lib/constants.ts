@@ -26,13 +26,15 @@ export interface NavLink {
   href: string;
   label: string;
   protected?: boolean;
+  adminOnly?: boolean;
 }
 
 export const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/meetings", label: "Meetings" },
   { href: "/alerts", label: "My Alerts", protected: true },
-  { href: "/admin/boarddocs", label: "Import", protected: true },
+  { href: "/admin/boarddocs", label: "Import", protected: true, adminOnly: true },
+  { href: "/admin/dashboard", label: "Dashboard", protected: true, adminOnly: true },
 ];
 
 // External links

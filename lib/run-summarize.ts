@@ -1,5 +1,7 @@
 import { summarizeMeeting, chunkTranscript } from '@/lib/anthropic'
 import { createAdminClient } from '@/lib/supabase/server'
+import { logActivity, ActivityTypes } from '@/lib/activity'
+import { trackApiUsage } from '@/lib/track-api-usage'
 
 type AdminClient = ReturnType<typeof createAdminClient>
 
@@ -23,17 +25,19 @@ export async function runSummarize(
 
   try {
     const chunks = chunkTranscript(transcript)
-    let summary
+    let result
 
     if (chunks.length === 1) {
-      summary = await summarizeMeeting(transcript, title)
+      result = await summarizeMeeting(transcript, title)
     } else {
       console.log(`Transcript split into ${chunks.length} chunks, using first chunk`)
-      summary = await summarizeMeeting(
+      result = await summarizeMeeting(
         chunks[0] + '\n\n[Note: This is a partial transcript due to length]',
         title
       )
     }
+
+    const { summary, usage } = result
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: saveError } = await (adminClient.from('summaries') as any)
@@ -53,6 +57,23 @@ export async function runSummarize(
     await (adminClient.from('meetings') as any)
       .update({ status: 'summarized' })
       .eq('id', meetingId)
+
+    // Track API usage and log the activity (fire-and-forget, never throws)
+    const totalTokens = usage.input_tokens + usage.output_tokens
+    await Promise.all([
+      trackApiUsage({
+        meetingId,
+        model: 'claude-sonnet-4-6',
+        inputTokens: usage.input_tokens,
+        outputTokens: usage.output_tokens,
+        success: true,
+      }),
+      logActivity(
+        ActivityTypes.SUMMARY_GENERATED,
+        `Generated summary for "${title}" (${totalTokens} tokens)`,
+        { meetingId, inputTokens: usage.input_tokens, outputTokens: usage.output_tokens }
+      ),
+    ])
   } catch (error) {
     console.error('Summarization failed for meeting', meetingId, error)
 
@@ -63,6 +84,23 @@ export async function runSummarize(
         error_message: error instanceof Error ? error.message : 'Unknown error',
       })
       .eq('id', meetingId)
+
+    // Log the failure (fire-and-forget)
+    await Promise.all([
+      trackApiUsage({
+        meetingId,
+        model: 'claude-sonnet-4-6',
+        inputTokens: 0,
+        outputTokens: 0,
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      logActivity(
+        ActivityTypes.SUMMARY_FAILED,
+        `Summary failed for "${title}": ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { meetingId }
+      ),
+    ])
 
     throw error
   }

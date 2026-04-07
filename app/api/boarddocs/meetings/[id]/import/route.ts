@@ -3,6 +3,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getMeetingContent, getBoardDocsUrl } from '@/lib/boarddocs'
 import { isAdminEmail } from '@/lib/is-admin'
 import { runSummarize } from '@/lib/run-summarize'
+import { logActivity, ActivityTypes } from '@/lib/activity'
 
 // POST /api/boarddocs/meetings/[id]/import - Import a BoardDocs meeting
 export async function POST(
@@ -74,6 +75,13 @@ export async function POST(
         { status: 500 }
       )
     }
+
+    // Log the import activity (fire-and-forget)
+    logActivity(
+      ActivityTypes.MEETING_IMPORTED,
+      `Imported meeting "${content.title}"`,
+      { meetingId: meeting.id, boarddocsId: id, itemCount: content.itemCount }
+    ).catch(() => {})
 
     // Kick off summarization in the background — import returns immediately
     runSummarize(meeting.id, content.fullText, content.title, adminClient).catch((err) => {

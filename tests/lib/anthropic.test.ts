@@ -68,6 +68,14 @@ describe('chunkTranscript', () => {
 
 // ─── summarizeMeeting ──────────────────────────────────────────────────────
 
+// Helper: wrap a JSON body in a full mock Anthropic response (includes usage)
+function mockResponse(text: string) {
+  return {
+    content: [{ type: 'text', text }],
+    usage: { input_tokens: 100, output_tokens: 50 },
+  }
+}
+
 describe('summarizeMeeting', () => {
   const validSummaryJson = JSON.stringify({
     summary_text: 'The board approved the FY2026 budget with amendments.',
@@ -82,9 +90,7 @@ describe('summarizeMeeting', () => {
   })
 
   it('calls the Anthropic API with model claude-sonnet-4-6', async () => {
-    mockCreate.mockResolvedValueOnce({
-      content: [{ type: 'text', text: validSummaryJson }],
-    })
+    mockCreate.mockResolvedValueOnce(mockResponse(validSummaryJson))
 
     await summarizeMeeting('Test transcript')
 
@@ -94,9 +100,7 @@ describe('summarizeMeeting', () => {
   })
 
   it('includes the meeting title in the prompt when provided', async () => {
-    mockCreate.mockResolvedValueOnce({
-      content: [{ type: 'text', text: validSummaryJson }],
-    })
+    mockCreate.mockResolvedValueOnce(mockResponse(validSummaryJson))
 
     await summarizeMeeting('Test transcript', 'March 4 Board Meeting')
 
@@ -106,42 +110,43 @@ describe('summarizeMeeting', () => {
   })
 
   it('parses a plain JSON response correctly', async () => {
-    mockCreate.mockResolvedValueOnce({
-      content: [{ type: 'text', text: validSummaryJson }],
-    })
+    mockCreate.mockResolvedValueOnce(mockResponse(validSummaryJson))
 
-    const result = await summarizeMeeting('Test transcript')
+    const { summary } = await summarizeMeeting('Test transcript')
 
-    expect(result.summary_text).toBe('The board approved the FY2026 budget with amendments.')
-    expect(result.topics).toEqual(['Budget', 'Staffing'])
-    expect(result.key_decisions).toHaveLength(1)
-    expect(result.action_items).toHaveLength(1)
+    expect(summary.summary_text).toBe('The board approved the FY2026 budget with amendments.')
+    expect(summary.topics).toEqual(['Budget', 'Staffing'])
+    expect(summary.key_decisions).toHaveLength(1)
+    expect(summary.action_items).toHaveLength(1)
+  })
+
+  it('returns token usage from the API response', async () => {
+    mockCreate.mockResolvedValueOnce(mockResponse(validSummaryJson))
+
+    const { usage } = await summarizeMeeting('Test transcript')
+
+    expect(usage.input_tokens).toBe(100)
+    expect(usage.output_tokens).toBe(50)
   })
 
   it('strips ```json markdown fences from the response', async () => {
     const wrapped = '```json\n' + validSummaryJson + '\n```'
-    mockCreate.mockResolvedValueOnce({
-      content: [{ type: 'text', text: wrapped }],
-    })
+    mockCreate.mockResolvedValueOnce(mockResponse(wrapped))
 
-    const result = await summarizeMeeting('Test transcript')
-    expect(result.summary_text).toBe('The board approved the FY2026 budget with amendments.')
+    const { summary } = await summarizeMeeting('Test transcript')
+    expect(summary.summary_text).toBe('The board approved the FY2026 budget with amendments.')
   })
 
   it('strips plain ``` fences (no language tag)', async () => {
     const wrapped = '```\n' + validSummaryJson + '\n```'
-    mockCreate.mockResolvedValueOnce({
-      content: [{ type: 'text', text: wrapped }],
-    })
+    mockCreate.mockResolvedValueOnce(mockResponse(wrapped))
 
-    const result = await summarizeMeeting('Test transcript')
-    expect(result.summary_text).toBeTruthy()
+    const { summary } = await summarizeMeeting('Test transcript')
+    expect(summary.summary_text).toBeTruthy()
   })
 
   it('throws when the response contains invalid JSON', async () => {
-    mockCreate.mockResolvedValueOnce({
-      content: [{ type: 'text', text: 'not valid json at all' }],
-    })
+    mockCreate.mockResolvedValueOnce(mockResponse('not valid json at all'))
 
     await expect(summarizeMeeting('Test transcript')).rejects.toThrow(
       'Failed to parse summary response as JSON'
@@ -150,9 +155,7 @@ describe('summarizeMeeting', () => {
 
   it('throws when summary_text is missing from response', async () => {
     const invalid = JSON.stringify({ topics: ['Budget'] })
-    mockCreate.mockResolvedValueOnce({
-      content: [{ type: 'text', text: invalid }],
-    })
+    mockCreate.mockResolvedValueOnce(mockResponse(invalid))
 
     await expect(summarizeMeeting('Test transcript')).rejects.toThrow(
       'Invalid summary structure'
@@ -162,6 +165,7 @@ describe('summarizeMeeting', () => {
   it('throws when the API returns no text content block', async () => {
     mockCreate.mockResolvedValueOnce({
       content: [{ type: 'tool_use', id: 'x', name: 'y', input: {} }],
+      usage: { input_tokens: 0, output_tokens: 0 },
     })
 
     await expect(summarizeMeeting('Test transcript')).rejects.toThrow(
@@ -171,12 +175,10 @@ describe('summarizeMeeting', () => {
 
   it('defaults missing key_decisions and action_items to empty arrays', async () => {
     const minimal = JSON.stringify({ summary_text: 'Brief summary', topics: ['X'] })
-    mockCreate.mockResolvedValueOnce({
-      content: [{ type: 'text', text: minimal }],
-    })
+    mockCreate.mockResolvedValueOnce(mockResponse(minimal))
 
-    const result = await summarizeMeeting('Test transcript')
-    expect(result.key_decisions).toEqual([])
-    expect(result.action_items).toEqual([])
+    const { summary } = await summarizeMeeting('Test transcript')
+    expect(summary.key_decisions).toEqual([])
+    expect(summary.action_items).toEqual([])
   })
 })

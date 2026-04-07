@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Home, FileText, Bell, Upload, LogIn, LogOut, Sun, Moon } from 'lucide-react'
+import { Home, FileText, Bell, Upload, LayoutDashboard, LogIn, LogOut, Sun, Moon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { APP_NAME, NAV_LINKS } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
+import { isAdminJwt } from '@/lib/auth/get-role'
 import type { User } from '@supabase/supabase-js'
 
 interface NavItem {
@@ -24,11 +25,13 @@ const iconMap: Record<string, React.ReactNode> = {
   Meetings: <FileText size={18} strokeWidth={2.5} />,
   'My Alerts': <Bell size={18} strokeWidth={2.5} />,
   Import: <Upload size={18} strokeWidth={2.5} />,
+  Dashboard: <LayoutDashboard size={18} strokeWidth={2.5} />,
 }
 
 export function TubelightNavbar() {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [supabase] = useState(() => createClient())
@@ -39,14 +42,17 @@ export function TubelightNavbar() {
   }, [])
 
   useEffect(() => {
-    const getUser = async () => {
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsAdmin(session ? isAdminJwt(session.access_token) : false)
     }
-    getUser()
+    init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      setIsAdmin(session ? isAdminJwt(session.access_token) : false)
     })
 
     return () => subscription.unsubscribe()
@@ -71,7 +77,7 @@ export function TubelightNavbar() {
   }
 
   // Build nav items from NAV_LINKS + auth items
-  const navItems: NavItem[] = NAV_LINKS.filter(link => !link.protected || user).map(link => ({
+  const navItems: NavItem[] = NAV_LINKS.filter(link => (!link.protected || user) && (!link.adminOnly || isAdmin)).map(link => ({
     name: link.label,
     url: link.href,
     icon: iconMap[link.label] || <Home size={18} strokeWidth={2.5} />,

@@ -60,10 +60,15 @@ Here is the transcript:
 
 `
 
+export interface SummarizeResult {
+  summary: MeetingSummary
+  usage: { input_tokens: number; output_tokens: number }
+}
+
 export async function summarizeMeeting(
   transcript: string,
   meetingTitle?: string
-): Promise<MeetingSummary> {
+): Promise<SummarizeResult> {
   const contextHeader = meetingTitle
     ? `Meeting: ${meetingTitle}\n\n`
     : ''
@@ -112,13 +117,18 @@ export async function summarizeMeeting(
     throw new Error('Invalid summary structure returned from Claude')
   }
 
-  // Ensure arrays exist with defaults
   return {
-    summary_text: parsed.summary_text,
-    topics: parsed.topics || [],
-    key_decisions: parsed.key_decisions || [],
-    action_items: parsed.action_items || [],
-    sentiment: parsed.sentiment || 'neutral',
+    summary: {
+      summary_text: parsed.summary_text,
+      topics: parsed.topics || [],
+      key_decisions: parsed.key_decisions || [],
+      action_items: parsed.action_items || [],
+      sentiment: parsed.sentiment || 'neutral',
+    },
+    usage: {
+      input_tokens: response.usage.input_tokens,
+      output_tokens: response.usage.output_tokens,
+    },
   }
 }
 

@@ -44,5 +44,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# supabase
+supabase/.temp/
+
+# IDE
+.idea/
+
 .claude/
 CLAUDE.md

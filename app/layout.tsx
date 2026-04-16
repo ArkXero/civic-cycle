@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, JetBrains_Mono } from "next/font/google";
+import { Playfair_Display, Manrope } from "next/font/google";
 import "./globals.css";
 import { ScrollAwareLogo } from "@/components/ui/scroll-aware-logo";
 import { TubelightNavbar } from "@/components/ui/tubelight-navbar";
@@ -13,7 +13,7 @@ const playfair = Playfair_Display({
   weight: ["400"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-body-var",
   weight: ["400", "500", "700"],
@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${playfair.variable} ${jetbrainsMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${playfair.variable} ${manrope.variable} antialiased min-h-screen flex flex-col`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <ScrollAwareLogo />

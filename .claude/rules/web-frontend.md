@@ -1,5 +1,5 @@
 ---
-paths: "src/app/**/*.tsx,src/components/**/*.tsx"
+paths: "app/**/*.tsx,components/**/*.tsx"
 ---
 
 # Frontend Conventions

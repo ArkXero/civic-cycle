@@ -112,7 +112,7 @@
 
     --border: rgba(26, 138, 154, 0.2);
     --input: rgba(26, 138, 154, 0.15);
-    --ring: #1A8A9A;
+    --ring: #F5A623;
 
     --chart-1: #1A8A9A;
     --chart-2: #2BBDD4;
@@ -157,7 +157,7 @@
 
     --border: rgba(26, 138, 154, 0.25);
     --input: rgba(26, 138, 154, 0.3);
-    --ring: #1A8A9A;
+    --ring: #F5A623;
 
     --chart-1: #1A8A9A;
     --chart-2: #2BBDD4;
@@ -178,6 +178,9 @@
 @layer base {
     * {
         @apply border-border outline-ring/50;
+    }
+    button, [role="button"], a {
+        outline-color: #1A8A9A80;
     }
     body {
         @apply bg-background text-foreground;

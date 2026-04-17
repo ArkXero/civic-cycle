@@ -6,8 +6,8 @@ export function Footer() {
 
   return (
     <footer
+      className="bg-[#245f6b] dark:bg-[#061820]"
       style={{
-        background: '#061820',
         borderTop: '1px solid rgba(26, 138, 154, 0.25)',
       }}
     >

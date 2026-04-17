@@ -21,7 +21,7 @@ const repeatedNotifications = Array.from({ length: 5 }, () => notifications).fla
 
 function NotificationCard({ name, description, icon, color, time }: Notification) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-secondary p-3">
+    <div className="flex items-center gap-3 rounded-lg border border-[#F5A623]/40 bg-secondary dark:bg-[#0c2228] p-3">
       <div
         className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-sm"
         style={{ backgroundColor: `${color}20` }}
@@ -45,7 +45,7 @@ export default function KeywordAlertsHeader() {
           <NotificationCard key={`${n.name}-${i}`} {...n} />
         ))}
       </AnimatedList>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card dark:from-[#0f2535]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card dark:from-[#0f2535] to-transparent" />
     </div>
   );
 }

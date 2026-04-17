@@ -4,6 +4,7 @@ import { ArrowRight, Zap } from 'lucide-react'
 import { useState, Suspense, lazy } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useTheme } from 'next-themes'
 
 const Dithering = lazy(() =>
   import('@paper-design/shaders-react').then((mod) => ({ default: mod.Dithering }))
@@ -13,6 +14,9 @@ const easing = [0.22, 1, 0.36, 1] as [number, number, number, number]
 
 export function DitheringHero() {
   const [isHovered, setIsHovered] = useState(false)
+  const { resolvedTheme } = useTheme()
+  const isLight = resolvedTheme === 'light'
+  const cardBg = isLight ? '#F2F3F4' : '#020C10'
 
   return (
     <section className="py-8 w-full flex justify-center items-center px-4 md:px-6">
@@ -27,22 +31,22 @@ export function DitheringHero() {
           transition={{ duration: 0.9, ease: easing }}
           className="relative overflow-hidden rounded-[48px] border shadow-lg min-h-[600px] md:min-h-[680px] flex flex-col items-center justify-center"
           style={{
-            background: '#020C10',
+            background: cardBg,
             borderColor: 'rgba(26, 138, 154, 0.2)',
           }}
         >
           {/* Dithering shader background */}
-          <Suspense fallback={<div className="absolute inset-0" style={{ background: '#020C10' }} />}>
+          <Suspense fallback={<div className="absolute inset-0" style={{ background: cardBg }} />}>
             <div
               className="absolute inset-0 z-0 pointer-events-none"
               style={{
-                opacity: 0.55,
-                mixBlendMode: 'screen',
+                opacity: isLight ? 0.45 : 0.55,
+                mixBlendMode: isLight ? 'multiply' : 'screen',
               }}
             >
               <Dithering
-                colorBack="#00000000"
-                colorFront="#0D5E6B"
+                colorBack={isLight ? '#F2F3F4' : '#00000000'}
+                colorFront={isLight ? '#F5A623' : '#0D5E6B'}
                 shape="warp"
                 type="4x4"
                 speed={isHovered ? 0.6 : 0.2}
@@ -66,12 +70,12 @@ export function DitheringHero() {
                 fontSize: 'clamp(3.5rem, 9vw, 8rem)',
                 lineHeight: 1.05,
                 letterSpacing: '-0.02em',
-                color: '#F4F8F9',
+                color: isLight ? '#0D1B2A' : '#F4F8F9',
               }}
             >
               Fairfax County,
               <br />
-              <span style={{ color: 'rgba(244,248,249,0.65)', fontStyle: 'italic' }}>
+              <span style={{ color: isLight ? 'rgba(13,27,42,0.65)' : 'rgba(244,248,249,0.65)', fontStyle: 'italic' }}>
                 Made Clear.
               </span>
             </motion.h1>
@@ -95,7 +99,7 @@ export function DitheringHero() {
               transition={{ duration: 0.7, delay: 0.25, ease: easing }}
               className="mt-8 text-lg md:text-xl leading-relaxed max-w-2xl"
               style={{
-                color: 'rgba(244,248,249,0.60)',
+                color: isLight ? 'rgba(13,27,42,0.65)' : 'rgba(244,248,249,0.60)',
                 fontFamily: 'var(--font-body-var), monospace',
               }}
             >
@@ -131,9 +135,9 @@ export function DitheringHero() {
                 href="/meetings"
                 className="inline-flex h-14 items-center justify-center gap-3 rounded-full px-10 text-base font-medium transition-all duration-300 hover:scale-105 active:scale-95"
                 style={{
-                  background: 'rgba(26,138,154,0.12)',
+                  background: isLight ? 'rgba(26,138,154,0.10)' : 'rgba(26,138,154,0.12)',
                   border: '1px solid rgba(26,138,154,0.35)',
-                  color: '#F4F8F9',
+                  color: isLight ? '#0D1B2A' : '#F4F8F9',
                   fontFamily: 'var(--font-body-var), monospace',
                 }}
               >

@@ -18,8 +18,8 @@ export function MeetingCard({ meeting }: MeetingCardProps) {
           backdropFilter: 'blur(12px)',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(43,189,212,0.5)'
-          e.currentTarget.style.boxShadow = '0 8px 32px rgba(26,138,154,0.2)'
+          e.currentTarget.style.borderColor = 'rgba(245,166,35,0.5)'
+          e.currentTarget.style.boxShadow = '0 0 28px rgba(245,166,35,0.22)'
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.borderColor = 'rgba(26,138,154,0.25)'
@@ -56,36 +56,6 @@ export function MeetingCard({ meeting }: MeetingCardProps) {
           </p>
         )}
 
-        {/* Topic tags */}
-        {meeting.summary?.topics && meeting.summary.topics.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {meeting.summary.topics.slice(0, 4).map((topic) => (
-              <span
-                key={topic}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold tracking-wide"
-                style={{
-                  background: 'rgba(245,166,35,0.15)',
-                  color: '#F5A623',
-                  fontFamily: 'var(--font-body-var), monospace',
-                }}
-              >
-                {topic}
-              </span>
-            ))}
-            {meeting.summary.topics.length > 4 && (
-              <span
-                className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold"
-                style={{
-                  background: 'rgba(26,138,154,0.12)',
-                  color: '#2BBDD4',
-                  fontFamily: 'var(--font-body-var), monospace',
-                }}
-              >
-                +{meeting.summary.topics.length - 4} more
-              </span>
-            )}
-          </div>
-        )}
 
         {/* Footer row */}
         <div className="flex items-center justify-between mt-auto pt-1">

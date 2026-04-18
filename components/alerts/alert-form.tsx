@@ -2,12 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { MEETING_BODIES } from '@/lib/constants'
+
+const alertSchema = z.object({
+  keyword: z.string().min(2, 'Keyword must be at least 2 characters').max(100, 'Keyword too long'),
+})
 
 interface AlertFormProps {
   onSuccess?: () => void
@@ -32,8 +37,9 @@ export function AlertForm({ onSuccess }: AlertFormProps) {
     e.preventDefault()
     setError(null)
 
-    if (keyword.trim().length < 2) {
-      setError('Keyword must be at least 2 characters')
+    const result = alertSchema.safeParse({ keyword: keyword.trim() })
+    if (!result.success) {
+      setError(result.error.errors[0].message)
       return
     }
 

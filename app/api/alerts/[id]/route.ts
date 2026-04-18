@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const uuidSchema = z.string().uuid();
+
+const patchBodySchema = z
+  .object({
+    is_active: z.boolean(),
+  })
+  .strict();
 
 // DELETE /api/alerts/[id] - Delete an alert
 export async function DELETE(
@@ -9,6 +18,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+
+    const idResult = uuidSchema.safeParse(id);
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+    }
+
     const supabase = await createClient();
 
     const {
@@ -83,6 +98,12 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+
+    const idResult = uuidSchema.safeParse(id);
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+    }
+
     const supabase = await createClient();
 
     const {
@@ -101,14 +122,16 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const isActive = body.is_active;
+    const bodyResult = patchBodySchema.safeParse(body);
 
-    if (typeof isActive !== "boolean") {
+    if (!bodyResult.success) {
       return NextResponse.json(
-        { error: "Validation error", message: "is_active must be a boolean" },
+        { error: "Validation error", message: bodyResult.error.issues[0].message },
         { status: 400 },
       );
     }
+
+    const { is_active: isActive } = bodyResult.data;
 
     // Use a fresh admin client for all database operations
     const adminClient = createAdminClient();

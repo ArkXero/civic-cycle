@@ -10,6 +10,14 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache
+    mem_limit: 512m
+    cpus: '1.0'
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
@@ -27,12 +35,17 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    mem_limit: 256m
+    cpus: '0.5'
     ports:
       - "8080:8080"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+      - caddy_logs:/var/log/caddy
     depends_on:
       - app
     networks:
@@ -44,6 +57,7 @@ services:
 volumes:
   caddy_data: # SSL certificates
   caddy_config: # Caddy config cache
+  caddy_logs: # Caddy access logs
 
 # ===========================================
 # NETWORKS

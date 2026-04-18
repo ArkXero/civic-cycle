@@ -3,6 +3,9 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/is-admin'
 import { runSummarize } from '@/lib/run-summarize'
+import { z } from 'zod'
+
+const uuidSchema = z.string().uuid()
 
 interface Meeting {
   id: string
@@ -19,6 +22,12 @@ export async function POST(
 ) {
   try {
     const { id } = await params
+
+    const idResult = uuidSchema.safeParse(id)
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
+    }
+
     const supabase = await createClient()
 
     // Check if user is authenticated and is an admin
@@ -111,6 +120,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+
+    const idResult = uuidSchema.safeParse(id)
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
+    }
+
     const supabase = await createClient()
 
     // Check if user is authenticated and is an admin

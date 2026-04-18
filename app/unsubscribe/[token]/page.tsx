@@ -1,3 +1,4 @@
+// TODO: SECURITY — alert UUID is used as unsubscribe token (IDOR risk). Generate cryptographic tokens and add unsubscribe_token column.
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { CheckCircle2, XCircle } from 'lucide-react'

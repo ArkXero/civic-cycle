@@ -12,42 +12,47 @@ export interface AdminUser {
 // GET /api/admin/users
 // Returns all auth users with their current role from user_roles.
 export async function GET() {
-  const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-  if (!isAdminEmail(user.email)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+    if (!isAdminEmail(user.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
-  const adminClient = createAdminClient()
+    const adminClient = createAdminClient()
 
-  // Fetch all auth users (service_role only)
-  const { data: authData, error: usersError } = await adminClient.auth.admin.listUsers()
-  if (usersError) {
-    console.error('Failed to list users:', usersError)
-    return NextResponse.json({ error: 'Failed to list users' }, { status: 500 })
-  }
+    // Fetch all auth users (service_role only)
+    const { data: authData, error: usersError } = await adminClient.auth.admin.listUsers()
+    if (usersError) {
+      console.error('Failed to list users:', usersError)
+      return NextResponse.json({ error: 'Failed to list users' }, { status: 500 })
+    }
 
-  // Fetch all role assignments
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: roles } = await (adminClient.from('user_roles') as any)
-    .select('user_id, role')
-
-  const roleMap = new Map<string, 'admin' | 'user'>(
+    // Fetch all role assignments
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (roles ?? []).map((r: any) => [r.user_id as string, r.role as 'admin' | 'user'])
-  )
+    const { data: roles } = await (adminClient.from('user_roles') as any)
+      .select('user_id, role')
 
-  const users: AdminUser[] = authData.users.map((u) => ({
-    id: u.id,
-    email: u.email ?? '(no email)',
-    role: roleMap.get(u.id) ?? 'user',
-    created_at: u.created_at,
-  }))
+    const roleMap = new Map<string, 'admin' | 'user'>(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (roles ?? []).map((r: any) => [r.user_id as string, r.role as 'admin' | 'user'])
+    )
 
-  return NextResponse.json({ users })
+    const users: AdminUser[] = authData.users.map((u) => ({
+      id: u.id,
+      email: u.email ?? '(no email)',
+      role: roleMap.get(u.id) ?? 'user',
+      created_at: u.created_at,
+    }))
+
+    return NextResponse.json({ users })
+  } catch (error) {
+    console.error('Route error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

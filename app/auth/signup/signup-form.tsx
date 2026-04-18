@@ -2,12 +2,18 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Loader2, CheckCircle2 } from 'lucide-react'
+
+const signupSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+})
 
 interface SignupFormProps {
   redirectTo: string
@@ -33,8 +39,9 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
       return
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+    const result = signupSchema.safeParse({ email, password })
+    if (!result.success) {
+      setError(result.error.errors[0].message)
       return
     }
 

@@ -4,6 +4,9 @@ import { getMeetingContent, getBoardDocsUrl } from '@/lib/boarddocs'
 import { isAdminEmail } from '@/lib/is-admin'
 import { runSummarize } from '@/lib/run-summarize'
 import { logActivity, ActivityTypes } from '@/lib/activity'
+import { z } from 'zod'
+
+const boardDocsIdSchema = z.string().min(1).max(128).regex(/^[a-zA-Z0-9_-]+$/)
 
 // POST /api/boarddocs/meetings/[id]/import - Import a BoardDocs meeting
 export async function POST(
@@ -12,6 +15,12 @@ export async function POST(
 ) {
   try {
     const { id } = await params
+
+    const idResult = boardDocsIdSchema.safeParse(id)
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
+    }
+
     const supabase = await createClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()

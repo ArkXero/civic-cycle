@@ -72,6 +72,20 @@ export async function middleware(request: NextRequest) {
     // General API budget: 120 requests per minute per IP
     const { allowed, reset } = checkRateLimit(`api:${ip}`, 120, 60_000)
     if (!allowed) return tooManyRequests(reset)
+
+    // CORS: block cross-origin API requests
+    const origin = request.headers.get('origin')
+    const host = request.headers.get('host')
+    if (origin) {
+      try {
+        const originHost = new URL(origin).host
+        if (originHost !== host) {
+          return new NextResponse(null, { status: 403 })
+        }
+      } catch {
+        return new NextResponse(null, { status: 403 })
+      }
+    }
   }
 
   // Supabase session refresh + route protection (handles login redirects)

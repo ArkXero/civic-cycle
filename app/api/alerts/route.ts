@@ -5,7 +5,7 @@ import { z } from 'zod'
 const createAlertSchema = z.object({
   keyword: z.string().min(2, 'Keyword must be at least 2 characters').max(100),
   bodies: z.array(z.string()).optional().default([]),
-})
+}).strict()
 
 // GET /api/alerts - List user's alerts
 export async function GET() {

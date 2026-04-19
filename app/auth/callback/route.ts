@@ -2,7 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+
+  // Behind Caddy + Cloudflare the internal URL is http://0.0.0.0:3000.
+  // Use forwarded headers to reconstruct the real public origin.
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https'
+  const origin = forwardedHost
+    ? `${forwardedProto}://${forwardedHost}`
+    : new URL(request.url).origin
+
   const code = searchParams.get('code')
   const rawRedirect = searchParams.get('redirectTo') || '/'
 

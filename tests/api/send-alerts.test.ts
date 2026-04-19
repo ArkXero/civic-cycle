@@ -603,7 +603,7 @@ describe('POST /api/cron/send-alerts', () => {
   // ── sendAlertEmail call correctness ───────────────────────────────────────
 
   it('passes correct params to sendAlertEmail', async () => {
-    process.env.NEXT_PUBLIC_APP_URL = 'https://civiccycle.app'
+    process.env.NEXT_PUBLIC_APP_URL = 'https://civiccycle.net'
 
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))

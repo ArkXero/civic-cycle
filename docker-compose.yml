@@ -30,7 +30,7 @@ services:
       - internal
 
   # ===========================================
-  # CADDY (REVERSE PROXY + AUTO HTTPS)
+  # CADDY (REVERSE PROXY)
   # ===========================================
   caddy:
     image: caddy:2-alpine
@@ -40,7 +40,7 @@ services:
     mem_limit: 256m
     cpus: '0.5'
     ports:
-      - "80:8080"
+      - "8080:8080"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

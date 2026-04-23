@@ -52,3 +52,5 @@ supabase/.temp/
 
 .claude/
 CLAUDE.md
+
+.mcp.json

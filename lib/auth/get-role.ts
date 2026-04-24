@@ -24,3 +24,8 @@ export function getRoleFromJwt(accessToken: string): string {
 export function isAdminJwt(accessToken: string): boolean {
   return getRoleFromJwt(accessToken) === 'admin'
 }
+
+/** Extract `email` from a raw JWT access token string. Returns null if absent. */
+export function getEmailFromJwt(accessToken: string): string | null {
+  return (decodeJwt(accessToken).email as string) ?? null
+}

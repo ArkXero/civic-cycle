@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { isAdminJwt } from '@/lib/auth/get-role'
+import { isAdminJwt, getEmailFromJwt } from '@/lib/auth/get-role'
+import { isAdminEmail } from '@/lib/is-admin'
 
 /**
  * Extract the best available client IP from standard proxy headers.
@@ -17,14 +18,25 @@ function getClientIp(request: NextRequest): string {
 
 /**
  * Extract the Supabase access token from cookies.
- * The cookie name is derived from NEXT_PUBLIC_SUPABASE_URL.
- * Returns null if no valid session cookie is found.
+ * @supabase/ssr chunks large cookies as sb-{ref}-auth-token.0, .1, etc.
+ * This reassembles chunks before parsing.
  */
 function getSupabaseAccessToken(request: NextRequest): string | null {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const projectRef = supabaseUrl.replace(/^https?:\/\//, '').split('.')[0]
-  const cookieName = `sb-${projectRef}-auth-token`
-  const raw = request.cookies.get(cookieName)?.value
+  const baseName = `sb-${projectRef}-auth-token`
+
+  // Collect chunks in order: .0, .1, ... then fall back to unchunked cookie
+  const allCookies = request.cookies.getAll()
+  const chunks = allCookies
+    .filter(c => c.name.startsWith(`${baseName}.`))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(c => c.value)
+
+  const raw = chunks.length > 0
+    ? chunks.join('')
+    : request.cookies.get(baseName)?.value
+
   if (!raw) return null
   try {
     const session = JSON.parse(decodeURIComponent(raw))
@@ -103,7 +115,7 @@ export async function middleware(request: NextRequest) {
     const accessToken = getSupabaseAccessToken(request)
     // accessToken present means the user is logged in; check their role.
     // If no token, updateSession already redirected to login above.
-    if (accessToken && !isAdminJwt(accessToken)) {
+    if (accessToken && !isAdminJwt(accessToken) && !isAdminEmail(getEmailFromJwt(accessToken))) {
       const url = request.nextUrl.clone()
       url.pathname = '/unauthorized'
       return NextResponse.redirect(url)

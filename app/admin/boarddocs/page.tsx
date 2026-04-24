@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { BoardDocsImporter } from '@/components/boarddocs/boarddocs-importer'
-import { isAdminEmail } from '@/lib/is-admin'
+import { isAdminUser } from '@/lib/auth/is-admin-server'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default async function BoardDocsAdminPage() {
     redirect('/auth/login?redirect=/admin/boarddocs')
   }
 
-  if (!isAdminEmail(user.email)) {
+  if (!await isAdminUser(user)) {
     redirect('/unauthorized')
   }
 

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { isAdminEmail } from '@/lib/is-admin'
+import { isAdminUser } from '@/lib/auth/is-admin-server'
 import { DashboardClient } from '@/components/admin/dashboard-client'
 import type { Metadata } from 'next'
 
@@ -17,7 +17,7 @@ export default async function AdminDashboardPage() {
     redirect('/auth/login?redirect=/admin/dashboard')
   }
 
-  if (!isAdminEmail(user.email)) {
+  if (!await isAdminUser(user)) {
     redirect('/unauthorized')
   }
 

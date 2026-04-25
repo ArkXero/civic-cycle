@@ -18,14 +18,13 @@ function KeywordRow({ keywords, reverse = false }: { keywords: string[]; reverse
         <CarouselContent className="ml-0">
           {[...keywords, ...keywords].map((kw, i) => (
             <CarouselItem key={i} className="pl-0 basis-auto">
-              <span className="mx-2 inline-block rounded-full border border-teal-primary text-teal-light bg-transparent px-4 py-1.5 text-sm whitespace-nowrap">
+              <span className="mx-2 inline-block rounded-full border border-primary text-primary bg-transparent px-4 py-1.5 text-sm whitespace-nowrap">
                 {kw}
               </span>
             </CarouselItem>
           ))}
         </CarouselContent>
       </Carousel>
-      {/* fade edges */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-card dark:from-[#0f2535] to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-card dark:from-[#0f2535] to-transparent" />
     </div>

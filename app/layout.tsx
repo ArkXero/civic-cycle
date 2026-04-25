@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Manrope } from "next/font/google";
 import "./globals.css";
-import { ScrollAwareLogo } from "@/components/ui/scroll-aware-logo";
-import { TubelightNavbar } from "@/components/ui/tubelight-navbar";
+import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
@@ -16,7 +15,7 @@ const playfair = Playfair_Display({
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-body-var",
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -46,10 +45,9 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${manrope.variable} antialiased min-h-screen flex flex-col`}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
-          <ScrollAwareLogo />
+        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
+          <Header />
           <main className="flex-1">{children}</main>
-          <TubelightNavbar />
           <Footer />
         </ThemeProvider>
       </body>

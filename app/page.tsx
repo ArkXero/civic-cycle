@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { MeetingWithSummary } from '@/types'
-import { DitheringHero } from '@/components/ui/hero-dithering-card'
-import FeaturesBento from '@/components/features/FeaturesBento'
+import { HeroClean } from '@/components/ui/hero-clean'
+import FeaturesSection from '@/components/features/FeaturesBento'
 import { RecentMeetingsSection, HomeCtaSection } from './_home-client'
 
 export default async function Home() {
@@ -20,9 +20,9 @@ export default async function Home() {
 
   return (
     <div className="bg-background">
-      <DitheringHero />
+      <HeroClean />
       <RecentMeetingsSection meetings={meetings} />
-      <FeaturesBento />
+      <FeaturesSection />
       <HomeCtaSection />
     </div>
   )

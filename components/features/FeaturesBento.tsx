@@ -4,7 +4,7 @@ import SearchFilterHeader from "./SearchFilterHeader";
 import KeywordAlertsHeader from "./KeywordAlertsHeader";
 import { Brain, Search, Bell } from "lucide-react";
 
-const iconClass = "h-4 w-4 text-teal-primary";
+const iconClass = "h-4 w-4 text-primary";
 
 const items = [
   {
@@ -33,17 +33,32 @@ const items = [
   },
 ];
 
-export default function FeaturesBento() {
+export default function FeaturesSection() {
   return (
-    <section className="py-20 px-4 bg-background">
-      <h2 className="text-center text-3xl font-bold text-foreground mb-12">
-        Everything you need to stay informed
-      </h2>
-      <BentoGrid className="max-w-4xl mx-auto md:auto-rows-[20rem]">
-        {items.map((item, i) => (
-          <BentoGridItem key={i} {...item} />
-        ))}
-      </BentoGrid>
+    <section className="py-20 px-6 bg-background">
+      <div className="max-w-[1200px] mx-auto">
+
+        <div className="mb-10">
+          <p className="eyebrow mb-3">How It Works</p>
+          <h2
+            className="text-foreground tracking-[-0.02em] leading-tight"
+            style={{
+              fontFamily: 'var(--font-display-var), Georgia, serif',
+              fontWeight: 400,
+              fontSize: 'clamp(1.6rem, 3vw, 2.1rem)',
+            }}
+          >
+            Built for busy parents and residents
+          </h2>
+        </div>
+
+        <BentoGrid className="max-w-full md:auto-rows-[20rem]">
+          {items.map((item, i) => (
+            <BentoGridItem key={i} {...item} />
+          ))}
+        </BentoGrid>
+
+      </div>
     </section>
   );
 }

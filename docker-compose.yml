@@ -29,6 +29,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - CRON_SECRET=${CRON_SECRET}
+      - ADMIN_EMAILS=${ADMIN_EMAILS}
     networks:
       - internal
 

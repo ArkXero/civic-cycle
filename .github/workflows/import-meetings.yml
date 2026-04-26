@@ -1,0 +1,19 @@
+name: Import BoardDocs Meetings
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 9am UTC daily
+  workflow_dispatch:      # allow manual trigger from Actions tab
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger import
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --fail \
+            --show-error \
+            "${{ secrets.APP_URL }}/api/cron/import-meetings"

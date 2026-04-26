@@ -27,6 +27,7 @@ export async function logActivity(
     })
   } catch (error) {
     // Never throw — activity logging must not break the caller
-    console.error('Failed to log activity:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Failed to log activity:', message)
   }
 }

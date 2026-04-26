@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
+import { isAdminUser } from '@/lib/auth/is-admin-server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
-import { isAdminEmail } from '@/lib/is-admin'
 
 export interface AdminUser {
   id: string
@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!isAdminEmail(user.email)) {
+    if (!await isAdminUser(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

@@ -8,6 +8,10 @@ const mockAdminFrom = vi.fn()
 const mockUserFrom = vi.fn()
 const mockGetUser = vi.fn()
 
+const USER_ID = '11111111-1111-4111-8111-111111111111'
+const ALERT_ID = '22222222-2222-4222-8222-222222222222'
+const OTHER_USER_ID = '33333333-3333-4333-8333-333333333333'
+
 vi.mock('@/lib/supabase/server', () => ({
   createAdminClient: () => ({ from: mockAdminFrom }),
   createClient: () =>
@@ -54,11 +58,10 @@ function makeJsonRequest(url: string, method: string, body?: unknown): NextReque
   })
 }
 
-const fakeUser = { id: 'user-uuid-1', email: 'test@example.com' }
+const fakeUser = { id: USER_ID, email: 'test@example.com' }
 
 const fakeAlert = {
-  id: 'alert-uuid-1',
-  user_id: 'user-uuid-1',
+  id: ALERT_ID,
   keyword: 'budget',
   bodies: [],
   is_active: true,
@@ -266,7 +269,7 @@ describe('POST /api/alerts', () => {
 describe('DELETE /api/alerts/[id]', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  function makeDeleteRequest(id = 'alert-uuid-1'): [NextRequest, { params: Promise<{ id: string }> }] {
+  function makeDeleteRequest(id = ALERT_ID): [NextRequest, { params: Promise<{ id: string }> }] {
     const req = new NextRequest(`http://localhost/api/alerts/${id}`, { method: 'DELETE' })
     return [req, { params: Promise.resolve({ id }) }]
   }
@@ -287,7 +290,7 @@ describe('DELETE /api/alerts/[id]', () => {
     // adminClient.from → fetch alert → not found
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: new Error('not found') }))
 
-    const [req, ctx] = makeDeleteRequest('nonexistent-id')
+    const [req, ctx] = makeDeleteRequest('44444444-4444-4444-8444-444444444444')
     const res = await DELETE(req, ctx)
 
     expect(res.status).toBe(404)
@@ -299,7 +302,7 @@ describe('DELETE /api/alerts/[id]', () => {
     mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null })
     // Fetch returns alert owned by different user
     mockAdminFrom.mockReturnValueOnce(
-      makeChain({ data: { id: 'alert-uuid-1', user_id: 'other-user-id' }, error: null }),
+      makeChain({ data: { id: ALERT_ID, user_id: OTHER_USER_ID }, error: null }),
     )
 
     const [req, ctx] = makeDeleteRequest()
@@ -314,7 +317,7 @@ describe('DELETE /api/alerts/[id]', () => {
     mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null })
     // 1. fetch alert (ownership check)
     mockAdminFrom.mockReturnValueOnce(
-      makeChain({ data: { id: 'alert-uuid-1', user_id: fakeUser.id }, error: null }),
+      makeChain({ data: { id: ALERT_ID, user_id: fakeUser.id }, error: null }),
     )
     // 2. delete
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
@@ -330,7 +333,7 @@ describe('DELETE /api/alerts/[id]', () => {
   it('returns 500 when delete query fails', async () => {
     mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null })
     mockAdminFrom.mockReturnValueOnce(
-      makeChain({ data: { id: 'alert-uuid-1', user_id: fakeUser.id }, error: null }),
+      makeChain({ data: { id: ALERT_ID, user_id: fakeUser.id }, error: null }),
     )
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: new Error('db error') }))
 
@@ -349,7 +352,7 @@ describe('PATCH /api/alerts/[id]', () => {
   beforeEach(() => vi.clearAllMocks())
 
   function makePatchRequest(
-    id = 'alert-uuid-1',
+    id = ALERT_ID,
     body?: unknown,
   ): [NextRequest, { params: Promise<{ id: string }> }] {
     const req = makeJsonRequest(`http://localhost/api/alerts/${id}`, 'PATCH', body)
@@ -359,7 +362,7 @@ describe('PATCH /api/alerts/[id]', () => {
   it('returns 401 when user is not authenticated', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null })
 
-    const [req, ctx] = makePatchRequest('alert-uuid-1', { is_active: false })
+    const [req, ctx] = makePatchRequest(ALERT_ID, { is_active: false })
     const res = await PATCH(req, ctx)
 
     expect(res.status).toBe(401)
@@ -370,7 +373,7 @@ describe('PATCH /api/alerts/[id]', () => {
   it('returns 400 when is_active is not a boolean', async () => {
     mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null })
 
-    const [req, ctx] = makePatchRequest('alert-uuid-1', { is_active: 'yes' })
+    const [req, ctx] = makePatchRequest(ALERT_ID, { is_active: 'yes' })
     const res = await PATCH(req, ctx)
 
     expect(res.status).toBe(400)
@@ -382,7 +385,7 @@ describe('PATCH /api/alerts/[id]', () => {
   it('returns 400 when is_active is missing from body', async () => {
     mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null })
 
-    const [req, ctx] = makePatchRequest('alert-uuid-1', {})
+    const [req, ctx] = makePatchRequest(ALERT_ID, {})
     const res = await PATCH(req, ctx)
 
     expect(res.status).toBe(400)
@@ -392,7 +395,7 @@ describe('PATCH /api/alerts/[id]', () => {
     mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null })
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: new Error('not found') }))
 
-    const [req, ctx] = makePatchRequest('nonexistent-id', { is_active: false })
+    const [req, ctx] = makePatchRequest('44444444-4444-4444-8444-444444444444', { is_active: false })
     const res = await PATCH(req, ctx)
 
     expect(res.status).toBe(404)
@@ -403,10 +406,10 @@ describe('PATCH /api/alerts/[id]', () => {
   it('returns 403 when alert belongs to a different user', async () => {
     mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null })
     mockAdminFrom.mockReturnValueOnce(
-      makeChain({ data: { id: 'alert-uuid-1', user_id: 'other-user' }, error: null }),
+      makeChain({ data: { id: ALERT_ID, user_id: OTHER_USER_ID }, error: null }),
     )
 
-    const [req, ctx] = makePatchRequest('alert-uuid-1', { is_active: false })
+    const [req, ctx] = makePatchRequest(ALERT_ID, { is_active: false })
     const res = await PATCH(req, ctx)
 
     expect(res.status).toBe(403)
@@ -420,12 +423,12 @@ describe('PATCH /api/alerts/[id]', () => {
 
     // 1. Ownership fetch
     mockAdminFrom.mockReturnValueOnce(
-      makeChain({ data: { id: 'alert-uuid-1', user_id: fakeUser.id }, error: null }),
+      makeChain({ data: { id: ALERT_ID, user_id: fakeUser.id }, error: null }),
     )
     // 2. Update
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: updatedAlert, error: null }))
 
-    const [req, ctx] = makePatchRequest('alert-uuid-1', { is_active: false })
+    const [req, ctx] = makePatchRequest(ALERT_ID, { is_active: false })
     const res = await PATCH(req, ctx)
 
     expect(res.status).toBe(200)
@@ -438,11 +441,11 @@ describe('PATCH /api/alerts/[id]', () => {
     const updatedAlert = { ...fakeAlert, is_active: true }
 
     mockAdminFrom.mockReturnValueOnce(
-      makeChain({ data: { id: 'alert-uuid-1', user_id: fakeUser.id }, error: null }),
+      makeChain({ data: { id: ALERT_ID, user_id: fakeUser.id }, error: null }),
     )
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: updatedAlert, error: null }))
 
-    const [req, ctx] = makePatchRequest('alert-uuid-1', { is_active: true })
+    const [req, ctx] = makePatchRequest(ALERT_ID, { is_active: true })
     const res = await PATCH(req, ctx)
 
     expect(res.status).toBe(200)
@@ -454,11 +457,11 @@ describe('PATCH /api/alerts/[id]', () => {
     mockGetUser.mockResolvedValue({ data: { user: fakeUser }, error: null })
 
     mockAdminFrom.mockReturnValueOnce(
-      makeChain({ data: { id: 'alert-uuid-1', user_id: fakeUser.id }, error: null }),
+      makeChain({ data: { id: ALERT_ID, user_id: fakeUser.id }, error: null }),
     )
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: new Error('db error') }))
 
-    const [req, ctx] = makePatchRequest('alert-uuid-1', { is_active: false })
+    const [req, ctx] = makePatchRequest(ALERT_ID, { is_active: false })
     const res = await PATCH(req, ctx)
 
     expect(res.status).toBe(500)

@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { AlertsClient } from './alerts-client'
 
+const publicAlertSelect = 'id, keyword, bodies, is_active, created_at'
+
 export const metadata: Metadata = {
   title: 'My Alerts',
   description: 'Manage your keyword alerts',
@@ -21,7 +23,7 @@ async function getAlerts() {
 
   const { data: alerts } = await supabase
     .from('alert_preferences')
-    .select('*')
+    .select(publicAlertSelect)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 

@@ -76,6 +76,7 @@ const fakeAlert = {
   user_id: 'user-1',
   keyword: 'budget',
   bodies: null, // no body filter → matches all
+  unsubscribe_token: 'unsubscribe-token-1',
 }
 
 const fakeUserProfile = {
@@ -410,8 +411,8 @@ describe('POST /api/cron/send-alerts', () => {
 
   it('sends at most one email per user per meeting even with multiple matching alerts', async () => {
     // Two alerts for the same user, both matching the same meeting
-    const alert1 = { id: 'alert-1', user_id: 'user-1', keyword: 'budget', bodies: null }
-    const alert2 = { id: 'alert-2', user_id: 'user-1', keyword: 'fy2027', bodies: null }
+    const alert1 = { id: 'alert-1', user_id: 'user-1', keyword: 'budget', bodies: null, unsubscribe_token: 'token-1' }
+    const alert2 = { id: 'alert-2', user_id: 'user-1', keyword: 'fy2027', bodies: null, unsubscribe_token: 'token-2' }
     const summaryWithBoth = {
       ...fakeSummary,
       summary_text: 'The board discussed the FY2027 budget proposal.',
@@ -432,8 +433,8 @@ describe('POST /api/cron/send-alerts', () => {
   })
 
   it('sends separate emails to different users for the same meeting', async () => {
-    const alert1 = { id: 'alert-1', user_id: 'user-1', keyword: 'budget', bodies: null }
-    const alert2 = { id: 'alert-2', user_id: 'user-2', keyword: 'budget', bodies: null }
+    const alert1 = { id: 'alert-1', user_id: 'user-1', keyword: 'budget', bodies: null, unsubscribe_token: 'token-1' }
+    const alert2 = { id: 'alert-2', user_id: 'user-2', keyword: 'budget', bodies: null, unsubscribe_token: 'token-2' }
     const userProfiles = [
       { id: 'user-1', email: 'voter1@example.com' },
       { id: 'user-2', email: 'voter2@example.com' },
@@ -493,8 +494,8 @@ describe('POST /api/cron/send-alerts', () => {
   })
 
   it('continues processing other alerts when one email send fails', async () => {
-    const alert1 = { id: 'alert-1', user_id: 'user-1', keyword: 'budget', bodies: null }
-    const alert2 = { id: 'alert-2', user_id: 'user-2', keyword: 'budget', bodies: null }
+    const alert1 = { id: 'alert-1', user_id: 'user-1', keyword: 'budget', bodies: null, unsubscribe_token: 'token-1' }
+    const alert2 = { id: 'alert-2', user_id: 'user-2', keyword: 'budget', bodies: null, unsubscribe_token: 'token-2' }
     const userProfiles = [
       { id: 'user-1', email: 'voter1@example.com' },
       { id: 'user-2', email: 'voter2@example.com' },
@@ -565,7 +566,7 @@ describe('POST /api/cron/send-alerts', () => {
     ]
     // Keyword 'budget' matches both summaries but same user → 2 emails (one per meeting)
     const twoUserAlerts = [
-      { id: 'alert-u1-m', user_id: 'user-1', keyword: 'budget', bodies: null },
+      { id: 'alert-u1-m', user_id: 'user-1', keyword: 'budget', bodies: null, unsubscribe_token: 'token-u1-m' },
     ]
     const twoUserProfiles = [{ id: 'user-1', email: 'voter@example.com' }]
 
@@ -620,7 +621,7 @@ describe('POST /api/cron/send-alerts', () => {
     expect(call.meetingTitle).toBe(fakeMeeting.title)
     expect(call.meetingBody).toBe(fakeMeeting.body)
     expect(call.meetingUrl).toContain(fakeMeeting.id)
-    expect(call.unsubscribeUrl).toContain(fakeAlert.id)
+    expect(call.unsubscribeUrl).toContain(fakeAlert.unsubscribe_token)
 
     delete process.env.NEXT_PUBLIC_APP_URL
   })

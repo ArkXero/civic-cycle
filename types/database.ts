@@ -124,6 +124,7 @@ export type Database = {
           keyword: string
           bodies: string[]
           is_active: boolean
+          unsubscribe_token: string
           created_at: string
         }
         Insert: {
@@ -132,6 +133,7 @@ export type Database = {
           keyword: string
           bodies?: string[]
           is_active?: boolean
+          unsubscribe_token?: string
           created_at?: string
         }
         Update: {
@@ -140,6 +142,7 @@ export type Database = {
           keyword?: string
           bodies?: string[]
           is_active?: boolean
+          unsubscribe_token?: string
           created_at?: string
         }
       }

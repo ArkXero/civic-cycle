@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isAdminUser } from '@/lib/auth/is-admin-server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getMeetingContent, getBoardDocsUrl } from '@/lib/boarddocs'
-import { isAdminEmail } from '@/lib/is-admin'
 import { runSummarize } from '@/lib/run-summarize'
 import { logActivity, ActivityTypes } from '@/lib/activity'
 import { z } from 'zod'
@@ -31,7 +31,7 @@ export async function POST(
       )
     }
 
-    if (!isAdminEmail(user.email)) {
+    if (!await isAdminUser(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

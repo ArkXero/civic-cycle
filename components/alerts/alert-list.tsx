@@ -2,10 +2,10 @@
 
 import { AlertCard } from './alert-card'
 import { Bell } from 'lucide-react'
-import type { AlertPreference } from '@/types'
+import type { PublicAlertPreference } from '@/types'
 
 interface AlertListProps {
-  alerts: AlertPreference[]
+  alerts: PublicAlertPreference[]
   onDelete: (id: string) => Promise<void>
   onToggle: (id: string, isActive: boolean) => Promise<void>
 }

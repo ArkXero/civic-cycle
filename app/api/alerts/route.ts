@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { randomBytes } from 'crypto'
 import { z } from 'zod'
+
+const publicAlertSelect = 'id, keyword, bodies, is_active, created_at'
 
 const createAlertSchema = z.object({
   keyword: z.string().min(2, 'Keyword must be at least 2 characters').max(100),
@@ -23,7 +26,7 @@ export async function GET() {
 
     const { data: alerts, error } = await supabase
       .from('alert_preferences')
-      .select('*')
+      .select(publicAlertSelect)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -86,16 +89,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: alert, error } = await (supabase
-      .from('alert_preferences') as any)
+    const { data: alert, error } = await supabase
+      .from('alert_preferences')
       .insert({
         user_id: user.id,
         keyword: keyword.toLowerCase(),
         bodies,
         is_active: true,
+        unsubscribe_token: randomBytes(32).toString('hex'),
       })
-      .select()
+      .select(publicAlertSelect)
       .single()
 
     if (error) {

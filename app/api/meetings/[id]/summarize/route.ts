@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isAdminUser } from '@/lib/auth/is-admin-server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
-import { isAdminEmail } from '@/lib/is-admin'
 import { runSummarize } from '@/lib/run-summarize'
 import { z } from 'zod'
 
@@ -40,19 +40,22 @@ export async function POST(
       )
     }
 
-    if (!isAdminEmail(user.email)) {
+    if (!await isAdminUser(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Get the meeting with its transcript
     const adminClient = createAdminClient()
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: meeting, error: fetchError } = await (adminClient
-      .from('meetings') as any)
+    const meetingResult = await adminClient
+      .from('meetings')
       .select('id, title, transcript_text, status, updated_at')
       .eq('id', id)
-      .single() as { data: Meeting | null; error: Error | null }
+      .single()
+    const { data: meeting, error: fetchError } = meetingResult as unknown as {
+      data: Meeting | null
+      error: Error | null
+    }
 
     if (fetchError || !meeting) {
       return NextResponse.json(
@@ -87,12 +90,14 @@ export async function POST(
     }
 
     // Check if already summarized
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existingSummary } = await (adminClient
-      .from('summaries') as any)
+    const existingSummaryResult = await adminClient
+      .from('summaries')
       .select('id')
       .eq('meeting_id', id)
       .single()
+    const { data: existingSummary } = existingSummaryResult as unknown as {
+      data: { id: string } | null
+    }
 
     if (existingSummary) {
       return NextResponse.json(
@@ -138,18 +143,20 @@ export async function DELETE(
       )
     }
 
-    if (!isAdminEmail(user.email)) {
+    if (!await isAdminUser(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const adminClient = createAdminClient()
 
     // Delete the summary
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: deleteError } = await (adminClient
-      .from('summaries') as any)
+    const deleteSummaryResult = await adminClient
+      .from('summaries')
       .delete()
       .eq('meeting_id', id)
+    const { error: deleteError } = deleteSummaryResult as unknown as {
+      error: Error | null
+    }
 
     if (deleteError) {
       console.error('Failed to delete summary:', deleteError)

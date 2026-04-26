@@ -23,6 +23,7 @@ interface Alert {
   user_id: string
   keyword: string
   bodies: string[] | null
+  unsubscribe_token: string
 }
 
 interface UserProfile {
@@ -55,9 +56,8 @@ export async function POST(request: NextRequest) {
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: recentMeetings, error: meetingsError } = await (supabase
-      .from('meetings') as any)
+    const recentMeetingsResult = await supabase
+      .from('meetings')
       .select(`
         id,
         title,
@@ -65,7 +65,11 @@ export async function POST(request: NextRequest) {
         meeting_date
       `)
       .eq('status', 'summarized')
-      .gte('updated_at', yesterday.toISOString()) as { data: Meeting[] | null; error: Error | null }
+      .gte('updated_at', yesterday.toISOString())
+    const {
+      data: recentMeetings,
+      error: meetingsError,
+    } = recentMeetingsResult as unknown as { data: Meeting[] | null; error: Error | null }
 
     if (meetingsError) {
       console.error('Error fetching recent meetings:', meetingsError)
@@ -81,11 +85,14 @@ export async function POST(request: NextRequest) {
 
     // Get summaries for these meetings
     const meetingIds = recentMeetings.map(m => m.id)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: summaries, error: summariesError } = await (supabase
-      .from('summaries') as any)
+    const summariesResult = await supabase
+      .from('summaries')
       .select('*')
-      .in('meeting_id', meetingIds) as { data: Summary[] | null; error: Error | null }
+      .in('meeting_id', meetingIds)
+    const {
+      data: summaries,
+      error: summariesError,
+    } = summariesResult as unknown as { data: Summary[] | null; error: Error | null }
 
     if (summariesError) {
       console.error('Error fetching summaries:', summariesError)
@@ -99,16 +106,20 @@ export async function POST(request: NextRequest) {
     const summaryMap = new Map(summaries?.map(s => [s.meeting_id, s]) || [])
 
     // Get all active alerts
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: alerts, error: alertsError } = await (supabase
-      .from('alert_preferences') as any)
+    const alertsResult = await supabase
+      .from('alert_preferences')
       .select(`
         id,
         user_id,
         keyword,
-        bodies
+        bodies,
+        unsubscribe_token
       `)
-      .eq('is_active', true) as { data: Alert[] | null; error: Error | null }
+      .eq('is_active', true)
+    const {
+      data: alerts,
+      error: alertsError,
+    } = alertsResult as unknown as { data: Alert[] | null; error: Error | null }
 
     if (alertsError) {
       console.error('Error fetching alerts:', alertsError)
@@ -124,11 +135,14 @@ export async function POST(request: NextRequest) {
 
     // Get user emails
     const userIds = [...new Set(alerts.map(a => a.user_id))]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: userProfiles, error: usersError } = await (supabase
-      .from('user_profiles') as any)
+    const userProfilesResult = await supabase
+      .from('user_profiles')
       .select('id, email')
-      .in('id', userIds) as { data: UserProfile[] | null; error: Error | null }
+      .in('id', userIds)
+    const {
+      data: userProfiles,
+      error: usersError,
+    } = userProfilesResult as unknown as { data: UserProfile[] | null; error: Error | null }
 
     if (usersError) {
       console.error('Error fetching user profiles:', usersError)
@@ -201,7 +215,7 @@ export async function POST(request: NextRequest) {
             meetingBody: meeting.body,
             summaryExcerpt: excerpt,
             meetingUrl: `${appUrl}/meetings/${meeting.id}`,
-            unsubscribeUrl: `${appUrl}/unsubscribe/${alert.id}`,
+            unsubscribeUrl: `${appUrl}/unsubscribe/${alert.unsubscribe_token}`,
           })
 
           // Record in alert history
@@ -247,4 +261,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

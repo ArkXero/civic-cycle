@@ -19,6 +19,9 @@ interface LoginFormProps {
   redirectTo: string
 }
 
+const GENERIC_LOGIN_ERROR = 'Unable to sign in with those credentials.'
+const GENERIC_OAUTH_ERROR = 'Unable to start sign-in. Please try again.'
+
 export function LoginForm({ redirectTo }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,14 +50,14 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       })
 
       if (error) {
-        setError(error.message)
+        setError(GENERIC_LOGIN_ERROR)
         return
       }
 
       router.push(redirectTo)
       router.refresh()
     } catch {
-      setError('An unexpected error occurred')
+      setError(GENERIC_LOGIN_ERROR)
     } finally {
       setIsLoading(false)
     }
@@ -73,11 +76,11 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       })
 
       if (error) {
-        setError(error.message)
+        setError(GENERIC_OAUTH_ERROR)
         setIsGoogleLoading(false)
       }
     } catch {
-      setError('An unexpected error occurred')
+      setError(GENERIC_OAUTH_ERROR)
       setIsGoogleLoading(false)
     }
   }

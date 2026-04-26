@@ -9,6 +9,9 @@ const mockAdminFrom = vi.fn()
 const mockUserFrom = vi.fn()
 const mockGetUser = vi.fn()
 
+const USER_ID = '11111111-1111-4111-8111-111111111111'
+const MEETING_ID = '55555555-5555-4555-8555-555555555555'
+
 vi.mock('@/lib/supabase/server', () => ({
   createAdminClient: () => ({ from: mockAdminFrom }),
   createClient: () => ({
@@ -18,8 +21,8 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 // Mock admin check — all non-401 tests assume the user is an admin
-vi.mock('@/lib/is-admin', () => ({
-  isAdminEmail: vi.fn().mockReturnValue(true),
+vi.mock('@/lib/auth/is-admin-server', () => ({
+  isAdminUser: vi.fn().mockResolvedValue(true),
 }))
 
 // Mock activity and API-usage trackers so they don't need a real DB
@@ -48,7 +51,7 @@ import { POST } from '@/app/api/meetings/[id]/summarize/route'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function makeRequest(id = 'meeting-123') {
+function makeRequest(id = MEETING_ID) {
   const req = new NextRequest(`http://localhost/api/meetings/${id}/summarize`, {
     method: 'POST',
   })
@@ -123,7 +126,7 @@ describe('POST /api/meetings/[id]/summarize', () => {
   // ── Meeting lookup ────────────────────────────────────────────────────────
 
   it('returns 404 when meeting does not exist', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
     mockAdminFrom.mockReturnValue(makeChain({ data: null, error: new Error('not found') }))
 
     const { req, params } = makeRequest()
@@ -137,9 +140,9 @@ describe('POST /api/meetings/[id]/summarize', () => {
   // ── No transcript ─────────────────────────────────────────────────────────
 
   it('returns 400 when meeting has no transcript_text', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
-    const meeting = { id: 'meeting-123', title: 'Test', transcript_text: null, status: 'pending', updated_at: new Date().toISOString() }
+    const meeting = { id: MEETING_ID, title: 'Test', transcript_text: null, status: 'pending', updated_at: new Date().toISOString() }
     mockAdminFrom.mockReturnValue(makeChain({ data: meeting, error: null }))
 
     const { req, params } = makeRequest()
@@ -153,11 +156,11 @@ describe('POST /api/meetings/[id]/summarize', () => {
   // ── Processing guard ──────────────────────────────────────────────────────
 
   it('returns 409 when meeting is already processing and not stuck', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const recentTime = new Date(Date.now() - 2 * 60 * 1000).toISOString() // 2 min ago
     const meeting = {
-      id: 'meeting-123',
+      id: MEETING_ID,
       title: 'Test',
       transcript_text: 'content',
       status: 'processing',
@@ -174,11 +177,11 @@ describe('POST /api/meetings/[id]/summarize', () => {
   })
 
   it('resets a stuck processing meeting and continues to summarize', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const stuckTime = new Date(Date.now() - 15 * 60 * 1000).toISOString() // 15 min ago
     const meeting = {
-      id: 'meeting-123',
+      id: MEETING_ID,
       title: 'Test',
       transcript_text: 'content',
       status: 'processing',
@@ -221,10 +224,10 @@ describe('POST /api/meetings/[id]/summarize', () => {
   // ── Already summarized ────────────────────────────────────────────────────
 
   it('returns 409 when summary already exists', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const meeting = {
-      id: 'meeting-123',
+      id: MEETING_ID,
       title: 'Test',
       transcript_text: 'content',
       status: 'pending',
@@ -248,16 +251,16 @@ describe('POST /api/meetings/[id]/summarize', () => {
   // ── Happy path ────────────────────────────────────────────────────────────
 
   it('generates summary, saves it, and sets status to summarized', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const meeting = {
-      id: 'meeting-123',
+      id: MEETING_ID,
       title: 'March Board Meeting',
       transcript_text: 'The board discussed the budget...',
       status: 'pending',
       updated_at: new Date().toISOString(),
     }
-    const savedSummary = { id: 'summary-new', meeting_id: 'meeting-123', ...fakeSummary }
+    const savedSummary = { id: 'summary-new', meeting_id: MEETING_ID, ...fakeSummary }
 
     // 1. fetch meeting
     // 2. check existing summary → none
@@ -291,10 +294,10 @@ describe('POST /api/meetings/[id]/summarize', () => {
   })
 
   it('passes the meeting title to summarizeMeeting', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const meeting = {
-      id: 'meeting-123',
+      id: MEETING_ID,
       title: 'March Board Meeting',
       transcript_text: 'content',
       status: 'pending',
@@ -323,10 +326,10 @@ describe('POST /api/meetings/[id]/summarize', () => {
   // ── Failure handling ──────────────────────────────────────────────────────
 
   it('sets status to failed with error_message when AI throws', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const meeting = {
-      id: 'meeting-123',
+      id: MEETING_ID,
       title: 'Test',
       transcript_text: 'content',
       status: 'pending',
@@ -356,10 +359,10 @@ describe('POST /api/meetings/[id]/summarize', () => {
   })
 
   it('sets status to failed when summary save throws', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const meeting = {
-      id: 'meeting-123',
+      id: MEETING_ID,
       title: 'Test',
       transcript_text: 'content',
       status: 'pending',
@@ -392,10 +395,10 @@ describe('POST /api/meetings/[id]/summarize', () => {
   // ── Multi-chunk ───────────────────────────────────────────────────────────
 
   it('uses only the first chunk with a note when transcript is chunked', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const meeting = {
-      id: 'meeting-123',
+      id: MEETING_ID,
       title: 'Long Meeting',
       transcript_text: 'very long transcript',
       status: 'pending',

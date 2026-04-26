@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
 const uuidSchema = z.string().uuid();
+const publicAlertSelect = 'id, keyword, bodies, is_active, created_at'
 
 const patchBodySchema = z
   .object({
@@ -158,15 +159,13 @@ export async function PATCH(
       );
     }
 
-    // Create a new admin client for the update to avoid type inference issues
     const updateClient = createAdminClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedAlert, error: updateError } = await (updateClient
-      .from("alert_preferences") as any)
+    const { data: updatedAlert, error: updateError } = await updateClient
+      .from("alert_preferences")
       .update({ is_active: isActive })
       .eq("id", id)
-      .select()
+      .select(publicAlertSelect)
       .single();
 
     if (updateError) {

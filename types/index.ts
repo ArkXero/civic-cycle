@@ -9,6 +9,10 @@ export type Summary = Database['public']['Tables']['summaries']['Row']
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type AlertPreference = Database['public']['Tables']['alert_preferences']['Row']
 export type AlertHistory = Database['public']['Tables']['alert_history']['Row']
+export type PublicAlertPreference = Pick<
+  AlertPreference,
+  'id' | 'keyword' | 'bodies' | 'is_active' | 'created_at'
+>
 
 // Insert types (for creating data)
 export type MeetingInsert = Database['public']['Tables']['meetings']['Insert']

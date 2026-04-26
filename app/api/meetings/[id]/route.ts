@@ -12,7 +12,7 @@ export async function GET(
     // First get the meeting
     const { data: meeting, error: meetingError } = await supabase
       .from("meetings")
-      .select("*")
+      .select("id, title, body, meeting_date, source_url, status, created_at, updated_at")
       .eq("id", id)
       .single();
 
@@ -40,7 +40,7 @@ export async function GET(
     // Then get the summary separately
     const { data: summaries } = await supabase
       .from("summaries")
-      .select("*")
+      .select("id, meeting_id, summary_text, key_decisions, action_items, topics, published, created_at")
       .eq("meeting_id", id)
       .limit(1);
 

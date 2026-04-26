@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -19,6 +18,9 @@ interface SignupFormProps {
   redirectTo: string
 }
 
+const GENERIC_SIGNUP_ERROR = 'Unable to create account. Try again or check your email for an existing confirmation link.'
+const GENERIC_OAUTH_ERROR = 'Unable to start sign-up. Please try again.'
+
 export function SignupForm({ redirectTo }: SignupFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -27,7 +29,6 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const router = useRouter()
   const supabase = createClient()
 
   const handleEmailSignup = async (e: React.FormEvent) => {
@@ -57,13 +58,13 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
       })
 
       if (error) {
-        setError(error.message)
+        setError(GENERIC_SIGNUP_ERROR)
         return
       }
 
       setIsSuccess(true)
     } catch {
-      setError('An unexpected error occurred')
+      setError(GENERIC_SIGNUP_ERROR)
     } finally {
       setIsLoading(false)
     }
@@ -82,11 +83,11 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
       })
 
       if (error) {
-        setError(error.message)
+        setError(GENERIC_OAUTH_ERROR)
         setIsGoogleLoading(false)
       }
     } catch {
-      setError('An unexpected error occurred')
+      setError(GENERIC_OAUTH_ERROR)
       setIsGoogleLoading(false)
     }
   }

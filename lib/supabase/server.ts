@@ -3,6 +3,15 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 
+function hardenCookieOptions(options: Record<string, unknown> | undefined) {
+  return {
+    ...options,
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+  }
+}
+
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -17,7 +26,7 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, hardenCookieOptions(options))
             )
           } catch {
             // The `setAll` method was called from a Server Component.

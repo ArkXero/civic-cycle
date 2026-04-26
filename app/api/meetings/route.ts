@@ -22,8 +22,24 @@ export async function GET(request: NextRequest) {
       .from("meetings")
       .select(
         `
-        *,
-        summary:summaries(*)
+        id,
+        title,
+        body,
+        meeting_date,
+        source_url,
+        status,
+        created_at,
+        updated_at,
+        summary:summaries(
+          id,
+          meeting_id,
+          summary_text,
+          key_decisions,
+          action_items,
+          topics,
+          published,
+          created_at
+        )
       `,
         { count: "exact" },
       )

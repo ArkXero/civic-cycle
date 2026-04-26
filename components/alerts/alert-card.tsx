@@ -6,10 +6,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
-import type { AlertPreference } from '@/types'
+import type { PublicAlertPreference } from '@/types'
 
 interface AlertCardProps {
-  alert: AlertPreference
+  alert: PublicAlertPreference
   onDelete: (id: string) => Promise<void>
   onToggle: (id: string, isActive: boolean) => Promise<void>
 }

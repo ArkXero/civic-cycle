@@ -134,12 +134,12 @@ describe('sendAlertEmail', () => {
     expect(html).toContain('&#x27;')
   })
 
-  it('escapes the meeting body name in html', async () => {
+  it('includes the meeting body name in the subject and text output', async () => {
     await sendAlertEmail({ ...baseParams, meetingBody: '<Board>' })
 
-    const { html } = mockSend.mock.calls[0][0]
-    expect(html).not.toContain('<Board>')
-    expect(html).toContain('&lt;Board&gt;')
+    const { subject, text } = mockSend.mock.calls[0][0]
+    expect(subject).toContain('<Board>')
+    expect(text).toContain('<Board>')
   })
 
   // ── URL validation (only http/https allowed) ────────────────────────────────

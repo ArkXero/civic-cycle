@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     // Get all summarized meetings
     let meetingsQuery = supabase
       .from("meetings")
-      .select("*")
+      .select("id, title, body, meeting_date, source_url, status, created_at, updated_at, transcript_text")
       .eq("status", "summarized")
       .order("meeting_date", { ascending: false });
 
@@ -120,7 +120,9 @@ export async function GET(request: NextRequest) {
     // Combine meetings with their summaries
     const transformedMeetings = paginatedMeetings.map((meeting) => {
       const m = meeting as { id: string };
-      return Object.assign({}, meeting, {
+      const publicMeeting = { ...(meeting as Record<string, unknown>) }
+      delete publicMeeting.transcript_text
+      return Object.assign({}, publicMeeting, {
         summary: summaries[m.id] || null,
       });
     });

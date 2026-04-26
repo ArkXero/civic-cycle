@@ -37,6 +37,7 @@ export async function trackApiUsage({
     })
   } catch (error) {
     // Never throw — tracking must not break the caller
-    console.error('Failed to track API usage:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Failed to track API usage:', message)
   }
 }

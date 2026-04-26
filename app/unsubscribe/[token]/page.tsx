@@ -1,4 +1,3 @@
-// TODO: SECURITY — alert UUID is used as unsubscribe token (IDOR risk). Generate cryptographic tokens and add unsubscribe_token column.
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { CheckCircle2, XCircle } from 'lucide-react'
@@ -18,30 +17,30 @@ interface UnsubscribePageProps {
 interface AlertRecord {
   id: string
   keyword: string
-  user_id: string
 }
 
-async function unsubscribeAlert(alertId: string) {
-  // The token is the alert ID for simplicity
-  // In production, you'd want a secure token system
+async function unsubscribeAlert(token: string) {
   const supabase = createAdminClient()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: alertData, error: fetchError } = await (supabase
-    .from('alert_preferences') as any)
-    .select('id, keyword, user_id')
-    .eq('id', alertId)
-    .single() as { data: AlertRecord | null; error: Error | null }
+  const alertLookupResult = await supabase
+    .from('alert_preferences')
+    .select('id, keyword')
+    .eq('unsubscribe_token', token)
+    .single()
+  const { data: alertData, error: fetchError } = alertLookupResult as unknown as {
+    data: AlertRecord | null
+    error: Error | null
+  }
 
   if (fetchError || !alertData) {
     return { success: false, error: 'Alert not found' }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: deleteError } = await (supabase
-    .from('alert_preferences') as any)
+  const deleteResult = await supabase
+    .from('alert_preferences')
     .delete()
-    .eq('id', alertId)
+    .eq('id', alertData.id)
+  const { error: deleteError } = deleteResult as unknown as { error: Error | null }
 
   if (deleteError) {
     return { success: false, error: 'Failed to unsubscribe' }

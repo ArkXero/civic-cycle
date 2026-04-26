@@ -1,17 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { AlertList } from '@/components/alerts/alert-list'
-import type { AlertPreference } from '@/types'
+import type { PublicAlertPreference } from '@/types'
 
 interface AlertsClientProps {
-  initialAlerts: AlertPreference[]
+  initialAlerts: PublicAlertPreference[]
 }
 
 export function AlertsClient({ initialAlerts }: AlertsClientProps) {
   const [alerts, setAlerts] = useState(initialAlerts)
-  const router = useRouter()
 
   const handleDelete = async (id: string) => {
     const response = await fetch(`/api/alerts/${id}`, {

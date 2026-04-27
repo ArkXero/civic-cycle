@@ -32,6 +32,7 @@ export interface NavLink {
 export const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/meetings", label: "Meetings" },
+  { href: "/calendar", label: "Calendar" },
   { href: "/alerts", label: "My Alerts", protected: true },
   { href: "/admin/boarddocs", label: "Import", protected: true, adminOnly: true },
   { href: "/admin/dashboard", label: "Dashboard", protected: true, adminOnly: true },

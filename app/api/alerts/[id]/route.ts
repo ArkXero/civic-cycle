@@ -161,7 +161,8 @@ export async function PATCH(
 
     const updateClient = createAdminClient();
 
-    const { data: updatedAlert, error: updateError } = await updateClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updatedAlert, error: updateError } = await (updateClient as any)
       .from("alert_preferences")
       .update({ is_active: isActive })
       .eq("id", id)

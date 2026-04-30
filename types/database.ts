@@ -24,6 +24,8 @@ export type Database = {
           boarddocs_id: string | null
           status: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message: string | null
+          digest_sent: boolean
+          digest_sent_at: string | null
           created_at: string
           updated_at: string
         }
@@ -41,6 +43,8 @@ export type Database = {
           boarddocs_id?: string | null
           status?: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message?: string | null
+          digest_sent?: boolean
+          digest_sent_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -58,6 +62,8 @@ export type Database = {
           boarddocs_id?: string | null
           status?: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message?: string | null
+          digest_sent?: boolean
+          digest_sent_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -248,6 +254,32 @@ export type Database = {
           user_id?: string
           role?: 'admin' | 'user'
           created_at?: string
+        }
+      }
+      digest_subscribers: {
+        Row: {
+          id: string
+          email: string
+          user_id: string | null
+          subscribed_at: string
+          unsubscribe_token: string
+          active: boolean
+        }
+        Insert: {
+          id?: string
+          email: string
+          user_id?: string | null
+          subscribed_at?: string
+          unsubscribe_token?: string
+          active?: boolean
+        }
+        Update: {
+          id?: string
+          email?: string
+          user_id?: string | null
+          subscribed_at?: string
+          unsubscribe_token?: string
+          active?: boolean
         }
       }
     }

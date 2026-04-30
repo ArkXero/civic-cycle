@@ -12,7 +12,7 @@ export const FROM_EMAIL =
  * HTML email template. Prevents email injection / stored-XSS if AI-generated
  * summary text or user-supplied keywords ever contain HTML tags or entities.
  */
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -133,6 +133,38 @@ Unsubscribe: ${unsubscribeUrl}
     from: `Civic Cycle <${FROM_EMAIL}>`,
     to,
     subject,
+    html,
+    text,
+  });
+}
+
+export interface DigestEmailParams {
+  to: string;
+  unsubscribeUrl: string;
+  digestHtml: string;
+  digestText: string;
+  weekRange: string;
+}
+
+export async function sendDigestEmail({
+  to,
+  unsubscribeUrl,
+  digestHtml,
+  digestText,
+  weekRange,
+}: DigestEmailParams) {
+  const safeUnsubscribeUrl =
+    unsubscribeUrl.startsWith("https://") || unsubscribeUrl.startsWith("http://")
+      ? unsubscribeUrl
+      : "#";
+
+  const html = digestHtml.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, safeUnsubscribeUrl);
+  const text = digestText.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, safeUnsubscribeUrl);
+
+  return resend.emails.send({
+    from: `Civic Cycle <${FROM_EMAIL}>`,
+    to,
+    subject: `FCPS School Board Weekly Digest — ${weekRange}`,
     html,
     text,
   });

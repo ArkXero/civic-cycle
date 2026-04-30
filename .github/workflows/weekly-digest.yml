@@ -1,0 +1,19 @@
+name: Weekly Digest Email
+
+on:
+  schedule:
+    - cron: '0 14 * * 0'  # 14:00 UTC = 9:00 AM EST (UTC-5). Fires at 10 AM during DST.
+  workflow_dispatch:        # allow manual trigger from Actions tab
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send weekly digest
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --fail \
+            --show-error \
+            "${{ secrets.APP_URL }}/api/digest/send"

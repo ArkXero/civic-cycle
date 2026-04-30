@@ -89,7 +89,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: alert, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: alert, error } = await (supabase as any)
       .from('alert_preferences')
       .insert({
         user_id: user.id,

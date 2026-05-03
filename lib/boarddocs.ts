@@ -43,7 +43,11 @@ async function boardDocsPost(endpoint: string, data: Record<string, string> = {}
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Mozilla/5.0',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'Referer': `${BOARDDOCS_BASE}/Home`,
+      'Origin': 'https://go.boarddocs.com',
+      'Accept': 'application/json, text/javascript, */*; q=0.01',
+      'X-Requested-With': 'XMLHttpRequest',
     },
     body,
   })

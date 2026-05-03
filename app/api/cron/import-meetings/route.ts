@@ -20,8 +20,9 @@ export async function POST(request: NextRequest) {
     try {
       boardDocsMeetings = await listMeetings()
     } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err)
       console.error('Failed to fetch BoardDocs meeting list:', err)
-      return NextResponse.json({ error: 'Failed to fetch BoardDocs meetings' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch BoardDocs meetings', detail }, { status: 500 })
     }
 
     // Batch-fetch already-imported source_urls

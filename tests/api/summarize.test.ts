@@ -48,6 +48,7 @@ vi.mock('@/lib/anthropic', () => ({
 
 // Import the route handler AFTER mocks are set up
 import { POST } from '@/app/api/meetings/[id]/summarize/route'
+import { makeChain } from '../helpers/supabase-chain'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -56,28 +57,6 @@ function makeRequest(id = MEETING_ID) {
     method: 'POST',
   })
   return { req, params: Promise.resolve({ id }) }
-}
-
-/**
- * Build a Supabase query chain stub that resolves to { data, error }.
- * The chain is also thenable so that `await chain.insert(...)` or
- * `await chain.update(...).eq(...)` resolve to `result` directly.
- */
-function makeChain(result: { data: unknown; error: unknown }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chain: any = {
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue(result),
-    in: vi.fn().mockReturnThis(),
-    // Thenability: makes `await chain` resolve to result
-    then: (resolve: (v: unknown) => void) => resolve(result),
-    catch: () => Promise.resolve(result),
-  }
-  return chain
 }
 
 /** A valid AI SummarizeResult (wrapped summary + usage) */

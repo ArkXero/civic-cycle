@@ -24,31 +24,7 @@ vi.mock('@/lib/supabase/server', () => ({
 // Import route handlers AFTER mocks are in place
 import { GET, POST } from '@/app/api/alerts/route'
 import { DELETE, PATCH } from '@/app/api/alerts/[id]/route'
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Build a Supabase query chain stub that resolves to { data, error }.
- * Supports chained .select/.insert/.update/.delete/.eq/.single/.in/.order calls.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function makeChain(result: { data: unknown; error: unknown }): any {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chain: any = {
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue(result),
-    in: vi.fn().mockReturnThis(),
-    order: vi.fn().mockResolvedValue(result),
-    // Thenability: `await chain` resolves to result
-    then: (resolve: (v: unknown) => void) => resolve(result),
-    catch: () => Promise.resolve(result),
-  }
-  return chain
-}
+import { makeChain } from '../helpers/supabase-chain'
 
 function makeJsonRequest(url: string, method: string, body?: unknown): NextRequest {
   return new NextRequest(url, {

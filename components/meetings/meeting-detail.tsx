@@ -106,48 +106,7 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
       ) : (
         <Card>
           <CardContent className="py-8 text-center">
-            {meeting.status === 'processing' && (
-              <div className="space-y-2">
-                <p className="text-muted-foreground font-medium">
-                  Summary is being generated.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Check back in a few minutes.
-                </p>
-              </div>
-            )}
-            {meeting.status === 'failed' && (
-              <div className="space-y-2">
-                <p className="text-muted-foreground font-medium">
-                  Summary generation failed.
-                </p>
-                {meeting.error_message && (
-                  <p className="text-sm text-destructive">{meeting.error_message}</p>
-                )}
-                {isAuthenticated && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Use the Regenerate button above to try again.
-                  </p>
-                )}
-              </div>
-            )}
-            {(meeting.status === 'pending' || meeting.status === 'summarized') && (
-              <div className="space-y-2">
-                <p className="text-muted-foreground font-medium">
-                  No summary available yet.
-                </p>
-                {!meeting.transcript_text && (
-                  <p className="text-sm text-muted-foreground">
-                    Import meeting content first using the admin panel.
-                  </p>
-                )}
-                {meeting.transcript_text && !isAuthenticated && (
-                  <p className="text-sm text-muted-foreground">
-                    Sign in to generate a summary.
-                  </p>
-                )}
-              </div>
-            )}
+            <NoSummaryState meeting={meeting} isAuthenticated={isAuthenticated} />
           </CardContent>
         </Card>
       )}
@@ -172,6 +131,51 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
           for official information.
         </p>
       </div>
+    </div>
+  )
+}
+
+function NoSummaryState({
+  meeting,
+  isAuthenticated,
+}: {
+  meeting: MeetingWithSummary
+  isAuthenticated: boolean
+}) {
+  if (meeting.status === 'processing') {
+    return (
+      <div className="space-y-2">
+        <p className="text-muted-foreground font-medium">Summary is being generated.</p>
+        <p className="text-sm text-muted-foreground">Check back in a few minutes.</p>
+      </div>
+    )
+  }
+  if (meeting.status === 'failed') {
+    return (
+      <div className="space-y-2">
+        <p className="text-muted-foreground font-medium">Summary generation failed.</p>
+        {meeting.error_message && (
+          <p className="text-sm text-destructive">{meeting.error_message}</p>
+        )}
+        {isAuthenticated && (
+          <p className="text-sm text-muted-foreground mt-2">
+            Use the Regenerate button above to try again.
+          </p>
+        )}
+      </div>
+    )
+  }
+  return (
+    <div className="space-y-2">
+      <p className="text-muted-foreground font-medium">No summary available yet.</p>
+      {!meeting.transcript_text && (
+        <p className="text-sm text-muted-foreground">
+          Import meeting content first using the admin panel.
+        </p>
+      )}
+      {meeting.transcript_text && !isAuthenticated && (
+        <p className="text-sm text-muted-foreground">Sign in to generate a summary.</p>
+      )}
     </div>
   )
 }

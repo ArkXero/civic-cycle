@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { MEETING_BODIES } from '@/lib/constants'
+import { apiPostJson } from '@/lib/api/fetch'
 
 const alertSchema = z.object({
   keyword: z.string().min(2, 'Keyword must be at least 2 characters').max(100, 'Keyword too long'),
@@ -46,30 +47,18 @@ export function AlertForm({ onSuccess }: AlertFormProps) {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/alerts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          keyword: keyword.trim(),
-          bodies: selectedBodies,
-        }),
+      await apiPostJson('/api/alerts', {
+        keyword: keyword.trim(),
+        bodies: selectedBodies,
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.message || 'Failed to create alert')
-        return
-      }
-
       if (onSuccess) {
         onSuccess()
       } else {
         router.push('/alerts')
         router.refresh()
       }
-    } catch {
-      setError('An unexpected error occurred')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create alert')
     } finally {
       setIsLoading(false)
     }

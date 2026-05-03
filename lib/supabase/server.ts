@@ -2,15 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
-
-function hardenCookieOptions(options: Record<string, unknown> | undefined) {
-  return {
-    ...options,
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-  }
-}
+import { hardenCookieOptions } from './cookie-utils'
 
 export async function createClient() {
   const cookieStore = await cookies()

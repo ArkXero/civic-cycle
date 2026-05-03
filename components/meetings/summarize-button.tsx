@@ -15,12 +15,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { apiCall } from '@/lib/api/fetch'
+import type { MeetingStatus } from '@/types'
 
 interface SummarizeButtonProps {
   meetingId: string
   hasSummary: boolean
   hasTranscript: boolean
-  status: string
+  status: MeetingStatus
 }
 
 export function SummarizeButton({
@@ -33,23 +35,12 @@ export function SummarizeButton({
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const handleSummarize = async () => {
+  const run = async (method: 'POST' | 'DELETE', onOk: () => void) => {
     setIsLoading(true)
     setError(null)
-
     try {
-      const response = await fetch(`/api/meetings/${meetingId}/summarize`, {
-        method: 'POST',
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to generate summary')
-      }
-
-      // Force a hard reload to update server component data
-      window.location.reload()
+      await apiCall(`/api/meetings/${meetingId}/summarize`, { method })
+      onOk()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -57,29 +48,8 @@ export function SummarizeButton({
     }
   }
 
-  const handleDelete = async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`/api/meetings/${meetingId}/summarize`, {
-        method: 'DELETE',
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete summary')
-      }
-
-      // Refresh the page
-      router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const handleSummarize = () => run('POST', () => window.location.reload())
+  const handleDelete = () => run('DELETE', () => router.refresh())
 
   if (!hasTranscript) {
     return (
@@ -150,9 +120,7 @@ export function SummarizeButton({
           </AlertDialog>
         )}
       </div>
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }

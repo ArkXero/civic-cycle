@@ -1,19 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { hardenCookieOptions } from './cookie-utils'
 
-function hardenCookieOptions(options: Record<string, unknown> | undefined) {
-  return {
-    ...options,
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-  }
+const PROTECTED_PATHS = ['/alerts', '/admin']
+const AUTH_PATHS = ['/auth/login', '/auth/signup']
+
+function matchesPath(pathname: string, paths: readonly string[]) {
+  return paths.some((p) => pathname.startsWith(p))
 }
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,9 +24,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
-          supabaseResponse = NextResponse.next({
-            request,
-          })
+          supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, hardenCookieOptions(options))
           )
@@ -38,31 +33,20 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Refreshing the auth token
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/alerts', '/admin']
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  )
+  const { pathname } = request.nextUrl
 
-  if (isProtectedPath && !user) {
+  if (matchesPath(pathname, PROTECTED_PATHS) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
-    url.searchParams.set('redirectTo', request.nextUrl.pathname)
+    url.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(url)
   }
 
-  // Redirect logged-in users away from auth pages
-  const authPaths = ['/auth/login', '/auth/signup']
-  const isAuthPath = authPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  )
-
-  if (isAuthPath && user) {
+  if (matchesPath(pathname, AUTH_PATHS) && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)

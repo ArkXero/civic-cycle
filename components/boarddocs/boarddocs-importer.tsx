@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react'
 import { RefreshCw, Loader2, AlertCircle, Calendar, FileText, CheckCircle2, Download, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/meetings/status-badge'
+import { apiCall } from '@/lib/api/fetch'
+import type { MeetingStatus } from '@/types'
 
 type FilterMode = 'all' | 'imported' | 'available'
 
@@ -15,7 +17,7 @@ interface BoardDocsMeeting {
   numberDate: string
   isImported: boolean
   dbId: string | null
-  dbStatus: string | null
+  dbStatus: MeetingStatus | null
 }
 
 export function BoardDocsImporter() {
@@ -30,15 +32,8 @@ export function BoardDocsImporter() {
   const fetchMeetings = async () => {
     setIsLoading(true)
     setError(null)
-
     try {
-      const response = await fetch('/api/boarddocs/meetings')
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch meetings')
-      }
-
+      const data = await apiCall<{ data: BoardDocsMeeting[] }>('/api/boarddocs/meetings')
       setMeetings(data.data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load meetings')
@@ -54,19 +49,11 @@ export function BoardDocsImporter() {
   const handleImport = async (meetingId: string) => {
     setImportingId(meetingId)
     setImportError(null)
-
     try {
-      const response = await fetch(`/api/boarddocs/meetings/${meetingId}/import`, {
-        method: 'POST',
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to import meeting')
-      }
-
-      // Update local state with DB id and status
+      const data = await apiCall<{ data?: { id: string } }>(
+        `/api/boarddocs/meetings/${meetingId}/import`,
+        { method: 'POST' }
+      )
       setMeetings((prev) =>
         prev.map((m) =>
           m.id === meetingId
@@ -84,27 +71,13 @@ export function BoardDocsImporter() {
   const handleSummarize = async (boardDocsId: string, dbId: string) => {
     setSummarizingId(boardDocsId)
     setImportError(null)
-
     try {
-      const response = await fetch(`/api/meetings/${dbId}/summarize`, {
-        method: 'POST',
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to generate summary')
-      }
-
-      // Update status to summarized
+      await apiCall(`/api/meetings/${dbId}/summarize`, { method: 'POST' })
       setMeetings((prev) =>
-        prev.map((m) =>
-          m.id === boardDocsId ? { ...m, dbStatus: 'summarized' } : m
-        )
+        prev.map((m) => (m.id === boardDocsId ? { ...m, dbStatus: 'summarized' } : m))
       )
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Summary generation failed')
-      // Refresh to get actual status from DB
       fetchMeetings()
     } finally {
       setSummarizingId(null)
@@ -300,19 +273,4 @@ export function BoardDocsImporter() {
       )}
     </div>
   )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  switch (status) {
-    case 'pending':
-      return <Badge variant="secondary">Pending</Badge>
-    case 'processing':
-      return <Badge variant="outline" className="text-yellow-600 border-yellow-600">Processing</Badge>
-    case 'summarized':
-      return <Badge className="bg-green-600 text-white">Summarized</Badge>
-    case 'failed':
-      return <Badge variant="destructive">Failed</Badge>
-    default:
-      return null
-  }
 }

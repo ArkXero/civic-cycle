@@ -19,6 +19,7 @@ export function Header() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [supabase] = useState(() => createClient())
   const { theme, setTheme } = useTheme()
 
@@ -31,6 +32,7 @@ export function Header() {
       setUser(user)
       const { data: { session } } = await supabase.auth.getSession()
       setIsAdmin(session ? isAdminJwt(session.access_token) : false)
+      setAuthLoading(false)
     }
     init()
 
@@ -117,7 +119,7 @@ export function Header() {
           )}
 
           {/* Auth */}
-          {user ? (
+          {!authLoading && (user ? (
             <button
               onClick={handleSignOut}
               className="ml-1 px-3.5 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
@@ -133,7 +135,7 @@ export function Header() {
             >
               Sign In
             </Link>
-          )}
+          ))}
         </nav>
 
         {/* Mobile hamburger */}
@@ -180,7 +182,7 @@ export function Header() {
             </nav>
 
             <div className="mt-6 pt-6 border-t border-border flex flex-col gap-3">
-              {user ? (
+              {!authLoading && (user ? (
                 <button
                   onClick={handleSignOut}
                   className="w-full px-3 py-2.5 rounded-md text-base font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors text-left"
@@ -197,7 +199,7 @@ export function Header() {
                 >
                   Sign In
                 </Link>
-              )}
+              ))}
 
               {mounted && (
                 <button

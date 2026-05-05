@@ -28,11 +28,14 @@ export function Header() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsAdmin(session ? isAdminJwt(session.access_token) : false)
-      setAuthLoading(false)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
+        const { data: { session } } = await supabase.auth.getSession()
+        setIsAdmin(session ? isAdminJwt(session.access_token) : false)
+      } finally {
+        setAuthLoading(false)
+      }
     }
     init()
 

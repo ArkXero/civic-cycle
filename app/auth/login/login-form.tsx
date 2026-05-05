@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -28,7 +27,6 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const router = useRouter()
   const supabase = createClient()
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -54,8 +52,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         return
       }
 
-      router.push(redirectTo)
-      router.refresh()
+      window.location.href = redirectTo
     } catch {
       setError(GENERIC_LOGIN_ERROR)
     } finally {

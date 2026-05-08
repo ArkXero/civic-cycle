@@ -177,6 +177,8 @@ export function DashboardClient() {
   useEffect(() => {
     refresh()
     refreshUsers()
+    const interval = setInterval(refresh, 60_000)
+    return () => clearInterval(interval)
   }, [refresh, refreshUsers])
 
   // ── Loading skeleton ──────────────────────────────────────────────────────

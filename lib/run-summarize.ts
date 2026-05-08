@@ -23,6 +23,8 @@ export async function runSummarize(
     .update({ status: 'processing' })
     .eq('id', meetingId)
 
+  let capturedUsage: { input_tokens: number; output_tokens: number } | null = null
+
   try {
     const chunks = chunkTranscript(transcript)
     let result
@@ -38,6 +40,7 @@ export async function runSummarize(
     }
 
     const { summary, usage } = result
+    capturedUsage = usage
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: saveError } = await (adminClient.from('summaries') as any)
@@ -90,8 +93,8 @@ export async function runSummarize(
       trackApiUsage({
         meetingId,
         model: 'claude-sonnet-4-6',
-        inputTokens: 0,
-        outputTokens: 0,
+        inputTokens: capturedUsage?.input_tokens ?? 0,
+        outputTokens: capturedUsage?.output_tokens ?? 0,
         success: false,
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
       }),

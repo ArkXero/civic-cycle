@@ -52,10 +52,17 @@ export async function GET() {
       checkService('boarddocs', async () => {
         const state = process.env.BOARDDOCS_STATE ?? 'vsba'
         const district = process.env.BOARDDOCS_DISTRICT ?? 'fairfax'
-        const res = await fetch(
-          `https://go.boarddocs.com/${state}/${district}/Board.nsf/vpublic`,
-          { method: 'HEAD', signal: AbortSignal.timeout(5000) }
-        )
+        const base = `https://go.boarddocs.com/${state}/${district}/Board.nsf`
+        const res = await fetch(`${base}/vpublic`, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Referer': `${base}/Home`,
+            'Origin': 'https://go.boarddocs.com',
+            'Accept': 'text/html,application/xhtml+xml,*/*',
+          },
+          signal: AbortSignal.timeout(5000),
+        })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
       }),
       checkService('claude_api', async () => {

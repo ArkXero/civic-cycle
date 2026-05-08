@@ -46,7 +46,12 @@ async function runImport() {
 
   const importedUrls = new Set((existingRows ?? []).map((r) => r.source_url))
 
-  const newMeetings = boardDocsMeetings.filter((m) => !importedUrls.has(getBoardDocsUrl(m.id)))
+  const sixtyDaysAgo = new Date()
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
+
+  const newMeetings = boardDocsMeetings
+    .filter((m) => !importedUrls.has(getBoardDocsUrl(m.id)))
+    .filter((m) => m.date >= sixtyDaysAgo)
 
   let imported = 0
   const skipped = boardDocsMeetings.length - newMeetings.length
@@ -95,4 +100,31 @@ async function runImport() {
   }
 
   console.log(`Import complete: ${imported} imported, ${skipped} skipped, ${boardDocsMeetings.length} total`)
+
+  const ninetyDaysAgo = new Date()
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+  const cutoff = ninetyDaysAgo.toISOString().split('T')[0]
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: staleRows } = await (adminClient.from('meetings') as any)
+    .select('id')
+    .eq('source', 'boarddocs')
+    .lt('meeting_date', cutoff) as { data: { id: string }[] | null }
+
+  if (staleRows && staleRows.length > 0) {
+    const staleIds = staleRows.map((r: { id: string }) => r.id)
+
+    // Delete summaries first — no CASCADE constraint on summaries.meeting_id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (adminClient.from('summaries') as any)
+      .delete()
+      .in('meeting_id', staleIds)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (adminClient.from('meetings') as any)
+      .delete()
+      .in('id', staleIds)
+
+    console.log(`Cleanup: deleted ${staleIds.length} stale meetings older than 90 days`)
+  }
 }

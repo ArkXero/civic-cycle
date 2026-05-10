@@ -183,11 +183,21 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Check if we already sent this user an alert for this meeting
+        // Check if we already sent this user an alert for this meeting (within this run)
         const alreadySent = sentEmails.some(
           e => e.userId === alert.user_id && e.meetingId === meeting.id
         )
         if (alreadySent) continue
+
+        // Check alert_history to prevent resend across cron runs
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: existingHistory } = await (supabase.from('alert_history') as any)
+          .select('id')
+          .eq('user_id', alert.user_id)
+          .eq('meeting_id', meeting.id)
+          .eq('email_status', 'sent')
+          .maybeSingle()
+        if (existingHistory) continue
 
         // Get user email
         const userEmail = userEmailMap.get(alert.user_id)

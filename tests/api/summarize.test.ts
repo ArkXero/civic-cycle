@@ -40,10 +40,12 @@ vi.mock('@/lib/track-api-usage', () => ({
 // Mock Anthropic lib
 const mockSummarizeMeeting = vi.fn()
 const mockChunkTranscript = vi.fn()
+const mockSynthesizeChunkSummaries = vi.fn()
 
 vi.mock('@/lib/anthropic', () => ({
   summarizeMeeting: (...args: unknown[]) => mockSummarizeMeeting(...args),
   chunkTranscript: (...args: unknown[]) => mockChunkTranscript(...args),
+  synthesizeChunkSummaries: (...args: unknown[]) => mockSynthesizeChunkSummaries(...args),
 }))
 
 // Import the route handler AFTER mocks are set up
@@ -373,7 +375,7 @@ describe('POST /api/meetings/[id]/summarize', () => {
 
   // ── Multi-chunk ───────────────────────────────────────────────────────────
 
-  it('uses only the first chunk with a note when transcript is chunked', async () => {
+  it('summarizes all chunks via map-reduce when transcript is chunked', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
 
     const meeting = {
@@ -395,13 +397,18 @@ describe('POST /api/meetings/[id]/summarize', () => {
       .mockReturnValueOnce(makeChain({ data: null, error: null }))
 
     mockSummarizeMeeting.mockResolvedValue(fakeSummary)
+    mockSynthesizeChunkSummaries.mockResolvedValue(fakeSummary)
 
     const { req, params } = makeRequest()
-    await POST(req, { params })
+    const res = await POST(req, { params })
 
-    // First arg to summarizeMeeting should be chunk-one + partial note
-    const firstArg = mockSummarizeMeeting.mock.calls[0][0] as string
-    expect(firstArg).toContain('chunk-one')
-    expect(firstArg).toContain('[Note: This is a partial transcript due to length]')
+    expect(res.status).toBe(200)
+    // Each chunk summarized independently
+    expect(mockSummarizeMeeting).toHaveBeenCalledTimes(3)
+    expect(mockSummarizeMeeting.mock.calls[0][0]).toBe('chunk-one')
+    expect(mockSummarizeMeeting.mock.calls[1][0]).toBe('chunk-two')
+    expect(mockSummarizeMeeting.mock.calls[2][0]).toBe('chunk-three')
+    // Chunk summaries synthesized into final output
+    expect(mockSynthesizeChunkSummaries).toHaveBeenCalledOnce()
   })
 })

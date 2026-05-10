@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getMeetingList } from "@/lib/data/meetings";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/constants";
 
 export async function GET(request: NextRequest) {
@@ -8,88 +9,24 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const pageSize = Math.min(
       MAX_PAGE_SIZE,
-      Math.max(
-        1,
-        parseInt(searchParams.get("pageSize") || String(DEFAULT_PAGE_SIZE), 10),
-      ),
+      Math.max(1, parseInt(searchParams.get("pageSize") || String(DEFAULT_PAGE_SIZE), 10)),
     );
-    const body = searchParams.get("body");
+    const body = searchParams.get("body") ?? undefined;
 
     const supabase = await createClient();
-
-    // Build query
-    let query = supabase
-      .from("meetings")
-      .select(
-        `
-        id,
-        title,
-        body,
-        meeting_date,
-        source_url,
-        status,
-        created_at,
-        updated_at,
-        summary:summaries(
-          id,
-          meeting_id,
-          summary_text,
-          key_decisions,
-          action_items,
-          topics,
-          published,
-          created_at
-        )
-      `,
-        { count: "exact" },
-      )
-      .order("meeting_date", { ascending: false });
-
-    // Apply body filter if provided
-    if (body) {
-      query = query.eq("body", body);
-    }
-
-    // Apply pagination
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-    query = query.range(from, to);
-
-    const { data: meetings, error, count } = await query;
-
-    if (error) {
-      console.error("Error fetching meetings:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch meetings" },
-        { status: 500 },
-      );
-    }
-
-    // Transform the data to flatten the summary relationship
-    const transformedMeetings =
-      meetings?.map((meeting) => {
-        const meetingWithSummary = meeting as { summary?: unknown[] };
-        return Object.assign({}, meeting, {
-          summary: meetingWithSummary.summary?.[0] || null,
-        });
-      }) || [];
-
-    const totalPages = Math.ceil((count || 0) / pageSize);
+    const result = await getMeetingList(supabase, { page, pageSize, body });
 
     return NextResponse.json({
-      data: transformedMeetings,
-      count: count || 0,
-      page,
-      pageSize,
-      totalPages,
+      data: result.meetings,
+      count: result.count,
+      page: result.page,
+      pageSize: result.pageSize,
+      totalPages: result.totalPages,
     });
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: "An unexpected error occurred",
-      },
+      { error: "Internal server error", message: "An unexpected error occurred" },
       { status: 500 },
     );
   }

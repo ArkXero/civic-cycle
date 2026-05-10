@@ -47,6 +47,7 @@ function makeChain(result: { data: unknown; error: unknown }): any {
     eq: vi.fn().mockReturnThis(),
     gte: vi.fn().mockResolvedValue(result),
     in: vi.fn().mockResolvedValue(result),
+    maybeSingle: vi.fn().mockResolvedValue(result),
     // Thenability
     then: (resolve: (v: unknown) => void) => resolve(result),
     catch: () => Promise.resolve(result),
@@ -249,6 +250,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+    // alert_history dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
     // alert_history insert
     const historyChain = makeChain({ data: null, error: null })
     mockAdminFrom.mockReturnValueOnce(historyChain)
@@ -285,7 +288,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [upperAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 
@@ -309,7 +313,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [topicSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [bridgeAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 
@@ -332,7 +337,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [decisionSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [zoningAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 
@@ -353,7 +359,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [actionSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [crossingAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 
@@ -369,7 +376,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [noBodyFilterAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 
@@ -385,7 +393,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [bodyFilterAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 
@@ -422,6 +431,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [summaryWithBoth], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [alert1, alert2], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+    // dedup check (only for first alert — second is skipped by in-memory sentEmails)
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
     // Only one history insert expected
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
 
@@ -444,8 +455,13 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [alert1, alert2], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: userProfiles, error: null }))
-    // Two history inserts
+    // dedup check for user-1
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    // history insert for user-1
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    // dedup check for user-2
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    // history insert for user-2
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -462,6 +478,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+    // alert_history dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
     const historyChain = makeChain({ data: null, error: null })
     mockAdminFrom.mockReturnValueOnce(historyChain)
 
@@ -481,6 +499,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+    // alert_history dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
     const failHistoryChain = makeChain({ data: null, error: null })
     mockAdminFrom.mockReturnValueOnce(failHistoryChain)
 
@@ -510,7 +530,11 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [alert1, alert2], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: userProfiles, error: null }))
+    // dedup check for alert1 (user-1)
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
     // failed history for alert1
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    // dedup check for alert2 (user-2)
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
     // sent history for alert2
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
@@ -529,6 +553,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
     // user profile not present for this user_id
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [], error: null }))
+    // dedup check (happens before user email lookup)
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 
@@ -544,7 +570,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 
@@ -574,7 +601,11 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: summaries, error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: twoUserAlerts, error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: twoUserProfiles, error: null }))
+    // dedup check for m1
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
     // history insert for m1
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    // dedup check for m2
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
     // history insert for m2
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
@@ -610,7 +641,8 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     await POST(makeRequest(`Bearer ${CRON_SECRET}`))
 

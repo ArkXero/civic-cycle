@@ -15,6 +15,7 @@ export function makeChain(result: { data: unknown; error: unknown }): any {
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue(result),
+    maybeSingle: vi.fn().mockResolvedValue(result),
     in: vi.fn().mockReturnThis(),
     order: vi.fn().mockResolvedValue(result),
     then: (resolve: (v: unknown) => void) => resolve(result),

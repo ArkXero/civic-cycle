@@ -1,4 +1,4 @@
-import { summarizeMeeting, chunkTranscript } from '@/lib/anthropic'
+import { summarizeMeeting, synthesizeChunkSummaries, chunkTranscript } from '@/lib/anthropic'
 import { createAdminClient } from '@/lib/supabase/server'
 import { logActivity, ActivityTypes } from '@/lib/activity'
 import { trackApiUsage } from '@/lib/track-api-usage'
@@ -32,11 +32,30 @@ export async function runSummarize(
     if (chunks.length === 1) {
       result = await summarizeMeeting(transcript, title)
     } else {
-      console.log(`Transcript split into ${chunks.length} chunks, using first chunk`)
-      result = await summarizeMeeting(
-        chunks[0] + '\n\n[Note: This is a partial transcript due to length]',
+      console.log(`Transcript split into ${chunks.length} chunks, summarizing each then synthesizing`)
+      const chunkResults = await Promise.all(
+        chunks.map((chunk, i) =>
+          summarizeMeeting(chunk, `${title} (Part ${i + 1} of ${chunks.length})`)
+        )
+      )
+      const chunkUsage = chunkResults.reduce(
+        (acc, r) => ({
+          input_tokens: acc.input_tokens + r.usage.input_tokens,
+          output_tokens: acc.output_tokens + r.usage.output_tokens,
+        }),
+        { input_tokens: 0, output_tokens: 0 }
+      )
+      const synthesis = await synthesizeChunkSummaries(
+        chunkResults.map((r) => r.summary),
         title
       )
+      result = {
+        summary: synthesis.summary,
+        usage: {
+          input_tokens: chunkUsage.input_tokens + synthesis.usage.input_tokens,
+          output_tokens: chunkUsage.output_tokens + synthesis.usage.output_tokens,
+        },
+      }
     }
 
     const { summary, usage } = result

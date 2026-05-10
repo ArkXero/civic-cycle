@@ -20,6 +20,8 @@ export async function GET() {
       new Date().getMonth(),
       1
     ).toISOString()
+    const stuckThreshold = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
     const [
       meetingsTotal,
@@ -27,6 +29,8 @@ export async function GET() {
       meetingsPending,
       meetingsFailed,
       meetingsSummarized,
+      meetingsStuck,
+      meetingsFailedToday,
       apiUsageRows,
       alertsTotal,
       alertsThisMonth,
@@ -38,6 +42,8 @@ export async function GET() {
       adminClient.from('meetings').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       adminClient.from('meetings').select('id', { count: 'exact', head: true }).eq('status', 'failed'),
       adminClient.from('meetings').select('id', { count: 'exact', head: true }).eq('status', 'summarized'),
+      adminClient.from('meetings').select('id', { count: 'exact', head: true }).eq('status', 'processing').lt('updated_at', stuckThreshold),
+      adminClient.from('meetings').select('id', { count: 'exact', head: true }).eq('status', 'failed').gte('updated_at', last24h),
       // Fetch all rows for this month so we can aggregate in JS (Supabase doesn't have SUM in REST)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (adminClient.from('api_usage') as any)
@@ -81,6 +87,8 @@ export async function GET() {
         pending: meetingsPending.count ?? 0,
         failed: meetingsFailed.count ?? 0,
         summarized: meetingsSummarized.count ?? 0,
+        stuckProcessing: meetingsStuck.count ?? 0,
+        failedLast24h: meetingsFailedToday.count ?? 0,
       },
       alerts: {
         totalActive: alertsTotal.count ?? 0,

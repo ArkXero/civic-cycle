@@ -1,21 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
-import type { MeetingWithSummary } from '@/types'
+import { getMeetingList } from '@/lib/data/meetings'
 import { HeroClean } from '@/components/ui/hero-clean'
 import FeaturesSection from '@/components/features/FeaturesBento'
 import { RecentMeetingsSection, HomeCtaSection } from './_home-client'
 
 export default async function Home() {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('meetings')
-    .select('*, summary:summaries(*)')
-    .eq('status', 'summarized')
-    .order('meeting_date', { ascending: false })
-    .limit(3)
-
-  const meetings: MeetingWithSummary[] = (data ?? []).map((m) => {
-    const row = m as { summary?: unknown[] }
-    return Object.assign({}, m, { summary: row.summary?.[0] ?? null }) as MeetingWithSummary
+  const { meetings } = await getMeetingList(supabase, {
+    page: 1,
+    pageSize: 3,
+    statusFilter: 'summarized',
   })
 
   return (

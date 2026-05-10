@@ -168,3 +168,78 @@ export function chunkTranscript(transcript: string, maxTokens: number = 100000):
 
   return chunks
 }
+
+const SYNTHESIS_PROMPT = `You are merging partial summaries of the same government meeting into one unified summary.
+
+Each partial summary covers a different section of the transcript. Combine them into a single coherent summary using the same JSON structure.
+
+Rules:
+- Merge summary_text into 2-3 unified paragraphs covering the full meeting
+- Deduplicate topics, keep 3-8 most significant ones
+- Include ALL key_decisions from all parts (no deduplication — each vote is distinct)
+- Include ALL action_items from all parts (no deduplication)
+- Set sentiment to the overall tone across all parts
+
+Return ONLY the JSON object with this exact structure:
+{
+  "summary_text": "...",
+  "topics": [...],
+  "key_decisions": [...],
+  "action_items": [...],
+  "sentiment": "positive|neutral|negative|mixed"
+}
+
+Here are the partial summaries to merge:
+
+`
+
+export async function synthesizeChunkSummaries(
+  chunkSummaries: MeetingSummary[],
+  meetingTitle?: string
+): Promise<SummarizeResult> {
+  const contextHeader = meetingTitle ? `Meeting: ${meetingTitle}\n\n` : ''
+
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 4096,
+    messages: [{
+      role: 'user',
+      content: SYNTHESIS_PROMPT + contextHeader + JSON.stringify(chunkSummaries, null, 2),
+    }],
+    system: SYSTEM_PROMPT,
+  })
+
+  const textContent = response.content.find((block) => block.type === 'text')
+  if (!textContent || textContent.type !== 'text') {
+    throw new Error('No text response from Claude during synthesis')
+  }
+
+  let parsed: MeetingSummary
+  try {
+    let jsonText = textContent.text.trim()
+    if (jsonText.startsWith('```json')) jsonText = jsonText.slice(7)
+    else if (jsonText.startsWith('```')) jsonText = jsonText.slice(3)
+    if (jsonText.endsWith('```')) jsonText = jsonText.slice(0, -3)
+    parsed = JSON.parse(jsonText.trim())
+  } catch {
+    throw new Error('Failed to parse synthesis response as JSON')
+  }
+
+  if (!parsed.summary_text || !Array.isArray(parsed.topics)) {
+    throw new Error('Invalid synthesis structure returned from Claude')
+  }
+
+  return {
+    summary: {
+      summary_text: parsed.summary_text,
+      topics: parsed.topics || [],
+      key_decisions: parsed.key_decisions || [],
+      action_items: parsed.action_items || [],
+      sentiment: parsed.sentiment || 'neutral',
+    },
+    usage: {
+      input_tokens: response.usage.input_tokens,
+      output_tokens: response.usage.output_tokens,
+    },
+  }
+}

@@ -216,7 +216,7 @@ export function BoardDocsImporter() {
                     ) : (
                       <>
                         <Download className="h-4 w-4 mr-2" />
-                        Import
+                        Import + Summarize
                       </>
                     )}
                   </Button>
@@ -241,7 +241,7 @@ export function BoardDocsImporter() {
                         ) : (
                           <>
                             <Sparkles className="h-4 w-4 mr-2" />
-                            Generate Summary
+                            Regenerate Summary
                           </>
                         )}
                       </Button>

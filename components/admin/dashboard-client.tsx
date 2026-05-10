@@ -30,6 +30,8 @@ interface DashboardStats {
     pending: number
     failed: number
     summarized: number
+    stuckProcessing: number
+    failedLast24h: number
   }
   alerts: {
     totalActive: number
@@ -273,6 +275,22 @@ export function DashboardClient() {
               count={meetings.summarized}
               colorClass="text-green-600"
             />
+            {meetings.stuckProcessing > 0 && (
+              <StatusRow
+                icon={<AlertCircle className="w-4 h-4 text-orange-500" />}
+                label="Stuck processing (>15m)"
+                count={meetings.stuckProcessing}
+                colorClass="text-orange-600"
+              />
+            )}
+            {meetings.failedLast24h > 0 && (
+              <StatusRow
+                icon={<XCircle className="w-4 h-4 text-red-500" />}
+                label="Failed (last 24h)"
+                count={meetings.failedLast24h}
+                colorClass="text-red-600"
+              />
+            )}
             <div className="pt-2">
               <Button variant="outline" size="sm" className="w-full" asChild>
                 <a href="/admin/boarddocs">Go to BoardDocs Importer</a>

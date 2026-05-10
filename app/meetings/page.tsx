@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getMeetingList } from "@/lib/data/meetings";
 import { MeetingListClient } from "./meeting-list-client";
 import { SearchBar } from "@/components/search/search-bar";
 import { MeetingFilters } from "@/components/meetings/meeting-filters";
@@ -9,46 +10,6 @@ export const metadata: Metadata = {
   title: "Meetings",
   description: "Browse FCPS School Board meeting summaries",
 };
-
-async function getMeetings(page: number, body?: string) {
-  const supabase = await createClient();
-  const pageSize = 9;
-
-  let query = supabase
-    .from("meetings")
-    .select(
-      `
-      *,
-      summary:summaries(*)
-    `,
-      { count: "exact" },
-    )
-    .order("meeting_date", { ascending: false });
-
-  if (body) {
-    query = query.eq("body", body);
-  }
-
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-  query = query.range(from, to);
-
-  const { data: meetings, count } = await query;
-
-  const transformedMeetings =
-    meetings?.map((meeting) => {
-      const m = meeting as { summary?: unknown[] };
-      return Object.assign({}, meeting, {
-        summary: m.summary?.[0] || null,
-      });
-    }) || [];
-
-  return {
-    meetings: transformedMeetings,
-    totalPages: Math.ceil((count || 0) / pageSize),
-    count: count || 0,
-  };
-}
 
 interface MeetingsPageProps {
   searchParams: Promise<{ page?: string; body?: string }>;
@@ -61,7 +22,8 @@ export default async function MeetingsPage({
   const page = Math.max(1, parseInt(params.page || "1", 10));
   const body = params.body;
 
-  const { meetings, totalPages, count } = await getMeetings(page, body);
+  const supabase = await createClient();
+  const { meetings, totalPages, count } = await getMeetingList(supabase, { page, body, pageSize: 9 });
 
   return (
     <div className="container mx-auto px-4 py-8">

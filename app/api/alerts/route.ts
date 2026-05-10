@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { randomBytes } from 'crypto'
+import { randomUUID } from 'crypto'
 import { z } from 'zod'
 
 const publicAlertSelect = 'id, keyword, bodies, is_active, created_at'
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         keyword: keyword.toLowerCase(),
         bodies,
         is_active: true,
-        unsubscribe_token: randomBytes(32).toString('hex'),
+        unsubscribe_token: randomUUID(),
       })
       .select(publicAlertSelect)
       .single()

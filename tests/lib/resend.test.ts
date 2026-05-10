@@ -10,7 +10,7 @@ vi.mock('resend', () => ({
 }))
 
 // Import AFTER mocks are in place
-import { sendAlertEmail } from '@/lib/resend'
+import { sendAlertEmail, sendDigestEmail } from '@/lib/resend'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -195,5 +195,57 @@ describe('sendAlertEmail', () => {
     mockSend.mockRejectedValue(new TypeError('fetch failed'))
 
     await expect(sendAlertEmail(baseParams)).rejects.toThrow('fetch failed')
+  })
+})
+
+describe('sendDigestEmail', () => {
+  beforeEach(() => {
+    mockSend.mockReset()
+    mockSend.mockResolvedValue({ data: { id: 'email-id-1' }, error: null })
+  })
+
+  it('replaces unsubscribe placeholder in both html and text', async () => {
+    await sendDigestEmail({
+      to: 'user@example.com',
+      unsubscribeUrl: 'https://example.com/unsubscribe/digest-123',
+      digestHtml: '<a href="{{UNSUBSCRIBE_URL}}">Unsubscribe</a>',
+      digestText: 'Unsubscribe: {{UNSUBSCRIBE_URL}}',
+      weekRange: 'March 4, 2026',
+    })
+
+    const { html, text } = mockSend.mock.calls[0][0]
+    expect(html).toContain('https://example.com/unsubscribe/digest-123')
+    expect(text).toContain('https://example.com/unsubscribe/digest-123')
+    expect(html).not.toContain('{{UNSUBSCRIBE_URL}}')
+    expect(text).not.toContain('{{UNSUBSCRIBE_URL}}')
+  })
+
+  it('includes the week range in the subject', async () => {
+    await sendDigestEmail({
+      to: 'user@example.com',
+      unsubscribeUrl: 'https://example.com/unsubscribe/digest-123',
+      digestHtml: '<p>Digest</p>',
+      digestText: 'Digest',
+      weekRange: 'March 4, 2026 – March 11, 2026',
+    })
+
+    const call = mockSend.mock.calls[0][0]
+    expect(call.subject).toBe('FCPS School Board Weekly Digest — March 4, 2026 – March 11, 2026')
+  })
+
+  it('falls back to # when unsubscribe URL is not http or https', async () => {
+    await sendDigestEmail({
+      to: 'user@example.com',
+      unsubscribeUrl: 'javascript:alert(1)',
+      digestHtml: '<a href="{{UNSUBSCRIBE_URL}}">Unsubscribe</a>',
+      digestText: 'Unsubscribe: {{UNSUBSCRIBE_URL}}',
+      weekRange: 'March 4, 2026',
+    })
+
+    const { html, text } = mockSend.mock.calls[0][0]
+    expect(html).toContain('href="#"')
+    expect(text).toContain('Unsubscribe: #')
+    expect(html).not.toContain('javascript:')
+    expect(text).not.toContain('javascript:')
   })
 })

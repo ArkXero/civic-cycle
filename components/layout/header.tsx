@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, Sun, Moon } from 'lucide-react'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { APP_NAME, NAV_LINKS } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
@@ -155,6 +155,7 @@ export function Header() {
             side="right"
             className="w-[280px] bg-white dark:bg-[#0D2B33] border-l border-border"
           >
+            <SheetTitle className="sr-only">Mobile navigation menu</SheetTitle>
             <div className="flex items-center gap-2.5 mb-8 pt-2">
               <Image src="/favicon.png" alt={APP_NAME} width={26} height={26} unoptimized className="rounded-md" />
               <span

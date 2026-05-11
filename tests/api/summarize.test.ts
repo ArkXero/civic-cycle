@@ -54,8 +54,8 @@ import { makeChain } from '../helpers/supabase-chain'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function makeRequest(id = MEETING_ID) {
-  const req = new NextRequest(`http://localhost/api/meetings/${id}/summarize`, {
+function makeRequest(id = MEETING_ID, search = '') {
+  const req = new NextRequest(`http://localhost/api/meetings/${id}/summarize${search}`, {
     method: 'POST',
   })
   return { req, params: Promise.resolve({ id }) }
@@ -202,6 +202,36 @@ describe('POST /api/meetings/[id]/summarize', () => {
     expect(body.message).toBe('Summary generated successfully')
   })
 
+  it('force-resets a recently processing meeting and continues to summarize', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
+
+    const recentTime = new Date(Date.now() - 30 * 1000).toISOString()
+    const meeting = {
+      id: MEETING_ID,
+      title: 'Test',
+      transcript_text: 'content',
+      status: 'processing',
+      updated_at: recentTime,
+    }
+    const resetChain = makeChain({ data: null, error: null })
+
+    mockAdminFrom
+      .mockReturnValueOnce(makeChain({ data: meeting, error: null }))
+      .mockReturnValueOnce(resetChain)
+      .mockReturnValueOnce(makeChain({ data: null, error: new Error('no rows') }))
+      .mockReturnValueOnce(makeChain({ data: null, error: null }))
+      .mockReturnValueOnce(makeChain({ data: { id: 'summary-1', ...fakeSummary }, error: null }))
+      .mockReturnValueOnce(makeChain({ data: null, error: null }))
+
+    mockSummarizeMeeting.mockResolvedValue(fakeSummary)
+
+    const { req, params } = makeRequest(MEETING_ID, '?force=true')
+    const res = await POST(req, { params })
+
+    expect(res.status).toBe(200)
+    expect(resetChain.update).toHaveBeenCalledWith({ status: 'pending', error_message: null })
+  })
+
   // ── Already summarized ────────────────────────────────────────────────────
 
   it('returns 409 when summary already exists', async () => {
@@ -337,6 +367,46 @@ describe('POST /api/meetings/[id]/summarize', () => {
     const failedUpdate = setFailedChain.update.mock.calls[0][0]
     expect(failedUpdate.status).toBe('failed')
     expect(failedUpdate.error_message).toBe('Claude API rate limit')
+  })
+
+  it('sets status to failed with error_message when Claude times out', async () => {
+    vi.useFakeTimers()
+
+    try {
+      mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
+
+      const meeting = {
+        id: MEETING_ID,
+        title: 'Test',
+        transcript_text: 'content',
+        status: 'pending',
+        updated_at: new Date().toISOString(),
+      }
+
+      const setFailedChain = makeChain({ data: null, error: null })
+
+      mockAdminFrom
+        .mockReturnValueOnce(makeChain({ data: meeting, error: null }))
+        .mockReturnValueOnce(makeChain({ data: null, error: new Error('no rows') }))
+        .mockReturnValueOnce(makeChain({ data: null, error: null }))
+        .mockReturnValueOnce(setFailedChain)
+
+      mockSummarizeMeeting.mockReturnValue(new Promise(() => {}))
+
+      const { req, params } = makeRequest()
+      const resPromise = POST(req, { params })
+
+      await vi.advanceTimersByTimeAsync(120_000)
+      const res = await resPromise
+
+      expect(res.status).toBe(500)
+
+      const failedUpdate = setFailedChain.update.mock.calls[0][0]
+      expect(failedUpdate.status).toBe('failed')
+      expect(failedUpdate.error_message).toBe('Claude summary request timed out after 120 seconds')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('sets status to failed when summary save throws', async () => {

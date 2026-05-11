@@ -11,6 +11,7 @@ const MEETING_LIST_SELECT = `
   title,
   body,
   meeting_date,
+  source,
   source_url,
   status,
   created_at,
@@ -30,6 +31,22 @@ const MEETING_LIST_SELECT = `
 function flattenSummary(row: Record<string, unknown>): MeetingWithSummary {
   const summaryArr = row.summary as unknown[]
   return { ...row, summary: summaryArr?.[0] ?? null } as MeetingWithSummary
+}
+
+export function dedupeMeetingsBySourceUrl<T extends { source?: string | null; source_url?: string | null }>(
+  meetings: T[]
+): T[] {
+  const seen = new Set<string>()
+
+  return meetings.filter((meeting) => {
+    if (!meeting.source_url) return true
+
+    const key = `${meeting.source ?? ''}|${meeting.source_url}`
+    if (seen.has(key)) return false
+
+    seen.add(key)
+    return true
+  })
 }
 
 export interface MeetingListOptions {
@@ -78,7 +95,8 @@ export async function getMeetingList(
   if (error) throw error
 
   return {
-    meetings: (data ?? []).map((row: Record<string, unknown>) => flattenSummary(row)),
+    meetings: dedupeMeetingsBySourceUrl(data ?? [])
+      .map((row: Record<string, unknown>) => flattenSummary(row)),
     count: count ?? 0,
     page,
     pageSize,
@@ -145,7 +163,8 @@ export async function searchMeetings(
   if (error) throw error
 
   return {
-    meetings: (data ?? []).map((row: Record<string, unknown>) => flattenSummary(row)),
+    meetings: dedupeMeetingsBySourceUrl(data ?? [])
+      .map((row: Record<string, unknown>) => flattenSummary(row)),
     count: count ?? 0,
     page,
     pageSize,

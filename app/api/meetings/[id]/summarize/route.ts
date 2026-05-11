@@ -6,6 +6,7 @@ import { runSummarize } from '@/lib/run-summarize'
 import { z } from 'zod'
 
 const uuidSchema = z.string().uuid()
+const STUCK_PROCESSING_THRESHOLD_MS = 3 * 60 * 1000
 
 interface Meeting {
   id: string
@@ -71,19 +72,24 @@ export async function POST(
       )
     }
 
-    // Check if already processing — allow retry if stuck for over 10 minutes
+    const forceReset = request.nextUrl.searchParams.get('force') === 'true'
+
+    // Check if already processing — allow retry if stuck past the Claude timeout.
     if (meeting.status === 'processing') {
       const updatedAt = new Date(meeting.updated_at)
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000)
-      if (updatedAt < tenMinutesAgo) {
-        // Stuck — reset so we can retry
+      const stuckThreshold = new Date(Date.now() - STUCK_PROCESSING_THRESHOLD_MS)
+      if (forceReset || updatedAt < stuckThreshold) {
+        // Stuck or explicitly force-reset — reset so we can retry.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (adminClient.from('meetings') as any)
-          .update({ status: 'pending' })
+          .update({ status: 'pending', error_message: null })
           .eq('id', id)
       } else {
         return NextResponse.json(
-          { error: 'Processing', message: 'Summary is already being generated' },
+          {
+            error: 'Processing',
+            message: 'Summary is already being generated. Try again after 3 minutes or use force=true to reset.',
+          },
           { status: 409 }
         )
       }

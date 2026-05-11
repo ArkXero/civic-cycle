@@ -143,14 +143,18 @@ export async function POST(request: NextRequest) {
 
     for (const subscriber of subscribers) {
       try {
-        await sendDigestEmail({
+        const { error: sendError } = await sendDigestEmail({
           to: subscriber.email,
           unsubscribeUrl: `${appUrl}/unsubscribe/digest/${subscriber.unsubscribe_token}`,
           digestHtml: content.html,
           digestText: content.text,
           weekRange,
         })
-        emailsSent++
+        if (sendError) {
+          console.error(`digest: resend error for ${subscriber.email}:`, sendError)
+        } else {
+          emailsSent++
+        }
       } catch (err) {
         console.error(`digest: failed to send to ${subscriber.email}:`, err)
       }

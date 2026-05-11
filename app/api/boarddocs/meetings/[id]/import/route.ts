@@ -37,35 +37,19 @@ export async function POST(
 
     const sourceUrl = getBoardDocsUrl(id)
 
-    // Check if already imported (using source_url which already exists in schema)
-    // No `as any` needed — createAdminClient uses plain @supabase/supabase-js with proper types
     const adminClient = createAdminClient()
-
-    const { data: existing } = await adminClient
-      .from('meetings')
-      .select('id')
-      .eq('source_url', sourceUrl)
-      .single()
-
-    if (existing) {
-      return NextResponse.json(
-        { error: 'Already imported', message: 'This meeting has already been imported' },
-        { status: 409 }
-      )
-    }
 
     // Fetch full meeting content from BoardDocs
     const content = await getMeetingContent(id)
 
-    // Insert meeting — only using columns that exist in the current schema
     const meetingDate = content.date.toISOString().split('T')[0]
 
-    // Cast adminClient as any to bypass Supabase's type inference — insert with
-    // schema-mismatched columns makes the whole chain infer as never otherwise.
+    // Insert only if the source URL is new. Existing imports are returned below
+    // without touching status/updated_at, so stuck-processing recovery is not delayed.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: meeting, error: insertError } = await (adminClient as any)
+    const { data: insertedRows, error: insertError } = await (adminClient as any)
       .from('meetings')
-      .insert({
+      .upsert({
         title: content.title,
         body: 'FCPS School Board',
         meeting_date: meetingDate,
@@ -73,34 +57,60 @@ export async function POST(
         source: 'boarddocs',
         source_url: sourceUrl,
         status: 'pending',
-      })
+      }, { onConflict: 'source,source_url', ignoreDuplicates: true })
       .select()
-      .single()
 
     if (insertError) {
-      console.error('Failed to insert meeting:', insertError)
+      console.error('Failed to upsert meeting:', insertError)
       return NextResponse.json(
         { error: 'Failed to save meeting to database' },
         { status: 500 }
       )
     }
 
+    const insertedMeeting = (insertedRows as { id: string }[] | null)?.[0]
+
+    if (!insertedMeeting) {
+      const { data: existingMeeting, error: existingError } = await adminClient
+        .from('meetings')
+        .select('id, title, body, meeting_date, source_url, status, created_at, updated_at')
+        .eq('source', 'boarddocs')
+        .eq('source_url', sourceUrl)
+        .single()
+
+      if (existingError || !existingMeeting) {
+        console.error('Failed to fetch existing imported meeting:', existingError)
+        return NextResponse.json(
+          { error: 'Failed to load existing meeting' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        message: 'Meeting already imported',
+        data: existingMeeting,
+        itemCount: content.itemCount,
+        autoSummarizeStarted: false,
+      }, { status: 200 })
+    }
+
     // Log the import activity (fire-and-forget)
     logActivity(
       ActivityTypes.MEETING_IMPORTED,
       `Imported meeting "${content.title}"`,
-      { meetingId: meeting.id, boarddocsId: id, itemCount: content.itemCount }
+      { meetingId: insertedMeeting.id, boarddocsId: id, itemCount: content.itemCount }
     ).catch(() => {})
 
-    // Kick off summarization in the background — import returns immediately
-    runSummarize(meeting.id, content.fullText, content.title, adminClient).catch((err) => {
-      console.error('Auto-summarization failed for meeting', meeting.id, err)
+    // Kick off summarization only for newly inserted meetings.
+    runSummarize(insertedMeeting.id, content.fullText, content.title, adminClient).catch((err) => {
+      console.error('Auto-summarization failed for meeting', insertedMeeting.id, err)
     })
 
     return NextResponse.json({
       message: 'Meeting imported successfully',
-      data: meeting,
+      data: insertedMeeting,
       itemCount: content.itemCount,
+      autoSummarizeStarted: true,
     }, { status: 201 })
   } catch (error) {
     console.error('Error importing meeting:', error)

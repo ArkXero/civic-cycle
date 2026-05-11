@@ -5,6 +5,25 @@ import { trackApiUsage } from '@/lib/track-api-usage'
 
 type AdminClient = ReturnType<typeof createAdminClient>
 
+const CLAUDE_TIMEOUT_MS = 120_000
+
+async function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${Math.round(CLAUDE_TIMEOUT_MS / 1000)} seconds`))
+    }, CLAUDE_TIMEOUT_MS)
+  })
+
+  try {
+    return await Promise.race([promise, timeoutPromise])
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+  }
+}
+
 /**
  * Runs the full summarization flow for a meeting:
  * sets status → processing, calls Claude, saves summary, sets status → summarized.
@@ -20,7 +39,7 @@ export async function runSummarize(
 ): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (adminClient.from('meetings') as any)
-    .update({ status: 'processing' })
+    .update({ status: 'processing', error_message: null })
     .eq('id', meetingId)
 
   let capturedUsage: { input_tokens: number; output_tokens: number } | null = null
@@ -30,12 +49,18 @@ export async function runSummarize(
     let result
 
     if (chunks.length === 1) {
-      result = await summarizeMeeting(transcript, title)
+      result = await withTimeout(
+        summarizeMeeting(transcript, title),
+        'Claude summary request'
+      )
     } else {
       console.log(`Transcript split into ${chunks.length} chunks, summarizing each then synthesizing`)
       const chunkResults = await Promise.all(
         chunks.map((chunk, i) =>
-          summarizeMeeting(chunk, `${title} (Part ${i + 1} of ${chunks.length})`)
+          withTimeout(
+            summarizeMeeting(chunk, `${title} (Part ${i + 1} of ${chunks.length})`),
+            `Claude summary request for chunk ${i + 1}`
+          )
         )
       )
       const chunkUsage = chunkResults.reduce(
@@ -45,9 +70,12 @@ export async function runSummarize(
         }),
         { input_tokens: 0, output_tokens: 0 }
       )
-      const synthesis = await synthesizeChunkSummaries(
-        chunkResults.map((r) => r.summary),
-        title
+      const synthesis = await withTimeout(
+        synthesizeChunkSummaries(
+          chunkResults.map((r) => r.summary),
+          title
+        ),
+        'Claude synthesis request'
       )
       result = {
         summary: synthesis.summary,

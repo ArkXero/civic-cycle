@@ -50,14 +50,22 @@ export function BoardDocsImporter() {
     setImportingId(meetingId)
     setImportError(null)
     try {
-      const data = await apiCall<{ data?: { id: string } }>(
+      const data = await apiCall<{
+        data?: { id: string; status?: MeetingStatus }
+        autoSummarizeStarted?: boolean
+      }>(
         `/api/boarddocs/meetings/${meetingId}/import`,
         { method: 'POST' }
       )
       setMeetings((prev) =>
         prev.map((m) =>
           m.id === meetingId
-            ? { ...m, isImported: true, dbId: data.data?.id ?? null, dbStatus: 'processing' }
+            ? {
+                ...m,
+                isImported: true,
+                dbId: data.data?.id ?? null,
+                dbStatus: data.autoSummarizeStarted ? 'processing' : data.data?.status ?? 'processing',
+              }
             : m
         )
       )

@@ -34,29 +34,16 @@ async function runImport() {
     return
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: existingRows, error: dbError } = await (adminClient.from('meetings') as any)
-    .select('source_url')
-    .eq('source', 'boarddocs') as { data: { source_url: string }[] | null; error: Error | null }
-
-  if (dbError) {
-    console.error('Failed to query existing meetings:', dbError)
-    return
-  }
-
-  const importedUrls = new Set((existingRows ?? []).map((r) => r.source_url))
-
   const sixtyDaysAgo = new Date()
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
 
-  const newMeetings = boardDocsMeetings
-    .filter((m) => !importedUrls.has(getBoardDocsUrl(m.id)))
-    .filter((m) => m.date >= sixtyDaysAgo)
+  const recentMeetings = boardDocsMeetings.filter((m) => m.date >= sixtyDaysAgo)
 
   let imported = 0
-  const skipped = boardDocsMeetings.length - newMeetings.length
+  let skippedDuplicates = 0
+  const skippedOld = boardDocsMeetings.length - recentMeetings.length
 
-  for (const meeting of newMeetings) {
+  for (const meeting of recentMeetings) {
     try {
       const content = await getMeetingContent(meeting.id)
       const sourceUrl = getBoardDocsUrl(meeting.id)
@@ -65,7 +52,7 @@ async function runImport() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: inserted, error: insertError } = await (adminClient as any)
         .from('meetings')
-        .insert({
+        .upsert({
           title: content.title,
           body: 'FCPS School Board',
           meeting_date: meetingDate,
@@ -73,23 +60,30 @@ async function runImport() {
           source: 'boarddocs',
           source_url: sourceUrl,
           status: 'pending',
-        })
+        }, { onConflict: 'source,source_url', ignoreDuplicates: true })
         .select()
-        .single()
+      const insertedRows = inserted as { id: string }[] | null
 
       if (insertError) {
-        console.error(`Failed to insert meeting "${content.title}":`, insertError)
+        console.error(`Failed to upsert meeting "${content.title}":`, insertError)
         continue
       }
 
-      runSummarize(inserted.id, content.fullText, content.title, adminClient).catch((err) => {
-        console.error('Auto-summarization failed for meeting', inserted.id, err)
+      if (!insertedRows || insertedRows.length === 0) {
+        skippedDuplicates++
+        continue
+      }
+
+      const insertedMeeting = insertedRows[0]
+
+      runSummarize(insertedMeeting.id, content.fullText, content.title, adminClient).catch((err) => {
+        console.error('Auto-summarization failed for meeting', insertedMeeting.id, err)
       })
 
       logActivity(
         ActivityTypes.MEETING_IMPORTED,
         `Auto-imported meeting "${content.title}"`,
-        { meetingId: inserted.id, boarddocsId: meeting.id, itemCount: content.itemCount }
+        { meetingId: insertedMeeting.id, boarddocsId: meeting.id, itemCount: content.itemCount }
       ).catch(() => {})
 
       imported++
@@ -99,7 +93,10 @@ async function runImport() {
     }
   }
 
-  console.log(`Import complete: ${imported} imported, ${skipped} skipped, ${boardDocsMeetings.length} total`)
+  console.log(
+    `Import complete: ${imported} imported, ${skippedDuplicates} duplicates skipped, ` +
+    `${skippedOld} old skipped, ${boardDocsMeetings.length} total`
+  )
 
   const ninetyDaysAgo = new Date()
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { dedupeMeetingsBySourceUrl } from "@/lib/data/meetings";
 import { MeetingCalendar, type CalendarEvent } from "@/components/ui/meeting-calendar";
 import type { Metadata } from "next";
 
@@ -11,9 +12,9 @@ async function getAllMeetings() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("meetings")
-    .select("id, title, meeting_date, body, status")
+    .select("id, title, meeting_date, body, status, source, source_url")
     .order("meeting_date", { ascending: false });
-  return data ?? [];
+  return dedupeMeetingsBySourceUrl(data ?? []);
 }
 
 function toCalendarEvent(meeting: {
@@ -22,6 +23,8 @@ function toCalendarEvent(meeting: {
   meeting_date: string;
   body: string;
   status: string;
+  source?: string | null;
+  source_url?: string | null;
 }): CalendarEvent {
   const start = new Date(meeting.meeting_date);
   const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);

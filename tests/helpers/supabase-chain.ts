@@ -11,6 +11,7 @@ export function makeChain(result: { data: unknown; error: unknown }): any {
   const chain: any = {
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
+    upsert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),

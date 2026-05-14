@@ -33,7 +33,11 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !WORKOS_API_KEY || !WORKOS_CLIENT_
   process.exit(1)
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ws = require('ws')
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  realtime: { transport: ws },
+})
 const workos = new WorkOS(WORKOS_API_KEY)
 
 interface UserProfile {

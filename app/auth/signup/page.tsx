@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = {
@@ -12,6 +13,12 @@ interface SignupPageProps {
 }
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
+  if (process.env.USE_WORKOS_AUTH === 'true') {
+    const { getSignUpUrl } = await import('@workos-inc/authkit-nextjs')
+    const url = await getSignUpUrl()
+    redirect(url)
+  }
+
   const params = await searchParams;
   const redirectTo = params.redirectTo || "/";
 

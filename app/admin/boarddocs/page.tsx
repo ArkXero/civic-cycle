@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { BoardDocsImporter } from '@/components/boarddocs/boarddocs-importer'
-import { isAdminUser } from '@/lib/auth/is-admin-server'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -10,14 +9,13 @@ export const metadata: Metadata = {
 }
 
 export default async function BoardDocsAdminPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const currentUser = await getCurrentUser()
 
-  if (!user) {
+  if (!currentUser) {
     redirect('/auth/login?redirect=/admin/boarddocs')
   }
 
-  if (!await isAdminUser(user)) {
+  if (!currentUser.isAdmin) {
     redirect('/unauthorized')
   }
 

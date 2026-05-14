@@ -13,20 +13,37 @@ import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import type { User } from '@supabase/supabase-js'
 
+const USE_WORKOS = process.env.NEXT_PUBLIC_USE_WORKOS_AUTH === 'true'
+
+type MeUser = { id: string; email: string; displayName: string | null }
+
 export function Header() {
   const pathname = usePathname()
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | MeUser | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
-  const [supabase] = useState(() => createClient())
+  const [supabase] = useState(() => (USE_WORKOS ? null : createClient()))
   const { theme, setTheme } = useTheme()
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
+    if (USE_WORKOS) {
+      fetch('/api/me')
+        .then(r => r.json())
+        .then(data => {
+          setUser(data.user ?? null)
+          setIsAdmin(data.isAdmin ?? false)
+        })
+        .catch(() => {})
+        .finally(() => setAuthLoading(false))
+      return
+    }
+
+    if (!supabase) return
     const init = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -48,7 +65,11 @@ export function Header() {
   }, [supabase])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    if (USE_WORKOS) {
+      window.location.href = '/auth/sign-out'
+      return
+    }
+    await supabase!.auth.signOut()
     setIsOpen(false)
   }
 

@@ -4,6 +4,8 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { isAdminJwt, getEmailFromJwt } from '@/lib/auth/get-role'
 import { isAdminEmail } from '@/lib/is-admin'
 
+const USE_WORKOS = process.env.USE_WORKOS_AUTH === 'true'
+
 /**
  * Extract the best available client IP from standard proxy headers.
  * Falls back to a sentinel so rate limiting still applies.
@@ -63,6 +65,52 @@ function tooManyRequests(resetMs: number): NextResponse {
   )
 }
 
+async function handleWorkosMiddleware(request: NextRequest, pathname: string): Promise<NextResponse> {
+  const { authkit } = await import('@workos-inc/authkit-nextjs')
+  const { session, headers } = await authkit(request)
+
+  const isAdminRoute = pathname.startsWith('/admin') && !pathname.startsWith('/api')
+
+  if (isAdminRoute) {
+    if (!session.user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
+    // Check admin: ADMIN_EMAILS env or user_roles table
+    const { isAdminEmail: checkEmail } = await import('@/lib/is-admin')
+    let isAdmin = checkEmail(session.user.email)
+    if (!isAdmin) {
+      const { createAdminClient } = await import('@/lib/supabase/server')
+      const db = createAdminClient()
+      const { data: profile } = await db
+        .from('user_profiles')
+        .select('id')
+        .eq('workos_user_id', session.user.id)
+        .maybeSingle()
+      if (profile) {
+        const profileRow = profile as { id: string }
+        const { data: role } = await db
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', profileRow.id)
+          .eq('role', 'admin')
+          .maybeSingle()
+        isAdmin = !!role
+      }
+    }
+    if (!isAdmin) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/unauthorized'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  const response = NextResponse.next()
+  headers.forEach((value: string, key: string) => response.headers.set(key, value))
+  return response
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const ip = getClientIp(request)
@@ -98,6 +146,10 @@ export async function proxy(request: NextRequest) {
         return new NextResponse(null, { status: 403 })
       }
     }
+  }
+
+  if (USE_WORKOS) {
+    return handleWorkosMiddleware(request, pathname)
   }
 
   // Supabase session refresh + route protection (handles login redirects)

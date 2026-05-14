@@ -57,6 +57,8 @@ export function Footer() {
                 { href: '/meetings', label: 'Browse Meetings' },
                 { href: '/alerts', label: 'Set Up Alerts' },
                 { href: '/search', label: 'Search' },
+                { href: '/privacy', label: 'Privacy Policy' },
+                { href: '/terms', label: 'Terms of Service' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link

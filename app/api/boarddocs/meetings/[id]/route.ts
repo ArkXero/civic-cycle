@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAdminUser } from '@/lib/auth/is-admin-server'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { getMeetingAgenda } from '@/lib/boarddocs'
 
 // GET /api/boarddocs/meetings/[id] - Fetch agenda items for a meeting
@@ -10,19 +9,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const supabase = await createClient()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'You must be logged in' },
-        { status: 401 }
-      )
-    }
-
-    if (!await isAdminUser(user)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const currentUser = await getCurrentUser()
+    if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!currentUser.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const agendaItems = await getMeetingAgenda(id)
 

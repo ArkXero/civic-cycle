@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { z } from "zod";
 
 const uuidSchema = z.string().uuid();
@@ -25,24 +25,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const currentUser = await getCurrentUser();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!currentUser) {
       return NextResponse.json(
-        {
-          error: "Unauthorized",
-          message: "You must be logged in to delete alerts",
-        },
+        { error: "Unauthorized", message: "You must be logged in to delete alerts" },
         { status: 401 },
       );
     }
 
-    // Verify ownership using admin client
     const adminClient = createAdminClient();
     const { data: alertData, error: fetchError } = await adminClient
       .from("alert_preferences")
@@ -58,14 +49,13 @@ export async function DELETE(
     }
 
     const alertRecord = alertData as { id: string; user_id: string };
-    if (alertRecord.user_id !== user.id) {
+    if (alertRecord.user_id !== currentUser.profileId) {
       return NextResponse.json(
         { error: "Forbidden", message: "You can only delete your own alerts" },
         { status: 403 },
       );
     }
 
-    // Delete the alert
     const { error: deleteError } = await adminClient
       .from("alert_preferences")
       .delete()
@@ -83,10 +73,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: "An unexpected error occurred",
-      },
+      { error: "Internal server error", message: "An unexpected error occurred" },
       { status: 500 },
     );
   }
@@ -105,19 +92,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const currentUser = await getCurrentUser();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!currentUser) {
       return NextResponse.json(
-        {
-          error: "Unauthorized",
-          message: "You must be logged in to update alerts",
-        },
+        { error: "Unauthorized", message: "You must be logged in to update alerts" },
         { status: 401 },
       );
     }
@@ -133,11 +112,8 @@ export async function PATCH(
     }
 
     const { is_active: isActive } = bodyResult.data;
-
-    // Use a fresh admin client for all database operations
     const adminClient = createAdminClient();
 
-    // First verify the alert exists and belongs to this user
     const { data: alertData, error: fetchError } = await adminClient
       .from("alert_preferences")
       .select("id, user_id")
@@ -152,17 +128,15 @@ export async function PATCH(
     }
 
     const alertRecord = alertData as { id: string; user_id: string };
-    if (alertRecord.user_id !== user.id) {
+    if (alertRecord.user_id !== currentUser.profileId) {
       return NextResponse.json(
         { error: "Forbidden", message: "You can only update your own alerts" },
         { status: 403 },
       );
     }
 
-    const updateClient = createAdminClient();
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedAlert, error: updateError } = await (updateClient as any)
+    const { data: updatedAlert, error: updateError } = await (adminClient as any)
       .from("alert_preferences")
       .update({ is_active: isActive })
       .eq("id", id)
@@ -181,10 +155,7 @@ export async function PATCH(
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: "An unexpected error occurred",
-      },
+      { error: "Internal server error", message: "An unexpected error occurred" },
       { status: 500 },
     );
   }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAdminUser } from '@/lib/auth/is-admin-server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { createAdminClient } from '@/lib/supabase/server'
-import { createClient } from '@/lib/supabase/server'
 import { runSummarize } from '@/lib/run-summarize'
 import { z } from 'zod'
 
@@ -29,21 +28,9 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
     }
 
-    const supabase = await createClient()
-
-    // Check if user is authenticated and is an admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'You must be logged in to summarize meetings' },
-        { status: 401 }
-      )
-    }
-
-    if (!await isAdminUser(user)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const currentUser = await getCurrentUser()
+    if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!currentUser.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     // Get the meeting with its transcript
     const adminClient = createAdminClient()
@@ -137,21 +124,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
     }
 
-    const supabase = await createClient()
-
-    // Check if user is authenticated and is an admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'You must be logged in to delete summaries' },
-        { status: 401 }
-      )
-    }
-
-    if (!await isAdminUser(user)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const currentUser = await getCurrentUser()
+    if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!currentUser.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const adminClient = createAdminClient()
 

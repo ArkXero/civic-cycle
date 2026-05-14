@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAdminUser } from '@/lib/auth/is-admin-server'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
+import { createAdminClient } from '@/lib/supabase/server'
 import { getMeetingContent, getBoardDocsUrl } from '@/lib/boarddocs'
 import { runSummarize } from '@/lib/run-summarize'
 import { logActivity, ActivityTypes } from '@/lib/activity'
@@ -21,19 +21,9 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
     }
 
-    const supabase = await createClient()
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'You must be logged in' },
-        { status: 401 }
-      )
-    }
-
-    if (!await isAdminUser(user)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const currentUser = await getCurrentUser()
+    if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!currentUser.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const sourceUrl = getBoardDocsUrl(id)
 

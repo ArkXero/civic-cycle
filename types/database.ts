@@ -105,13 +105,15 @@ export type Database = {
           id: string
           email: string
           display_name: string | null
+          workos_user_id: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
-          id: string
+          id?: string
           email: string
           display_name?: string | null
+          workos_user_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -119,6 +121,7 @@ export type Database = {
           id?: string
           email?: string
           display_name?: string | null
+          workos_user_id?: string | null
           created_at?: string
           updated_at?: string
         }

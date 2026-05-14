@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { isAdminUser } from '@/lib/auth/is-admin-server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { DashboardClient } from '@/components/admin/dashboard-client'
 import type { Metadata } from 'next'
 
@@ -10,14 +9,13 @@ export const metadata: Metadata = {
 }
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const currentUser = await getCurrentUser()
 
-  if (!user) {
+  if (!currentUser) {
     redirect('/auth/login?redirect=/admin/dashboard')
   }
 
-  if (!await isAdminUser(user)) {
+  if (!currentUser.isAdmin) {
     redirect('/unauthorized')
   }
 

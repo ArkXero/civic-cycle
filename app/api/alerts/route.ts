@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
 
@@ -13,21 +14,20 @@ const createAlertSchema = z.object({
 // GET /api/alerts - List user's alerts
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const currentUser = await getCurrentUser()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
+    if (!currentUser) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'You must be logged in to view alerts' },
         { status: 401 }
       )
     }
 
-    const { data: alerts, error } = await supabase
+    const db = createAdminClient()
+    const { data: alerts, error } = await db
       .from('alert_preferences')
       .select(publicAlertSelect)
-      .eq('user_id', user.id)
+      .eq('user_id', currentUser.profileId)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -51,11 +51,9 @@ export async function GET() {
 // POST /api/alerts - Create a new alert
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const currentUser = await getCurrentUser()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
+    if (!currentUser) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'You must be logged in to create alerts' },
         { status: 401 }
@@ -73,12 +71,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { keyword, bodies } = validationResult.data
+    const db = createAdminClient()
 
     // Check if user already has an alert for this keyword
-    const { data: existing } = await supabase
+    const { data: existing } = await db
       .from('alert_preferences')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('user_id', currentUser.profileId)
       .eq('keyword', keyword.toLowerCase())
       .single()
 
@@ -90,10 +89,10 @@ export async function POST(request: NextRequest) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: alert, error } = await (supabase as any)
+    const { data: alert, error } = await (db as any)
       .from('alert_preferences')
       .insert({
-        user_id: user.id,
+        user_id: currentUser.profileId,
         keyword: keyword.toLowerCase(),
         bodies,
         is_active: true,

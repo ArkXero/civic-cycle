@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { Button } from '@/components/ui/button'
 import { AlertsClient } from './alerts-client'
 
@@ -13,18 +14,14 @@ export const metadata: Metadata = {
 }
 
 async function getAlerts() {
-  const supabase = await createClient()
+  const currentUser = await getCurrentUser()
+  if (!currentUser) return []
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return []
-  }
-
-  const { data: alerts } = await supabase
+  const db = createAdminClient()
+  const { data: alerts } = await db
     .from('alert_preferences')
     .select(publicAlertSelect)
-    .eq('user_id', user.id)
+    .eq('user_id', currentUser.profileId)
     .order('created_at', { ascending: false })
 
   return alerts || []

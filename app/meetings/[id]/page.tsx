@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { getMeetingById } from "@/lib/data/meetings";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { MeetingDetail } from "@/components/meetings/meeting-detail";
 import type { Metadata } from "next";
 
@@ -12,7 +13,7 @@ export async function generateMetadata({
   params,
 }: MeetingPageProps): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const meeting = await getMeetingById(supabase, id);
 
   if (!meeting) {
@@ -27,10 +28,10 @@ export async function generateMetadata({
 
 export default async function MeetingPage({ params }: MeetingPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
-  const [meeting, { data: { user } }] = await Promise.all([
+  const supabase = createAdminClient();
+  const [meeting, currentUser] = await Promise.all([
     getMeetingById(supabase, id),
-    supabase.auth.getUser(),
+    getCurrentUser(),
   ]);
 
   if (!meeting) {
@@ -39,7 +40,7 @@ export default async function MeetingPage({ params }: MeetingPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <MeetingDetail meeting={meeting} isAuthenticated={!!user} />
+      <MeetingDetail meeting={meeting} isAuthenticated={!!currentUser} />
     </div>
   );
 }

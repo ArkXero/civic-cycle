@@ -1,38 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { z } from 'zod'
 
 const promoteBodySchema = z.object({
-  targetUserId: z.string().uuid(),
+  targetUserId: z.string().min(1),
 }).strict()
 
 // POST /api/admin/promote
-// Promotes a user to the admin role.
-// Caller must be authenticated AND have role = 'admin' in user_roles (DB double-check).
+// When USE_WORKOS_AUTH: targetUserId is a WorkOS user ID (user_xxx...).
+// Legacy: targetUserId is a Supabase UUID.
 export async function POST(request: NextRequest) {
   try {
-    // 1. Verify the caller is authenticated
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const currentUser = await getCurrentUser()
 
-    if (authError || !user) {
+    if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    // 2. Double-check the caller has role = 'admin' in the DB (not just the JWT)
-    const adminClient = createAdminClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: callerRole, error: roleError } = await (adminClient.from('user_roles') as any)
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single()
-
-    if (roleError || !callerRole) {
+    if (!currentUser.isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // 3. Parse and validate the request body
     let rawBody: unknown
     try {
       rawBody = await request.json()
@@ -46,18 +34,32 @@ export async function POST(request: NextRequest) {
     }
 
     const { targetUserId } = bodyResult.data
+    const adminClient = createAdminClient()
+    let internalProfileId: string
 
-    // Prevent self-promotion (belt-and-suspenders — the caller already IS an admin,
-    // but guard against accidental duplicate upserts causing confusion)
-    if (targetUserId === user.id) {
+    if (process.env.USE_WORKOS_AUTH === 'true') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: profile, error: profileError } = await (adminClient.from('user_profiles') as any)
+        .select('id')
+        .eq('workos_user_id', targetUserId)
+        .single()
+
+      if (profileError || !profile) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
+      internalProfileId = profile.id
+    } else {
+      internalProfileId = targetUserId
+    }
+
+    if (internalProfileId === currentUser.profileId) {
       return NextResponse.json({ error: 'Cannot promote yourself' }, { status: 400 })
     }
 
-    // 4. Upsert the target user's role to 'admin'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: upsertError } = await (adminClient.from('user_roles') as any)
       .upsert(
-        { user_id: targetUserId, role: 'admin' },
+        { user_id: internalProfileId, role: 'admin' },
         { onConflict: 'user_id,role' }
       )
 

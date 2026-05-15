@@ -73,15 +73,16 @@ Copy `.env.example` to `.env.local` and fill in all values.
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+
+- Vite+ CLI (`vp`)
 - Docker + Docker Compose
-- Supabase CLI (`npm i -g supabase`)
+- Supabase CLI (`supabase`)
 
 ### Steps
 
 ```bash
 # 1. Install dependencies
-npm install
+vp install
 
 # 2. Copy and fill env vars
 cp .env.example .env.local
@@ -93,7 +94,7 @@ supabase start
 supabase db push
 
 # 5. Start dev server
-npm run dev
+vp run dev
 ```
 
 The app runs at `http://localhost:3000`.
@@ -150,8 +151,13 @@ Authorization: Bearer <CRON_SECRET>
 ## Commands
 
 ```bash
-npm run dev      # Start dev server
-npm run build    # Production build
-npm run lint     # ESLint
-npm test         # Vitest (108 tests)
+vp install              # Install dependencies
+vp run dev              # Start Next dev server
+vp run build            # Production Next build
+vp run start            # Start production server
+vp run lint             # ESLint
+vp check                # Vite+ static checks
+vp test                 # Test suite
+vp test watch           # Test watcher
+vp test run --coverage  # Coverage
 ```

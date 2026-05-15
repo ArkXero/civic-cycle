@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test'
 
 // vi.hoisted ensures mockSend is available inside vi.mock factory
 const mockSend = vi.hoisted(() => vi.fn())

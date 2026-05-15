@@ -67,6 +67,18 @@ Copy `.env.example` to `.env.local` and fill in all values.
 | `BOARDDOCS_STATE` | Two-letter state code, e.g. `va` |
 | `BOARDDOCS_DISTRICT` | BoardDocs committee/district ID |
 
+### Supabase Auth Redirect URLs
+
+Google OAuth redirects must be allow-listed in Supabase Auth. In the Supabase
+Dashboard, set the Site URL to the public app origin, for example
+`https://civiccycle.net`, and add every callback origin used for development or
+production:
+
+- `https://civiccycle.net/auth/callback`
+- `http://localhost:3000/auth/callback`
+- Any Cloudflare tunnel or preview URL exactly as opened in the browser, ending
+  in `/auth/callback`
+
 ---
 
 ## Local Setup
@@ -153,6 +165,7 @@ Authorization: Bearer <CRON_SECRET>
 ```bash
 vp install              # Install dependencies
 vp run dev              # Start Next dev server
+vp run dev:clean        # Clear Next/Turbopack cache, then start dev server
 vp run build            # Production Next build
 vp run start            # Start production server
 vp run lint             # ESLint

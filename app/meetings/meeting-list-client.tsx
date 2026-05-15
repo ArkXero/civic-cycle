@@ -8,14 +8,12 @@ interface MeetingListClientProps {
   initialMeetings: MeetingWithSummary[]
   initialPage: number
   initialTotalPages: number
-  initialBody?: string
 }
 
 export function MeetingListClient({
   initialMeetings,
   initialPage,
-  initialTotalPages,
-  initialBody
+  initialTotalPages
 }: MeetingListClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()

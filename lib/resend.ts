@@ -46,15 +46,12 @@ export async function sendAlertEmail({
   const safeKeyword = escapeHtml(keyword);
   const safeMeetingTitle = escapeHtml(meetingTitle);
   const safeMeetingDate = escapeHtml(meetingDate);
-  const safeMeetingBody = escapeHtml(meetingBody);
   const safeSummaryExcerpt = escapeHtml(summaryExcerpt);
   // URLs are used in href/action attributes — only allow http/https schemes
   const safeMeetingUrl = meetingUrl.startsWith("https://") || meetingUrl.startsWith("http://") ? meetingUrl : "#";
   const safeUnsubscribeUrl = unsubscribeUrl.startsWith("https://") || unsubscribeUrl.startsWith("http://") ? unsubscribeUrl : "#";
 
   const subject = `Alert: "${keyword}" mentioned in ${meetingBody} meeting`;
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   const html = `
 <!DOCTYPE html>

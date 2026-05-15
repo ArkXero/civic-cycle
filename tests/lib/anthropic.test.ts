@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test'
 
 // vi.hoisted runs before imports, so mockCreate is available inside vi.mock's factory
 const mockCreate = vi.hoisted(() => vi.fn())

@@ -44,7 +44,6 @@ export default async function MeetingsPage({
           initialMeetings={meetings}
           initialPage={page}
           initialTotalPages={totalPages}
-          initialBody={body}
         />
       </Suspense>
     </div>

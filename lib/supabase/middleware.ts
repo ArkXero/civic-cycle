@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { hardenCookieOptions } from './cookie-utils'
 
 const PROTECTED_PATHS = ['/alerts', '/admin']
-const AUTH_PATHS = ['/auth/login', '/auth/signup']
 
 function matchesPath(pathname: string, paths: readonly string[]) {
   return paths.some((p) => pathname.startsWith(p))

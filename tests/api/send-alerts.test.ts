@@ -85,18 +85,6 @@ const fakeUserProfile = {
   email: 'voter@example.com',
 }
 
-// ─── setupEnv / teardown ─────────────────────────────────────────────────────
-
-function withCronSecret(fn: () => void) {
-  const original = process.env.CRON_SECRET
-  process.env.CRON_SECRET = CRON_SECRET
-  try {
-    fn()
-  } finally {
-    process.env.CRON_SECRET = original
-  }
-}
-
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('POST /api/cron/send-alerts', () => {
@@ -317,7 +305,6 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
-
     expect(mockSendAlertEmail).toHaveBeenCalledOnce()
     const body = await res.json()
     expect(body.sent).toBe(1)
@@ -340,8 +327,7 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
-    const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
-
+    await POST(makeRequest(`Bearer ${CRON_SECRET}`))
     expect(mockSendAlertEmail).toHaveBeenCalledOnce()
   })
 
@@ -362,8 +348,7 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
-    const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
-
+    await POST(makeRequest(`Bearer ${CRON_SECRET}`))
     expect(mockSendAlertEmail).toHaveBeenCalledOnce()
   })
 
@@ -380,7 +365,6 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
-
     expect(mockSendAlertEmail).toHaveBeenCalledOnce()
     const body = await res.json()
     expect(body.sent).toBe(1)
@@ -396,8 +380,7 @@ describe('POST /api/cron/send-alerts', () => {
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // dedup check
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null })) // insert
 
-    const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
-
+    await POST(makeRequest(`Bearer ${CRON_SECRET}`))
     expect(mockSendAlertEmail).toHaveBeenCalledOnce()
   })
 

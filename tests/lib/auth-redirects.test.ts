@@ -80,4 +80,8 @@ describe('auth redirects', () => {
     expect(readAuthRedirectCookie('other=1; cc_auth_redirect_to=%2Falerts%3Ftab%3Dmine')).toBe('/alerts?tab=mine')
     expect(readAuthRedirectCookie('cc_auth_redirect_to=https%3A%2F%2Fevil.example%2Falerts')).toBe('/')
   })
+
+  it('falls back when the auth redirect cookie is malformed', () => {
+    expect(readAuthRedirectCookie('cc_auth_redirect_to=%E0%A4%A')).toBe('/')
+  })
 })

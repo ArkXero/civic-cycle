@@ -72,7 +72,11 @@ export function readAuthRedirectCookie(cookieHeader: string | null) {
 
   if (!cookie) return DEFAULT_REDIRECT_PATH
 
-  return sanitizeRedirectPath(decodeURIComponent(cookie.slice(AUTH_REDIRECT_COOKIE.length + 1)))
+  try {
+    return sanitizeRedirectPath(decodeURIComponent(cookie.slice(AUTH_REDIRECT_COOKIE.length + 1)))
+  } catch {
+    return DEFAULT_REDIRECT_PATH
+  }
 }
 
 export function oauthUrlMatchesCallbackOrigin(oauthUrl: string, expectedOrigin: string) {

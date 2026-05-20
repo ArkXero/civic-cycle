@@ -3,6 +3,11 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
+import {
+  buildAuthCallbackUrl,
+  oauthUrlMatchesCallbackOrigin,
+  storeAuthRedirectPath,
+} from '@/lib/auth/redirects'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +25,8 @@ interface LoginFormProps {
 
 const GENERIC_LOGIN_ERROR = 'Unable to sign in with those credentials.'
 const GENERIC_OAUTH_ERROR = 'Unable to start sign-in. Please try again.'
+const OAUTH_REDIRECT_ERROR =
+  'Google sign-in is configured for a different host. Check the Supabase Auth redirect URLs for this environment.'
 
 export function LoginForm({ redirectTo }: LoginFormProps) {
   const [email, setEmail] = useState('')
@@ -65,17 +72,31 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
     setIsGoogleLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const origin = window.location.origin
+      const callbackUrl = buildAuthCallbackUrl(origin, redirectTo)
+      storeAuthRedirectPath(redirectTo)
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+          redirectTo: callbackUrl,
+          skipBrowserRedirect: true,
         },
       })
 
       if (error) {
         setError(GENERIC_OAUTH_ERROR)
         setIsGoogleLoading(false)
+        return
       }
+
+      if (!data.url || !oauthUrlMatchesCallbackOrigin(data.url, origin)) {
+        setError(OAUTH_REDIRECT_ERROR)
+        setIsGoogleLoading(false)
+        return
+      }
+
+      window.location.assign(data.url)
     } catch {
       setError(GENERIC_OAUTH_ERROR)
       setIsGoogleLoading(false)

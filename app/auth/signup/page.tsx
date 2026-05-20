@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { SignupForm } from "./signup-form";
+import { sanitizeRedirectPath } from "@/lib/auth/redirects";
 
 export const metadata: Metadata = {
   title: "Sign Up",
@@ -13,7 +14,7 @@ interface SignupPageProps {
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
   const params = await searchParams;
-  const redirectTo = params.redirectTo || "/";
+  const redirectTo = sanitizeRedirectPath(params.redirectTo);
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-md">

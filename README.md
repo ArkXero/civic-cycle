@@ -38,6 +38,8 @@ Cron jobs (triggered externally via CRON_SECRET):
 | Database | Supabase (PostgreSQL + Auth + RLS) |
 | AI | Anthropic API — `claude-sonnet-4-6` |
 | Email | Resend |
+| Package manager | pnpm |
+| Task runner | Vite Plus (`vp`) |
 | Hosting | Docker + Caddy (self-hosted) |
 
 ---
@@ -74,14 +76,17 @@ Copy `.env.example` to `.env.local` and fill in all values.
 ### Prerequisites
 
 - Node.js 20+
+- Vite Plus (`vp`)
+- pnpm 11+
 - Docker + Docker Compose
-- Supabase CLI (`npm i -g supabase`)
+- Supabase CLI
 
 ### Steps
 
 ```bash
 # 1. Install dependencies
-npm install
+vp install
+# or: pnpm install
 
 # 2. Copy and fill env vars
 cp .env.example .env.local
@@ -93,10 +98,19 @@ supabase start
 supabase db push
 
 # 5. Start dev server
-npm run dev
+vp run dev
+# or: pnpm dev
 ```
 
-The app runs at `http://localhost:3000`.
+The app runs at `http://localhost:3000`. The default dev script uses webpack
+(`next dev --webpack`) to avoid local Turbopack cache/RAM spikes. Use
+`vp run dev:turbo` only when specifically testing Turbopack.
+
+For Google OAuth in local development, add `http://localhost:3000/**` to
+Supabase Auth's allowed redirect URLs. Keep the production callback URL there
+too, e.g. `https://your-domain.example/auth/callback`. In Google Cloud, the
+authorized redirect URI should remain Supabase's callback URL:
+`https://<project-ref>.supabase.co/auth/v1/callback`.
 
 ---
 
@@ -150,8 +164,11 @@ Authorization: Bearer <CRON_SECRET>
 ## Commands
 
 ```bash
-npm run dev      # Start dev server
-npm run build    # Production build
-npm run lint     # ESLint
-npm test         # Vitest (108 tests)
+vp install        # Install dependencies with pnpm
+vp run dev        # Start dev server via Next webpack dev mode
+vp run dev:turbo  # Start dev server with Turbopack
+vp run build      # Production build
+vp run lint       # ESLint
+vp run test       # Vitest
+vp exec tsc --noEmit  # TypeScript check
 ```

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "./login-form";
+import { sanitizeRedirectPath } from "@/lib/auth/redirects";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -8,13 +9,31 @@ export const metadata: Metadata = {
 };
 
 interface LoginPageProps {
-  searchParams: Promise<{ redirectTo?: string; error?: string }>;
+  searchParams: Promise<{ redirectTo?: string; error?: string; reason?: string }>;
+}
+
+function getAuthErrorMessage(error?: string, reason?: string) {
+  if (!error) return null;
+
+  if (error === "auth" && reason === "exchange") {
+    return "Authentication failed while completing sign-in. If this happened from localhost, make sure the localhost callback URL is allowed in Supabase Auth.";
+  }
+
+  if (error === "auth" && reason === "provider") {
+    return "Authentication was canceled or rejected by the provider.";
+  }
+
+  if (error === "auth") {
+    return "Authentication failed. Please try again.";
+  }
+
+  return "An error occurred. Please try again.";
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
-  const redirectTo = params.redirectTo || "/";
-  const error = params.error;
+  const redirectTo = sanitizeRedirectPath(params.redirectTo);
+  const errorMessage = getAuthErrorMessage(params.error, params.reason);
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-md">
@@ -27,13 +46,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
       </div>
 
-      {error && (
+      {errorMessage && (
         <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg p-4 mb-6">
-          <p className="text-sm">
-            {error === "auth"
-              ? "Authentication failed. Please try again."
-              : "An error occurred. Please try again."}
-          </p>
+          <p className="text-sm">{errorMessage}</p>
         </div>
       )}
 

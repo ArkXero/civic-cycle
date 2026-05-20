@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${playfair.variable} ${manrope.variable} antialiased min-h-screen flex flex-col`}
+        className={`${playfair.variable} ${manrope.variable} antialiased min-h-screen flex flex-col pb-[calc(86px+env(safe-area-inset-bottom))] md:pb-0`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
           <Header />

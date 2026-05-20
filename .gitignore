@@ -52,7 +52,8 @@ next-env.d.ts
 # supabase
 /supabase/
 
-scripts/
+/scripts/*
+!/scripts/pre-commit-secrets-check.sh
 
 # IDE
 .idea/

@@ -1,38 +1,68 @@
 import { createClient } from '@/lib/supabase/server'
+import {
+  AUTH_REDIRECT_COOKIE,
+  getLocalAuthCallbackRelayOrigin,
+  getRequestOrigin,
+  readAuthRedirectCookie,
+  sanitizeRedirectPath,
+} from '@/lib/auth/redirects'
 import { NextResponse } from 'next/server'
+
+function redirectToLogin(origin: string, reason: string) {
+  const loginUrl = new URL('/auth/login', origin)
+  loginUrl.searchParams.set('error', 'auth')
+  loginUrl.searchParams.set('reason', reason)
+  return NextResponse.redirect(loginUrl)
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-
-  // Behind Caddy + Cloudflare the internal URL is http://0.0.0.0:3000.
-  // Use forwarded headers to reconstruct the real public origin.
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https'
-  const origin = forwardedHost
-    ? `${forwardedProto}://${forwardedHost}`
-    : new URL(request.url).origin
+  const origin = getRequestOrigin(request)
 
   const code = searchParams.get('code')
-  const rawRedirect = searchParams.get('redirectTo') || '/'
+  const providerError = searchParams.get('error')
+  const providerErrorCode = searchParams.get('error_code')
+  const providerErrorDescription = searchParams.get('error_description')
+  const redirectTo = sanitizeRedirectPath(
+    searchParams.get('redirectTo') ?? readAuthRedirectCookie(request.headers.get('cookie'))
+  )
+  const relayOrigin = getLocalAuthCallbackRelayOrigin(searchParams.get('origin'), origin)
 
-  // Only allow relative paths that start with / but not // (protocol-relative URLs).
-  // This prevents open-redirect attacks where an attacker crafts a link like
-  // /auth/callback?redirectTo=https://evil.com after a successful OAuth flow.
-  const redirectTo =
-    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
-      ? rawRedirect
-      : '/'
+  if (code && relayOrigin) {
+    const callbackUrl = new URL('/auth/callback', relayOrigin)
+    callbackUrl.searchParams.set('code', code)
+    callbackUrl.searchParams.set('redirectTo', redirectTo)
+    return NextResponse.redirect(callbackUrl)
+  }
+
+  if (providerError) {
+    console.error('Supabase OAuth callback returned an error', {
+      error: providerError,
+      errorCode: providerErrorCode,
+      errorDescription: providerErrorDescription,
+      origin,
+    })
+    return redirectToLogin(relayOrigin ?? origin, 'provider')
+  }
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Successful authentication
-      return NextResponse.redirect(`${origin}${redirectTo}`)
+      const response = NextResponse.redirect(`${origin}${redirectTo}`)
+      response.cookies.set(AUTH_REDIRECT_COOKIE, '', { path: '/', maxAge: 0 })
+      return response
     }
+
+    console.error('Supabase OAuth code exchange failed', {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      origin,
+    })
+    return redirectToLogin(origin, 'exchange')
   }
 
-  // Return to login with error if something went wrong
-  return NextResponse.redirect(`${origin}/auth/login?error=auth`)
+  return redirectToLogin(relayOrigin ?? origin, 'missing_code')
 }

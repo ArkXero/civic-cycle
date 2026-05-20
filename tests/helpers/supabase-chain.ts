@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi } from 'vite-plus/test'
 
 /**
  * Build a Supabase query chain stub that resolves to { data, error }.

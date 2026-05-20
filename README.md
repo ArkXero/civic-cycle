@@ -69,17 +69,29 @@ Copy `.env.example` to `.env.local` and fill in all values.
 | `BOARDDOCS_STATE` | Two-letter state code, e.g. `va` |
 | `BOARDDOCS_DISTRICT` | BoardDocs committee/district ID |
 
+### Supabase Auth Redirect URLs
+
+Google OAuth redirects must be allow-listed in Supabase Auth. In the Supabase
+Dashboard, set the Site URL to the public app origin, for example
+`https://civiccycle.net`, and add every callback origin used for development or
+production:
+
+- `https://civiccycle.net/auth/callback`
+- `http://localhost:3000/auth/callback`
+- Any Cloudflare tunnel or preview URL exactly as opened in the browser, ending
+  in `/auth/callback`
+
 ---
 
 ## Local Setup
 
 ### Prerequisites
 
-- Node.js 20+
-- Vite Plus (`vp`)
+- Node.js 24+
+- Vite+ CLI (`vp`)
 - pnpm 11+
 - Docker + Docker Compose
-- Supabase CLI
+- Supabase CLI (`supabase`)
 
 ### Steps
 
@@ -102,9 +114,9 @@ vp run dev
 # or: pnpm dev
 ```
 
-The app runs at `http://localhost:3000`. The default dev script uses webpack
-(`next dev --webpack`) to avoid local Turbopack cache/RAM spikes. Use
-`vp run dev:turbo` only when specifically testing Turbopack.
+The app runs at `http://localhost:3000`. Use `vp run dev:clean` if you hit
+local cache issues, and use `vp run dev:turbo` only when specifically testing
+Turbopack.
 
 For Google OAuth in local development, add `http://localhost:3000/**` to
 Supabase Auth's allowed redirect URLs. Keep the production callback URL there
@@ -165,10 +177,14 @@ Authorization: Bearer <CRON_SECRET>
 
 ```bash
 vp install        # Install dependencies with pnpm
-vp run dev        # Start dev server via Next webpack dev mode
+vp run dev        # Start Next dev server
 vp run dev:turbo  # Start dev server with Turbopack
-vp run build      # Production build
-vp run lint       # ESLint
-vp run test       # Vitest
-vp exec tsc --noEmit  # TypeScript check
+vp run dev:clean        # Clear Next/Turbopack cache, then start dev server
+vp run build            # Production build
+vp run start            # Start production server
+vp run lint             # ESLint
+vp check                # Vite+ static checks
+vp test                 # Test suite
+vp test watch           # Test watcher
+vp test run --coverage  # Coverage
 ```

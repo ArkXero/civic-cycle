@@ -1,9 +1,21 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { CostTimelineChart } from '@/components/admin/cost-timeline-chart'
+import { UserDetailDialog } from '@/components/admin/user-detail-dialog'
+import { UserGrowthChart } from '@/components/admin/user-growth-chart'
+import { fmtCost, fmtTokens, timeAgo } from '@/components/admin/dashboard-format'
 import {
   FileText,
   Users,
@@ -14,6 +26,7 @@ import {
   AlertCircle,
   RefreshCw,
   Mail,
+  Search,
   Cpu,
   LayoutDashboard,
   ShieldCheck,
@@ -66,25 +79,10 @@ interface HealthStatus {
   allHealthy: boolean
 }
 
+type RoleFilter = 'all' | 'admin' | 'user'
+type SignupSort = 'newest' | 'oldest'
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function fmtCost(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`
-}
-
-function fmtTokens(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
-  return String(n)
-}
-
-function timeAgo(iso: string) {
-  const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (secs < 60) return 'Just now'
-  if (secs < 3_600) return `${Math.floor(secs / 60)}m ago`
-  if (secs < 86_400) return `${Math.floor(secs / 3_600)}h ago`
-  return `${Math.floor(secs / 86_400)}d ago`
-}
 
 function ActivityIcon({ action }: { action: string }) {
   switch (action) {
@@ -98,21 +96,42 @@ function ActivityIcon({ action }: { action: string }) {
       return <Mail className="w-4 h-4 text-purple-500 shrink-0" />
     case 'api_error':
       return <AlertCircle className="w-4 h-4 text-orange-500 shrink-0" />
+    case 'user_promoted':
+      return <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
+    case 'user_demoted':
+      return <ShieldOff className="w-4 h-4 text-red-500 shrink-0" />
     default:
       return <Activity className="w-4 h-4 text-muted-foreground shrink-0" />
   }
 }
 
+function signupTimestamp(user: AdminUser) {
+  const timestamp = new Date(user.created_at).getTime()
+  return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function DashboardClient() {
+export function DashboardClient({
+  currentUserId,
+  canDemoteAdmins,
+}: {
+  currentUserId: string
+  canDemoteAdmins: boolean
+}) {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [health, setHealth] = useState<HealthStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [users, setUsers] = useState<AdminUser[] | null>(null)
   const [usersLoading, setUsersLoading] = useState(true)
-  const [promotingId, setPromotingId] = useState<string | null>(null)
+  const [roleActionId, setRoleActionId] = useState<string | null>(null)
+  const [chartRefreshKey, setChartRefreshKey] = useState(0)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [userSearch, setUserSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
+  const [signupSort, setSignupSort] = useState<SignupSort>('newest')
 
   const refreshUsers = useCallback(async () => {
     setUsersLoading(true)
@@ -128,34 +147,8 @@ export function DashboardClient() {
     }
   }, [])
 
-  const handlePromote = useCallback(async (targetUser: AdminUser) => {
-    const confirmed = window.confirm(
-      `Promote ${targetUser.email} to admin?\n\nThe role change takes effect on their next login or token refresh.`
-    )
-    if (!confirmed) return
-
-    setPromotingId(targetUser.id)
-    try {
-      const res = await fetch('/api/admin/promote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUserId: targetUser.id }),
-      })
-      if (!res.ok) {
-        const body = await res.json()
-        alert(`Failed to promote user: ${body.error ?? 'Unknown error'}`)
-        return
-      }
-      await refreshUsers()
-    } catch {
-      alert('Failed to promote user. Please try again.')
-    } finally {
-      setPromotingId(null)
-    }
-  }, [refreshUsers])
-
-  const refresh = useCallback(async () => {
-    setLoading(true)
+  const refresh = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true)
     setError(false)
     try {
       const [statsRes, healthRes] = await Promise.all([
@@ -169,17 +162,99 @@ export function DashboardClient() {
       ])
       setStats(statsData)
       setHealth(healthData)
+      setChartRefreshKey((key) => key + 1)
     } catch {
       setError(true)
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }, [])
 
+  const refreshAll = useCallback(async () => {
+    await Promise.all([refresh(), refreshUsers()])
+  }, [refresh, refreshUsers])
+
+  const handlePromote = useCallback(async (targetUser: AdminUser) => {
+    const confirmed = window.confirm(
+      `Promote ${targetUser.email} to admin?\n\nThe role change takes effect on their next login or token refresh.`
+    )
+    if (!confirmed) return
+
+    setRoleActionId(targetUser.id)
+    try {
+      const res = await fetch('/api/admin/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: targetUser.id }),
+      })
+      if (!res.ok) {
+        const body = await res.json()
+        alert(`Failed to promote user: ${body.error ?? 'Unknown error'}`)
+        return
+      }
+      await Promise.all([refreshUsers(), refresh(false)])
+    } catch {
+      alert('Failed to promote user. Please try again.')
+    } finally {
+      setRoleActionId(null)
+    }
+  }, [refresh, refreshUsers])
+
+  const handleDemote = useCallback(async (targetUser: AdminUser) => {
+    const confirmed = window.confirm(
+      `Demote ${targetUser.email} from admin?\n\nThe role change takes effect on their next login or token refresh.`
+    )
+    if (!confirmed) return
+
+    setRoleActionId(targetUser.id)
+    try {
+      const res = await fetch('/api/admin/demote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: targetUser.id }),
+      })
+      if (!res.ok) {
+        const body = await res.json()
+        alert(`Failed to demote user: ${body.error ?? 'Unknown error'}`)
+        return
+      }
+      await Promise.all([refreshUsers(), refresh(false)])
+    } catch {
+      alert('Failed to demote user. Please try again.')
+    } finally {
+      setRoleActionId(null)
+    }
+  }, [refresh, refreshUsers])
+
+  const openUserDetail = useCallback((userId: string) => {
+    setSelectedUserId(userId)
+    setDetailOpen(true)
+  }, [])
+
+  const filteredUsers = useMemo(() => {
+    const query = userSearch.trim().toLowerCase()
+
+    return (users ?? [])
+      .filter((user) => {
+        const matchesRole = roleFilter === 'all' || user.role === roleFilter
+        const matchesSearch = !query
+          || user.email.toLowerCase().includes(query)
+          || (user.display_name?.toLowerCase().includes(query) ?? false)
+
+        return matchesRole && matchesSearch
+      })
+      .sort((a, b) => {
+        const diff = signupTimestamp(b) - signupTimestamp(a)
+        return signupSort === 'newest' ? diff : -diff
+      })
+  }, [roleFilter, signupSort, userSearch, users])
+
   useEffect(() => {
-    refresh()
-    refreshUsers()
-    const interval = setInterval(refresh, 60_000)
+    void refresh()
+    void refreshUsers()
+    const interval = setInterval(() => {
+      void refresh(false)
+    }, 60_000)
     return () => clearInterval(interval)
   }, [refresh, refreshUsers])
 
@@ -196,7 +271,7 @@ export function DashboardClient() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <p className="text-destructive">Failed to load dashboard data.</p>
-        <Button variant="outline" size="sm" onClick={refresh}>
+        <Button variant="outline" size="sm" onClick={() => refresh()}>
           <RefreshCw className="w-4 h-4 mr-2" />
           Retry
         </Button>
@@ -214,7 +289,7 @@ export function DashboardClient() {
           <LayoutDashboard className="w-6 h-6 text-muted-foreground" />
           <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={refreshAll} disabled={loading || usersLoading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
@@ -374,6 +449,12 @@ export function DashboardClient() {
         </CardContent>
       </Card>
 
+      {/* ── Analytics timelines ───────────────────────────────────────────── */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <UserGrowthChart refreshKey={chartRefreshKey} />
+        <CostTimelineChart refreshKey={chartRefreshKey} />
+      </div>
+
       {/* ── User Management ────────────────────────────────────────────────── */}
       <Card>
         <CardHeader>
@@ -399,41 +480,103 @@ export function DashboardClient() {
             <p className="text-sm text-muted-foreground">No users found.</p>
           ) : (
             <>
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                {users.map((u) => (
-                  <div key={u.id} className="flex items-center justify-between rounded-md border px-3 py-2 gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {u.role === 'admin'
-                        ? <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
-                        : <ShieldOff className="w-4 h-4 text-muted-foreground shrink-0" />
-                      }
-                      <span className="text-sm truncate">{u.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant={u.role === 'admin' ? 'default' : 'outline'}>
-                        {u.role}
-                      </Badge>
-                      {u.role !== 'admin' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
-                          disabled={promotingId === u.id}
-                          onClick={() => handlePromote(u)}
-                        >
-                          {promotingId === u.id ? (
-                            <RefreshCw className="w-3 h-3 animate-spin" />
-                          ) : (
-                            'Promote'
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div className="mb-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_160px_180px]">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={userSearch}
+                    onChange={(event) => setUserSearch(event.target.value)}
+                    placeholder="Search users"
+                    className="pl-9"
+                    aria-label="Search users"
+                  />
+                </div>
+                <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as RoleFilter)}>
+                  <SelectTrigger className="w-full" aria-label="Filter users by role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All roles</SelectItem>
+                    <SelectItem value="admin">Admins</SelectItem>
+                    <SelectItem value="user">Users</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={signupSort} onValueChange={(value) => setSignupSort(value as SignupSort)}>
+                  <SelectTrigger className="w-full" aria-label="Sort users by signup date">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest first</SelectItem>
+                    <SelectItem value="oldest">Oldest first</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {filteredUsers.length === 0 ? (
+                <p className="rounded-md border px-3 py-6 text-sm text-muted-foreground">
+                  No users match these filters.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {filteredUsers.map((u) => (
+                    <div key={u.id} className="flex items-center justify-between rounded-md border px-3 py-2 gap-3">
+                      <button
+                        type="button"
+                        className="flex min-w-0 flex-1 items-center gap-2 rounded-sm text-left outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        onClick={() => openUserDetail(u.id)}
+                      >
+                        {u.role === 'admin'
+                          ? <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
+                          : <ShieldOff className="w-4 h-4 text-muted-foreground shrink-0" />
+                        }
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm">{u.email}</span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {u.display_name ?? 'No display name'} • joined {timeAgo(u.created_at)}
+                          </span>
+                        </span>
+                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant={u.role === 'admin' ? 'default' : 'outline'}>
+                          {u.role}
+                        </Badge>
+                        {u.role !== 'admin' && u.id !== currentUserId && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            disabled={roleActionId === u.id}
+                            onClick={() => handlePromote(u)}
+                          >
+                            {roleActionId === u.id ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : (
+                              'Promote'
+                            )}
+                          </Button>
+                        )}
+                        {canDemoteAdmins && u.role === 'admin' && u.id !== currentUserId && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 border-destructive/30 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            disabled={roleActionId === u.id}
+                            onClick={() => handleDemote(u)}
+                          >
+                            {roleActionId === u.id ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : (
+                              'Demote'
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground mt-3">
-                Role changes take effect on the user&apos;s next login or token refresh.
+                Showing {filteredUsers.length} of {users.length} users. Role changes take effect on the user&apos;s next login or token refresh.
               </p>
             </>
           )}
@@ -500,6 +643,15 @@ export function DashboardClient() {
           </CardContent>
         </Card>
       </div>
+
+      <UserDetailDialog
+        userId={selectedUserId}
+        open={detailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open)
+          if (!open) setSelectedUserId(null)
+        }}
+      />
     </div>
   )
 }

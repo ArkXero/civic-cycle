@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { ActivityTypes, logActivity } from '@/lib/activity'
+import { canDemoteAdmins } from '@/lib/auth/can-demote-admins'
+import { isAdminUser } from '@/lib/auth/is-admin-server'
 import { z } from 'zod'
 
-const promoteBodySchema = z.object({
+const demoteBodySchema = z.object({
   targetUserId: z.string().uuid(),
 }).strict()
 
-// POST /api/admin/promote
-// Promotes a user to the admin role.
-// Caller must be authenticated AND have role = 'admin' in user_roles (DB double-check).
+// POST /api/admin/demote
+// Demotes a user by deleting the admin role row. Do not upsert role='user'.
 export async function POST(request: NextRequest) {
   try {
-    // 1. Verify the caller is authenticated
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
@@ -20,20 +20,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 2. Double-check the caller has role = 'admin' in the DB (not just the JWT)
-    const adminClient = createAdminClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: callerRole, error: roleError } = await (adminClient.from('user_roles') as any)
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single()
-
-    if (roleError || !callerRole) {
+    if (!await isAdminUser(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // 3. Parse and validate the request body
+    if (!canDemoteAdmins(user.email)) {
+      return NextResponse.json({ error: 'Only owner admins can demote users' }, { status: 403 })
+    }
+
     let rawBody: unknown
     try {
       rawBody = await request.json()
@@ -41,38 +35,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
 
-    const bodyResult = promoteBodySchema.safeParse(rawBody)
+    const bodyResult = demoteBodySchema.safeParse(rawBody)
     if (!bodyResult.success) {
       return NextResponse.json({ error: bodyResult.error.issues[0].message }, { status: 400 })
     }
 
     const { targetUserId } = bodyResult.data
 
-    // Prevent self-promotion (belt-and-suspenders — the caller already IS an admin,
-    // but guard against accidental duplicate upserts causing confusion)
     if (targetUserId === user.id) {
-      return NextResponse.json({ error: 'Cannot promote yourself' }, { status: 400 })
+      return NextResponse.json({ error: 'Cannot demote yourself' }, { status: 400 })
     }
 
+    const adminClient = createAdminClient()
     const { data: targetData } = await adminClient.auth.admin.getUserById(targetUserId)
     const targetEmail = targetData.user?.email ?? targetUserId
 
-    // 4. Upsert the target user's role to 'admin'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: upsertError } = await (adminClient.from('user_roles') as any)
-      .upsert(
-        { user_id: targetUserId, role: 'admin' },
-        { onConflict: 'user_id,role' }
-      )
+    const { error: deleteError } = await (adminClient.from('user_roles') as any)
+      .delete()
+      .eq('user_id', targetUserId)
+      .eq('role', 'admin')
 
-    if (upsertError) {
-      console.error('Failed to promote user:', upsertError)
-      return NextResponse.json({ error: 'Failed to promote user' }, { status: 500 })
+    if (deleteError) {
+      console.error('Failed to demote user:', deleteError)
+      return NextResponse.json({ error: 'Failed to demote user' }, { status: 500 })
     }
 
     logActivity(
-      ActivityTypes.USER_PROMOTED,
-      `Promoted ${targetEmail} to admin`,
+      ActivityTypes.USER_DEMOTED,
+      `Demoted ${targetEmail} from admin`,
       { targetUserId }
     ).catch(() => {})
 

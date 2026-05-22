@@ -43,7 +43,7 @@ export function BoardDocsImporter() {
   }
 
   useEffect(() => {
-    fetchMeetings()
+    void fetchMeetings()
   }, [])
 
   const handleImport = async (meetingId: string) => {
@@ -86,7 +86,7 @@ export function BoardDocsImporter() {
       )
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Summary generation failed')
-      fetchMeetings()
+      void fetchMeetings()
     } finally {
       setSummarizingId(null)
     }

@@ -17,16 +17,13 @@ import { POST } from '@/app/api/cron/send-alerts/route'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function makeChain(result: { data: unknown; error: unknown }): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chain: any = {
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    gte: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn().mockResolvedValue(result),
-    then: (resolve: (value: unknown) => void) => resolve(result),
-    catch: () => Promise.resolve(result),
-  }
+  const chain: any = Promise.resolve(result)
+  chain.select = vi.fn().mockReturnValue(chain)
+  chain.insert = vi.fn().mockReturnValue(chain)
+  chain.eq = vi.fn().mockReturnValue(chain)
+  chain.gte = vi.fn().mockReturnValue(chain)
+  chain.in = vi.fn().mockReturnValue(chain)
+  chain.maybeSingle = vi.fn().mockResolvedValue(result)
   return chain
 }
 

@@ -41,17 +41,13 @@ function makeRequest(authHeader?: string): NextRequest {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function makeChain(result: { data: unknown; error: unknown }): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chain: any = {
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    gte: vi.fn().mockResolvedValue(result),
-    in: vi.fn().mockResolvedValue(result),
-    maybeSingle: vi.fn().mockResolvedValue(result),
-    // Thenability
-    then: (resolve: (v: unknown) => void) => resolve(result),
-    catch: () => Promise.resolve(result),
-  }
+  const chain: any = Promise.resolve(result)
+  chain.select = vi.fn().mockReturnValue(chain)
+  chain.insert = vi.fn().mockReturnValue(chain)
+  chain.eq = vi.fn().mockReturnValue(chain)
+  chain.gte = vi.fn().mockResolvedValue(result)
+  chain.in = vi.fn().mockResolvedValue(result)
+  chain.maybeSingle = vi.fn().mockResolvedValue(result)
   return chain
 }
 

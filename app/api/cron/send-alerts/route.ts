@@ -31,6 +31,34 @@ interface UserProfile {
   email: string
 }
 
+interface AlertHistoryInsert {
+  user_id: string
+  meeting_id: string
+  alert_preference_id: string
+  matched_keyword: string
+  email_status: 'sent' | 'failed'
+}
+
+async function recordAlertHistory(
+  supabase: ReturnType<typeof createAdminClient>,
+  payload: AlertHistoryInsert
+) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('alert_history') as any).insert(payload)
+
+    if (error) {
+      console.error('Error recording alert history:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error recording alert history:', error)
+    return false
+  }
+}
+
 // This endpoint is called by a cron scheduler to send alert emails.
 // CRON_SECRET must be set in production — requests without the correct
 // Bearer token are rejected unconditionally.
@@ -217,7 +245,7 @@ export async function POST(request: NextRequest) {
 
         // Send email
         try {
-          await sendAlertEmail({
+          const sendResult = await sendAlertEmail({
             to: userEmail,
             keyword: alert.keyword,
             meetingTitle: meeting.title,
@@ -228,12 +256,16 @@ export async function POST(request: NextRequest) {
             unsubscribeUrl: `${appUrl}/unsubscribe/${alert.unsubscribe_token}`,
           })
 
+          if (sendResult?.error) {
+            throw sendResult.error
+          }
+
           // Record in alert history
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase.from('alert_history') as any).insert({
+          await recordAlertHistory(supabase, {
             user_id: alert.user_id,
             meeting_id: meeting.id,
             alert_preference_id: alert.id,
+            matched_keyword: alert.keyword,
             email_status: 'sent',
           })
 
@@ -247,11 +279,11 @@ export async function POST(request: NextRequest) {
           console.error('Error sending alert email:', emailError)
 
           // Record failed email
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase.from('alert_history') as any).insert({
+          await recordAlertHistory(supabase, {
             user_id: alert.user_id,
             meeting_id: meeting.id,
             alert_preference_id: alert.id,
+            matched_keyword: alert.keyword,
             email_status: 'failed',
           })
         }

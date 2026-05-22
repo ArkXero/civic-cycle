@@ -473,6 +473,7 @@ describe('POST /api/cron/send-alerts', () => {
     expect(insertCall.user_id).toBe(fakeAlert.user_id)
     expect(insertCall.meeting_id).toBe(fakeMeeting.id)
     expect(insertCall.alert_preference_id).toBe(fakeAlert.id)
+    expect(insertCall.matched_keyword).toBe(fakeAlert.keyword)
   })
 
   it('records alert_history with email_status "failed" when sendAlertEmail throws', async () => {
@@ -492,8 +493,78 @@ describe('POST /api/cron/send-alerts', () => {
     expect(res.status).toBe(200)
     const insertCall = failHistoryChain.insert.mock.calls[0][0]
     expect(insertCall.email_status).toBe('failed')
+    expect(insertCall.matched_keyword).toBe(fakeAlert.keyword)
     const body = await res.json()
     expect(body.sent).toBe(0)
+  })
+
+  it('records alert_history with email_status "failed" when Resend returns an error result', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockSendAlertEmail.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Resend domain is not verified' },
+    })
+
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    const failHistoryChain = makeChain({ data: null, error: null })
+    mockAdminFrom.mockReturnValueOnce(failHistoryChain)
+
+    try {
+      const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
+
+      expect(res.status).toBe(200)
+      expect(mockSendAlertEmail).toHaveBeenCalledOnce()
+      const insertCall = failHistoryChain.insert.mock.calls[0][0]
+      expect(insertCall).toMatchObject({
+        user_id: fakeAlert.user_id,
+        meeting_id: fakeMeeting.id,
+        alert_preference_id: fakeAlert.id,
+        matched_keyword: fakeAlert.keyword,
+        email_status: 'failed',
+      })
+      const body = await res.json()
+      expect(body.sent).toBe(0)
+    } finally {
+      errorSpy.mockRestore()
+    }
+  })
+
+  it('does not crash the cron run when alert_history insert fails after a successful send', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
+    const historyChain = makeChain({ data: null, error: new Error('history insert failed') })
+    mockAdminFrom.mockReturnValueOnce(historyChain)
+
+    try {
+      const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
+
+      expect(res.status).toBe(200)
+      expect(mockSendAlertEmail).toHaveBeenCalledOnce()
+      expect(historyChain.insert).toHaveBeenCalledWith({
+        user_id: fakeAlert.user_id,
+        meeting_id: fakeMeeting.id,
+        alert_preference_id: fakeAlert.id,
+        matched_keyword: fakeAlert.keyword,
+        email_status: 'sent',
+      })
+      const body = await res.json()
+      expect(body.sent).toBe(1)
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Error recording alert history:',
+        expect.any(Error)
+      )
+    } finally {
+      errorSpy.mockRestore()
+    }
   })
 
   it('continues processing other alerts when one email send fails', async () => {

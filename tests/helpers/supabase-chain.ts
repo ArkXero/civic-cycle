@@ -8,19 +8,16 @@ import { vi } from 'vite-plus/test'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function makeChain(result: { data: unknown; error: unknown }): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chain: any = {
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    upsert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue(result),
-    maybeSingle: vi.fn().mockResolvedValue(result),
-    in: vi.fn().mockReturnThis(),
-    order: vi.fn().mockResolvedValue(result),
-    then: (resolve: (v: unknown) => void) => resolve(result),
-    catch: () => Promise.resolve(result),
-  }
+  const chain: any = Promise.resolve(result)
+  chain.select = vi.fn().mockReturnValue(chain)
+  chain.insert = vi.fn().mockReturnValue(chain)
+  chain.upsert = vi.fn().mockReturnValue(chain)
+  chain.update = vi.fn().mockReturnValue(chain)
+  chain.delete = vi.fn().mockReturnValue(chain)
+  chain.eq = vi.fn().mockReturnValue(chain)
+  chain.single = vi.fn().mockResolvedValue(result)
+  chain.maybeSingle = vi.fn().mockResolvedValue(result)
+  chain.in = vi.fn().mockReturnValue(chain)
+  chain.order = vi.fn().mockResolvedValue(result)
   return chain
 }

@@ -8,8 +8,12 @@ const VARIANTS: Record<MeetingStatus, { variant?: 'secondary' | 'outline' | 'des
   failed: { variant: 'destructive', label: 'Failed' },
 }
 
-export function StatusBadge({ status }: { status: MeetingStatus | string | null | undefined }) {
-  if (!status || !(status in VARIANTS)) return null
-  const { variant, className, label } = VARIANTS[status as MeetingStatus]
+function isMeetingStatus(status: string): status is MeetingStatus {
+  return status in VARIANTS
+}
+
+export function StatusBadge({ status }: { status: string | null | undefined }) {
+  if (!status || !isMeetingStatus(status)) return null
+  const { variant, className, label } = VARIANTS[status]
   return <Badge variant={variant} className={className}>{label}</Badge>
 }

@@ -53,7 +53,7 @@ export function Header() {
         setAuthLoading(false)
       }
     }
-    init()
+    void init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)

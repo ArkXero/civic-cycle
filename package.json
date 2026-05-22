@@ -42,7 +42,7 @@
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "resend": "^6.12.2",
-    "tailwind-merge": "^3.5.0",
+    "tailwind-merge": "^3.6.0",
     "three": "^0.184.0",
     "zod": "^4.4.3"
   },

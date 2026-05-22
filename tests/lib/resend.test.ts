@@ -54,6 +54,38 @@ describe('sendAlertEmail', () => {
     expect(call.from).toContain('Civic Cycle')
   })
 
+  it('uses RESEND_FROM_EMAIL for the from address when present', async () => {
+    const previousFromEmail = process.env.RESEND_FROM_EMAIL
+    process.env.RESEND_FROM_EMAIL = 'alerts@example.test'
+    vi.resetModules()
+    mockSend.mockReset()
+    mockSend.mockResolvedValue({ data: { id: 'email-id-1' }, error: null })
+
+    try {
+      const { sendAlertEmail: sendAlertEmailWithEnv } = await import('@/lib/resend')
+
+      await sendAlertEmailWithEnv(baseParams)
+
+      const call = mockSend.mock.calls[0][0]
+      expect(call.from).toBe('Civic Cycle <alerts@example.test>')
+    } finally {
+      if (previousFromEmail === undefined) {
+        delete process.env.RESEND_FROM_EMAIL
+      } else {
+        process.env.RESEND_FROM_EMAIL = previousFromEmail
+      }
+      vi.resetModules()
+    }
+  })
+
+  it('does not set a reply_to field by default', async () => {
+    await sendAlertEmail(baseParams)
+
+    const call = mockSend.mock.calls[0][0]
+    expect(call).not.toHaveProperty('reply_to')
+    expect(call).not.toHaveProperty('replyTo')
+  })
+
   it('includes the meeting title in both html and text', async () => {
     await sendAlertEmail(baseParams)
 
@@ -92,6 +124,13 @@ describe('sendAlertEmail', () => {
     const { html, text } = mockSend.mock.calls[0][0]
     expect(html).toContain('https://example.com/unsubscribe/alert-456')
     expect(text).toContain('https://example.com/unsubscribe/alert-456')
+  })
+
+  it('includes the unsubscribe link in the alert text body', async () => {
+    await sendAlertEmail(baseParams)
+
+    const { text } = mockSend.mock.calls[0][0]
+    expect(text).toContain(`Unsubscribe: ${baseParams.unsubscribeUrl}`)
   })
 
   it('returns the resend API response', async () => {
@@ -217,6 +256,26 @@ describe('sendDigestEmail', () => {
     expect(html).toContain('https://example.com/unsubscribe/digest-123')
     expect(text).toContain('https://example.com/unsubscribe/digest-123')
     expect(html).not.toContain('{{UNSUBSCRIBE_URL}}')
+    expect(text).not.toContain('{{UNSUBSCRIBE_URL}}')
+  })
+
+  it('replaces every unsubscribe placeholder in digest text output', async () => {
+    await sendDigestEmail({
+      to: 'user@example.com',
+      unsubscribeUrl: 'https://example.com/unsubscribe/digest-123',
+      digestHtml: '<a href="{{UNSUBSCRIBE_URL}}">Unsubscribe</a>',
+      digestText:
+        'Manage preferences: {{UNSUBSCRIBE_URL}}\nUnsubscribe: {{UNSUBSCRIBE_URL}}',
+      weekRange: 'March 4, 2026',
+    })
+
+    const { text } = mockSend.mock.calls[0][0]
+    expect(text).toContain(
+      'Manage preferences: https://example.com/unsubscribe/digest-123'
+    )
+    expect(text).toContain(
+      'Unsubscribe: https://example.com/unsubscribe/digest-123'
+    )
     expect(text).not.toContain('{{UNSUBSCRIBE_URL}}')
   })
 

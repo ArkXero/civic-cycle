@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   ListTree,
   Moon,
+  Settings,
   Shield,
   Sun,
 } from 'lucide-react'
@@ -27,6 +28,7 @@ const mobileNavIcons = {
   '/meetings': ListTree,
   '/calendar': CalendarDays,
   '/alerts': Bell,
+  '/settings': Settings,
   '/admin/boarddocs': FileDown,
   '/admin/dashboard': LayoutDashboard,
 } as const

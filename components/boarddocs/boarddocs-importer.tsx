@@ -4,8 +4,16 @@ import { useState, useEffect } from 'react'
 import { RefreshCw, Loader2, AlertCircle, Calendar, FileText, CheckCircle2, Download, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StatusBadge } from '@/components/meetings/status-badge'
 import { apiCall } from '@/lib/api/fetch'
+import {
+  ACTIVE_SCHOOL_DISTRICTS,
+  DEFAULT_SCHOOL_DISTRICT_ID,
+  getSchoolDistrict,
+  isSchoolDistrictId,
+  type SchoolDistrictId,
+} from '@/lib/school-districts'
 import type { MeetingStatus } from '@/types'
 
 type FilterMode = 'all' | 'imported' | 'available'
@@ -18,10 +26,37 @@ interface BoardDocsMeeting {
   isImported: boolean
   dbId: string | null
   dbStatus: MeetingStatus | null
+  isRegularMeeting: boolean
+}
+
+interface BoardDocsResponse {
+  data: BoardDocsMeeting[]
+  importedCount: number
+  regularMeetingCount: number
+  district: {
+    id: SchoolDistrictId
+    label: string
+    schoolSystemLabel: string
+    boardBodyLabel: string
+    sourceUrl: string
+    regularMeetingFilterDescription: string
+  }
 }
 
 export function BoardDocsImporter() {
+  const [districtId, setDistrictId] = useState<SchoolDistrictId>(DEFAULT_SCHOOL_DISTRICT_ID)
   const [meetings, setMeetings] = useState<BoardDocsMeeting[]>([])
+  const [districtMeta, setDistrictMeta] = useState<BoardDocsResponse['district']>(
+    {
+      id: DEFAULT_SCHOOL_DISTRICT_ID,
+      label: getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).uiLabel,
+      schoolSystemLabel: getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).schoolSystemLabel,
+      boardBodyLabel: getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).boardBodyLabel,
+      sourceUrl: getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).sourceUrl(),
+      regularMeetingFilterDescription:
+        getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).regularMeetingFilterDescription,
+    }
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [importingId, setImportingId] = useState<string | null>(null)
@@ -33,8 +68,11 @@ export function BoardDocsImporter() {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await apiCall<{ data: BoardDocsMeeting[] }>('/api/boarddocs/meetings')
+      const data = await apiCall<BoardDocsResponse>(
+        `/api/boarddocs/districts/${districtId}/meetings`
+      )
       setMeetings(data.data)
+      setDistrictMeta(data.district)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load meetings')
     } finally {
@@ -44,7 +82,8 @@ export function BoardDocsImporter() {
 
   useEffect(() => {
     void fetchMeetings()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [districtId])
 
   const handleImport = async (meetingId: string) => {
     setImportingId(meetingId)
@@ -54,7 +93,7 @@ export function BoardDocsImporter() {
         data?: { id: string; status?: MeetingStatus }
         autoSummarizeStarted?: boolean
       }>(
-        `/api/boarddocs/meetings/${meetingId}/import`,
+        `/api/boarddocs/districts/${districtId}/meetings/${meetingId}/import`,
         { method: 'POST' }
       )
       setMeetings((prev) =>
@@ -117,6 +156,7 @@ export function BoardDocsImporter() {
 
   const importedCount = meetings.filter((m) => m.isImported).length
   const availableCount = meetings.length - importedCount
+  const regularMeetingCount = meetings.filter((m) => m.isRegularMeeting).length
 
   const visibleMeetings = meetings.filter((m) => {
     if (filter === 'imported') return m.isImported
@@ -126,18 +166,44 @@ export function BoardDocsImporter() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 mb-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Select
+            value={districtId}
+            onValueChange={(value) => {
+              if (isSchoolDistrictId(value)) {
+                setDistrictId(value)
+                setMeetings([])
+                setFilter('all')
+              }
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-[280px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ACTIVE_SCHOOL_DISTRICTS.map((district) => (
+                <SelectItem key={district.id} value={district.id}>
+                  {district.schoolSystemLabel}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-sm text-muted-foreground">
             {meetings.length} meetings found &middot;{' '}
             <span className="text-green-500 font-medium">{importedCount} imported</span>
-            {' '}&middot; {availableCount} available
+            {' '}&middot; {availableCount} available &middot; {regularMeetingCount} regular
           </p>
         </div>
         <Button variant="outline" onClick={fetchMeetings} disabled={isLoading}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-4 mb-6 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">{districtMeta.boardBodyLabel}</p>
+        <p className="mt-1">{districtMeta.regularMeetingFilterDescription}</p>
       </div>
 
       <div className="flex gap-2 mb-6">
@@ -198,6 +264,11 @@ export function BoardDocsImporter() {
                     </div>
                   )}
                 </div>
+                {!meeting.isRegularMeeting && (
+                  <div className="mb-3 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
+                    Not matched by cron regular-meeting filter
+                  </div>
+                )}
                 <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />

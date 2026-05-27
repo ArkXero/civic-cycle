@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildAuthCallbackUrl,
+  DEFAULT_POST_AUTH_REDIRECT_PATH,
   getLocalAuthCallbackRelayOrigin,
   getRequestOrigin,
   oauthUrlMatchesCallbackOrigin,
@@ -15,6 +16,13 @@ describe('auth redirects', () => {
     expect(sanitizeRedirectPath('https://civiccycle.net/alerts')).toBe('/')
     expect(sanitizeRedirectPath('//civiccycle.net/alerts')).toBe('/')
     expect(sanitizeRedirectPath(undefined)).toBe('/')
+  })
+
+  it('supports a post-auth fallback while preserving redirect hardening', () => {
+    expect(sanitizeRedirectPath(undefined, DEFAULT_POST_AUTH_REDIRECT_PATH)).toBe('/alerts')
+    expect(sanitizeRedirectPath('https://civiccycle.net/alerts', DEFAULT_POST_AUTH_REDIRECT_PATH)).toBe('/alerts')
+    expect(sanitizeRedirectPath('//civiccycle.net/alerts', DEFAULT_POST_AUTH_REDIRECT_PATH)).toBe('/alerts')
+    expect(sanitizeRedirectPath('/meetings?id=1', DEFAULT_POST_AUTH_REDIRECT_PATH)).toBe('/meetings?id=1')
   })
 
   it('builds query-free localhost callback URLs', () => {
@@ -79,6 +87,13 @@ describe('auth redirects', () => {
   it('reads and sanitizes the auth redirect cookie', () => {
     expect(readAuthRedirectCookie('other=1; cc_auth_redirect_to=%2Falerts%3Ftab%3Dmine')).toBe('/alerts?tab=mine')
     expect(readAuthRedirectCookie('cc_auth_redirect_to=https%3A%2F%2Fevil.example%2Falerts')).toBe('/')
+    expect(readAuthRedirectCookie(null, DEFAULT_POST_AUTH_REDIRECT_PATH)).toBe('/alerts')
+    expect(
+      readAuthRedirectCookie(
+        'cc_auth_redirect_to=https%3A%2F%2Fevil.example%2Falerts',
+        DEFAULT_POST_AUTH_REDIRECT_PATH
+      )
+    ).toBe('/alerts')
   })
 
   it('falls back when the auth redirect cookie is malformed', () => {

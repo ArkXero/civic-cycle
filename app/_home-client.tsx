@@ -4,11 +4,19 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { MeetingCard } from '@/components/meetings/meeting-card'
+import { ViewingDistrict } from '@/components/school-district/viewing-district'
 import type { MeetingWithSummary } from '@/types'
+import type { SchoolDistrictId } from '@/lib/school-districts'
 
 const easing = [0.22, 1, 0.36, 1] as [number, number, number, number]
 
-export function RecentMeetingsSection({ meetings }: { meetings: MeetingWithSummary[] }) {
+export function RecentMeetingsSection({
+  meetings,
+  districtId,
+}: {
+  meetings: MeetingWithSummary[]
+  districtId: SchoolDistrictId
+}) {
   if (meetings.length === 0) return null
 
   return (
@@ -26,6 +34,9 @@ export function RecentMeetingsSection({ meetings }: { meetings: MeetingWithSumma
               RECENT ACTIVITY
             </p>
             <h2 className="text-foreground">Recent Meeting Summaries</h2>
+            <div className="mt-4">
+              <ViewingDistrict districtId={districtId} />
+            </div>
           </div>
           <Link
             href="/meetings"

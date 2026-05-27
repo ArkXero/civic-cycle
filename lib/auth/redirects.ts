@@ -1,5 +1,9 @@
+import { isSchoolDistrictId, type SchoolDistrictId } from '@/lib/school-districts'
+
 const DEFAULT_REDIRECT_PATH = '/'
+export const DEFAULT_POST_AUTH_REDIRECT_PATH = '/alerts'
 export const AUTH_REDIRECT_COOKIE = 'cc_auth_redirect_to'
+export const AUTH_PENDING_DISTRICT_COOKIE = 'cc_pending_district_id'
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
 
 function firstForwardedValue(value: string | null) {
@@ -14,16 +18,19 @@ function isHttpProtocol(protocol: string) {
   return protocol === 'http:' || protocol === 'https:'
 }
 
-export function sanitizeRedirectPath(value: string | null | undefined) {
+export function sanitizeRedirectPath(
+  value: string | null | undefined,
+  fallback = DEFAULT_REDIRECT_PATH
+) {
   if (!value || !value.startsWith('/') || value.startsWith('//')) {
-    return DEFAULT_REDIRECT_PATH
+    return fallback
   }
 
   try {
     const url = new URL(value, 'http://localhost')
-    return `${url.pathname}${url.search}${url.hash}` || DEFAULT_REDIRECT_PATH
+    return `${url.pathname}${url.search}${url.hash}` || fallback
   } catch {
-    return DEFAULT_REDIRECT_PATH
+    return fallback
   }
 }
 
@@ -62,20 +69,61 @@ export function storeAuthRedirectPath(redirectTo: string) {
   document.cookie = cookieParts.join('; ')
 }
 
-export function readAuthRedirectCookie(cookieHeader: string | null) {
-  if (!cookieHeader) return DEFAULT_REDIRECT_PATH
+export function storePendingDistrictPreference(districtId: SchoolDistrictId) {
+  if (typeof document === 'undefined') return
+
+  const cookieParts = [
+    `${AUTH_PENDING_DISTRICT_COOKIE}=${encodeURIComponent(districtId)}`,
+    'Path=/',
+    'Max-Age=600',
+    'SameSite=Lax',
+  ]
+
+  if (window.location.protocol === 'https:') {
+    cookieParts.push('Secure')
+  }
+
+  document.cookie = cookieParts.join('; ')
+}
+
+export function readAuthRedirectCookie(
+  cookieHeader: string | null,
+  fallback = DEFAULT_REDIRECT_PATH
+) {
+  if (!cookieHeader) return fallback
 
   const cookie = cookieHeader
     .split(';')
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${AUTH_REDIRECT_COOKIE}=`))
 
-  if (!cookie) return DEFAULT_REDIRECT_PATH
+  if (!cookie) return fallback
 
   try {
-    return sanitizeRedirectPath(decodeURIComponent(cookie.slice(AUTH_REDIRECT_COOKIE.length + 1)))
+    return sanitizeRedirectPath(
+      decodeURIComponent(cookie.slice(AUTH_REDIRECT_COOKIE.length + 1)),
+      fallback
+    )
   } catch {
-    return DEFAULT_REDIRECT_PATH
+    return fallback
+  }
+}
+
+export function readPendingDistrictCookie(cookieHeader: string | null) {
+  if (!cookieHeader) return null
+
+  const cookie = cookieHeader
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${AUTH_PENDING_DISTRICT_COOKIE}=`))
+
+  if (!cookie) return null
+
+  try {
+    const value = decodeURIComponent(cookie.slice(AUTH_PENDING_DISTRICT_COOKIE.length + 1))
+    return isSchoolDistrictId(value) ? value : null
+  } catch {
+    return null
   }
 }
 

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
@@ -27,6 +28,10 @@ const GENERIC_LOGIN_ERROR = 'Unable to sign in with those credentials.'
 const GENERIC_OAUTH_ERROR = 'Unable to start sign-in. Please try again.'
 const OAUTH_REDIRECT_ERROR =
   'Google sign-in is configured for a different host. Check the Supabase Auth redirect URLs for this environment.'
+
+function chooseCountyRedirect(redirectTo: string) {
+  return `/settings?reason=choose-county&redirectTo=${encodeURIComponent(redirectTo)}`
+}
 
 export function LoginForm({ redirectTo }: LoginFormProps) {
   const [email, setEmail] = useState('')
@@ -56,6 +61,15 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
 
       if (error) {
         setError(GENERIC_LOGIN_ERROR)
+        return
+      }
+
+      const profileResponse = await fetch('/api/account/profile')
+      if (profileResponse.ok) {
+        const profile = await profileResponse.json() as { preferredDistrictId?: string | null }
+        window.location.href = profile.preferredDistrictId
+          ? redirectTo
+          : chooseCountyRedirect(redirectTo)
         return
       }
 
@@ -102,6 +116,11 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       setIsGoogleLoading(false)
     }
   }
+
+  const forgotPasswordHref =
+    redirectTo !== '/'
+      ? `/auth/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}`
+      : '/auth/forgot-password'
 
   return (
     <div className="space-y-6">
@@ -162,7 +181,15 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              href={forgotPasswordHref}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Input
             id="password"
             type="password"

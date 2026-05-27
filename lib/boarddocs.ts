@@ -1,9 +1,9 @@
-const BOARDDOCS_STATE = process.env.BOARDDOCS_STATE || 'vsba'
-const BOARDDOCS_DISTRICT = process.env.BOARDDOCS_DISTRICT || 'fairfax'
-const BOARDDOCS_BASE = `https://go.boarddocs.com/${BOARDDOCS_STATE}/${BOARDDOCS_DISTRICT}/Board.nsf`
-
-// The Fairfax County School Board committee ID (from the BoardDocs site)
-const COMMITTEE_ID = 'A9HDX937D70D'
+import {
+  DEFAULT_SCHOOL_DISTRICT_ID,
+  getBoardDocsBaseUrl,
+  getSchoolDistrict,
+  type SchoolDistrictId,
+} from '@/lib/school-districts'
 
 export interface BoardDocsMeeting {
   id: string          // unique field from API
@@ -33,18 +33,24 @@ export interface AgendaItemContent {
 }
 
 // POST helper for BoardDocs API
-async function boardDocsPost(endpoint: string, data: Record<string, string> = {}): Promise<string> {
+async function boardDocsPost(
+  districtId: SchoolDistrictId,
+  endpoint: string,
+  data: Record<string, string> = {}
+): Promise<string> {
+  const district = getSchoolDistrict(districtId)
+  const baseUrl = getBoardDocsBaseUrl(districtId)
   const body = new URLSearchParams({
-    current_committee_id: COMMITTEE_ID,
+    current_committee_id: district.boardDocs.committeeId,
     ...data,
   })
 
-  const res = await fetch(`${BOARDDOCS_BASE}/${endpoint}?open`, {
+  const res = await fetch(`${baseUrl}/${endpoint}?open`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Referer': `${BOARDDOCS_BASE}/Home`,
+      'Referer': `${baseUrl}/Home`,
       'Origin': 'https://go.boarddocs.com',
       'Accept': 'application/json, text/javascript, */*; q=0.01',
       'X-Requested-With': 'XMLHttpRequest',
@@ -60,8 +66,10 @@ async function boardDocsPost(endpoint: string, data: Record<string, string> = {}
 }
 
 // Fetch list of all public meetings
-export async function listMeetings(): Promise<BoardDocsMeeting[]> {
-  const text = await boardDocsPost('BD-GetMeetingsList')
+export async function listMeetings(
+  districtId: SchoolDistrictId = DEFAULT_SCHOOL_DISTRICT_ID
+): Promise<BoardDocsMeeting[]> {
+  const text = await boardDocsPost(districtId, 'BD-GetMeetingsList')
 
   if (!text || text.length === 0) {
     return []
@@ -95,8 +103,11 @@ function parseNumberDate(nd: string): Date {
 }
 
 // Fetch agenda items for a specific meeting (returns HTML, parsed into items)
-export async function getMeetingAgenda(meetingId: string): Promise<AgendaItem[]> {
-  const html = await boardDocsPost('BD-GetAgenda', { id: meetingId })
+export async function getMeetingAgenda(
+  meetingId: string,
+  districtId: SchoolDistrictId = DEFAULT_SCHOOL_DISTRICT_ID
+): Promise<AgendaItem[]> {
+  const html = await boardDocsPost(districtId, 'BD-GetAgenda', { id: meetingId })
 
   const items: AgendaItem[] = []
   let currentCategory = ''
@@ -146,8 +157,11 @@ export async function getMeetingAgenda(meetingId: string): Promise<AgendaItem[]>
 }
 
 // Fetch full content for a single agenda item
-export async function getAgendaItemContent(itemId: string): Promise<AgendaItemContent> {
-  const html = await boardDocsPost('BD-GetAgendaItem', { id: itemId })
+export async function getAgendaItemContent(
+  itemId: string,
+  districtId: SchoolDistrictId = DEFAULT_SCHOOL_DISTRICT_ID
+): Promise<AgendaItemContent> {
+  const html = await boardDocsPost(districtId, 'BD-GetAgendaItem', { id: itemId })
 
   // Extract fields from the HTML
   const name = extractField(html, 'Subject') || extractField(html, 'ai-name') || ''
@@ -245,21 +259,24 @@ export async function extractPdfText(url: string): Promise<string> {
 }
 
 // Main: Get complete meeting content ready for summarization
-export async function getMeetingContent(meetingId: string): Promise<{
+export async function getMeetingContent(
+  meetingId: string,
+  districtId: SchoolDistrictId = DEFAULT_SCHOOL_DISTRICT_ID
+): Promise<{
   title: string
   date: Date
   fullText: string
   itemCount: number
 }> {
   // Get the meeting info from the meetings list
-  const meetings = await listMeetings()
+  const meetings = await listMeetings(districtId)
   const meeting = meetings.find((m) => m.id === meetingId)
   if (!meeting) {
     throw new Error(`Meeting ${meetingId} not found`)
   }
 
   // Get agenda items
-  const agendaItems = await getMeetingAgenda(meetingId)
+  const agendaItems = await getMeetingAgenda(meetingId, districtId)
 
   // Fetch content for each agenda item
   const sections: string[] = []
@@ -267,7 +284,7 @@ export async function getMeetingContent(meetingId: string): Promise<{
 
   for (const item of agendaItems) {
     try {
-      const content = await getAgendaItemContent(item.id)
+      const content = await getAgendaItemContent(item.id, districtId)
 
       let section = `## ${item.order} ${content.name}\n`
       if (content.category) {
@@ -311,6 +328,9 @@ export async function getMeetingContent(meetingId: string): Promise<{
 }
 
 // Get the public URL for a BoardDocs meeting item
-export function getBoardDocsUrl(itemId: string): string {
-  return `${BOARDDOCS_BASE}/goto?open&id=${itemId}`
+export function getBoardDocsUrl(
+  itemId: string,
+  districtId: SchoolDistrictId = DEFAULT_SCHOOL_DISTRICT_ID
+): string {
+  return getSchoolDistrict(districtId).sourceUrl(itemId)
 }

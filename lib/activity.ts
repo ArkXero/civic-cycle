@@ -8,12 +8,14 @@ export const ActivityTypes = {
   SUMMARY_FAILED: 'summary_failed',
   EMAIL_SENT: 'email_sent',
   API_ERROR: 'api_error',
+  USER_PROMOTED: 'user_promoted',
+  USER_DEMOTED: 'user_demoted',
 } as const
 
 export type ActivityType = (typeof ActivityTypes)[keyof typeof ActivityTypes]
 
 export async function logActivity(
-  action: ActivityType | string,
+  action: string,
   description: string,
   metadata?: Record<string, unknown>
 ): Promise<void> {

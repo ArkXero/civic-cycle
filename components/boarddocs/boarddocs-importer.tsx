@@ -81,7 +81,7 @@ export function BoardDocsImporter() {
   }
 
   useEffect(() => {
-    fetchMeetings()
+    void fetchMeetings()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [districtId])
 
@@ -125,7 +125,7 @@ export function BoardDocsImporter() {
       )
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Summary generation failed')
-      fetchMeetings()
+      void fetchMeetings()
     } finally {
       setSummarizingId(null)
     }

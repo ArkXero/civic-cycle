@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminUser } from '@/lib/auth/is-admin-server'
+import { canDemoteAdmins } from '@/lib/auth/can-demote-admins'
 import { DashboardClient } from '@/components/admin/dashboard-client'
 import type { Metadata } from 'next'
 
@@ -23,7 +24,10 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <DashboardClient />
+      <DashboardClient
+        currentUserId={user.id}
+        canDemoteAdmins={canDemoteAdmins(user.email)}
+      />
     </div>
   )
 }

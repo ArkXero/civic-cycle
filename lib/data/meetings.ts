@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import type { MeetingWithSummary } from '@/types'
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/lib/constants'
+import type { SchoolDistrictId } from '@/lib/school-districts'
 
 type DBClient = SupabaseClient<Database>
 
@@ -10,6 +11,7 @@ const MEETING_LIST_SELECT = `
   id,
   title,
   body,
+  district_id,
   meeting_date,
   source,
   source_url,
@@ -54,6 +56,7 @@ export interface MeetingListOptions {
   pageSize?: number
   body?: string
   statusFilter?: string | string[]
+  districtId?: SchoolDistrictId
 }
 
 export interface MeetingListResult {
@@ -79,6 +82,9 @@ export async function getMeetingList(
 
   if (options.body) {
     query = query.eq('body', options.body)
+  }
+  if (options.districtId) {
+    query = query.eq('district_id', options.districtId)
   }
   if (options.statusFilter) {
     if (Array.isArray(options.statusFilter)) {
@@ -109,6 +115,7 @@ export interface SearchOptions {
   page?: number
   pageSize?: number
   body?: string
+  districtId?: SchoolDistrictId
 }
 
 export async function searchMeetings(
@@ -122,15 +129,21 @@ export async function searchMeetings(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
 
+  let meetingHitQuery = db.from('meetings')
+    .select('id')
+    .eq('status', 'summarized')
+
+  if (options.districtId) {
+    meetingHitQuery = meetingHitQuery.eq('district_id', options.districtId)
+  }
+
   // FTS on summaries and meetings in parallel — returns only IDs (tiny payloads)
   const [summaryHits, meetingHits] = await Promise.all([
     db.from('summaries')
       .select('meeting_id')
       .textSearch('search_vector', options.query, { type: 'plain', config: 'english' })
       .limit(500),
-    db.from('meetings')
-      .select('id')
-      .eq('status', 'summarized')
+    meetingHitQuery
       .textSearch('search_vector', options.query, { type: 'plain', config: 'english' })
       .limit(500),
   ])
@@ -157,6 +170,9 @@ export async function searchMeetings(
 
   if (options.body) {
     fetchQuery = fetchQuery.eq('body', options.body)
+  }
+  if (options.districtId) {
+    fetchQuery = fetchQuery.eq('district_id', options.districtId)
   }
 
   const { data, error, count } = await fetchQuery

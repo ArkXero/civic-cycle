@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { searchMeetings } from "@/lib/data/meetings";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/constants";
+import { getPreferredDistrictId } from "@/lib/account-profile";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +30,8 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = await createClient();
-    const result = await searchMeetings(supabase, { query: query.trim(), page, pageSize, body });
+    const districtId = await getPreferredDistrictId(supabase, searchParams.get("districtId"));
+    const result = await searchMeetings(supabase, { query: query.trim(), page, pageSize, body, districtId });
 
     return NextResponse.json({
       data: result.meetings,

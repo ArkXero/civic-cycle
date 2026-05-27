@@ -34,7 +34,7 @@ export type MeetingWithSummary = Meeting & {
 }
 
 // Meeting body type
-export type MeetingBody = 'FCPS School Board' | 'Board of Supervisors'
+export type MeetingBody = string
 
 // Meeting status type
 export type MeetingStatus = 'pending' | 'processing' | 'summarized' | 'failed'

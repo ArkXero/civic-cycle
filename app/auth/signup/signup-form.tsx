@@ -7,16 +7,24 @@ import {
   buildAuthCallbackUrl,
   oauthUrlMatchesCallbackOrigin,
   storeAuthRedirectPath,
+  storePendingDistrictPreference,
 } from '@/lib/auth/redirects'
+import {
+  ACTIVE_SCHOOL_DISTRICTS,
+  isSchoolDistrictId,
+  type SchoolDistrictId,
+} from '@/lib/school-districts'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, CheckCircle2 } from 'lucide-react'
 
 const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  preferredDistrictId: z.string().refine(isSchoolDistrictId, 'Choose a county'),
 })
 
 interface SignupFormProps {
@@ -30,6 +38,7 @@ const OAUTH_REDIRECT_ERROR =
 
 export function SignupForm({ redirectTo }: SignupFormProps) {
   const [email, setEmail] = useState('')
+  const [preferredDistrictId, setPreferredDistrictId] = useState<SchoolDistrictId | ''>('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +56,7 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
       return
     }
 
-    const result = signupSchema.safeParse({ email, password })
+    const result = signupSchema.safeParse({ email, password, preferredDistrictId })
     if (!result.success) {
       setError(result.error.issues[0].message)
       return
@@ -63,6 +72,9 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
         password,
         options: {
           emailRedirectTo: buildAuthCallbackUrl(window.location.origin, redirectTo),
+          data: {
+            preferred_district_id: result.data.preferredDistrictId,
+          },
         },
       })
 
@@ -81,12 +93,19 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
 
   const handleGoogleSignup = async () => {
     setError(null)
+
+    if (!isSchoolDistrictId(preferredDistrictId)) {
+      setError('Choose a county')
+      return
+    }
+
     setIsGoogleLoading(true)
 
     try {
       const origin = window.location.origin
       const callbackUrl = buildAuthCallbackUrl(origin, redirectTo)
       storeAuthRedirectPath(redirectTo)
+      storePendingDistrictPreference(preferredDistrictId)
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -132,6 +151,30 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
 
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="preferredDistrict">County</Label>
+        <Select
+          value={preferredDistrictId}
+          onValueChange={(value) => {
+            if (isSchoolDistrictId(value)) {
+              setPreferredDistrictId(value)
+            }
+          }}
+          disabled={isLoading || isGoogleLoading}
+        >
+          <SelectTrigger id="preferredDistrict">
+            <SelectValue placeholder="Choose your county" />
+          </SelectTrigger>
+          <SelectContent>
+            {ACTIVE_SCHOOL_DISTRICTS.map((district) => (
+              <SelectItem key={district.id} value={district.id}>
+                {district.schoolSystemLabel}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <Button
         variant="outline"
         className="w-full"

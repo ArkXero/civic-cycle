@@ -1,18 +1,71 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
+import type { AuthTokenResponse } from '@supabase/supabase-js'
 import {
+  AUTH_PENDING_DISTRICT_COOKIE,
   AUTH_REDIRECT_COOKIE,
+  DEFAULT_POST_AUTH_REDIRECT_PATH,
   getLocalAuthCallbackRelayOrigin,
   getRequestOrigin,
   readAuthRedirectCookie,
+  readPendingDistrictCookie,
   sanitizeRedirectPath,
 } from '@/lib/auth/redirects'
+import { chooseCountyRedirectPath } from '@/lib/account-profile'
+import { isSchoolDistrictId } from '@/lib/school-districts'
 import { NextResponse } from 'next/server'
+
+type AuthCodeExchangeData = AuthTokenResponse['data'] & {
+  redirectType?: string | null
+}
 
 function redirectToLogin(origin: string, reason: string) {
   const loginUrl = new URL('/auth/login', origin)
   loginUrl.searchParams.set('error', 'auth')
   loginUrl.searchParams.set('reason', reason)
   return NextResponse.redirect(loginUrl)
+}
+
+async function getOrApplyPreferredDistrict(
+  userId: string,
+  email: string | undefined,
+  pendingDistrictId: string | null
+) {
+  const adminClient = createAdminClient()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profile } = await (adminClient as any)
+    .from('user_profiles')
+    .select('preferred_district_id')
+    .eq('id', userId)
+    .maybeSingle() as {
+      data: { preferred_district_id: string | null } | null
+    }
+
+  if (profile?.preferred_district_id) {
+    return profile.preferred_district_id
+  }
+
+  if (!pendingDistrictId) {
+    return null
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (adminClient as any)
+    .from('user_profiles')
+    .upsert({
+      id: userId,
+      email: email ?? '',
+      preferred_district_id: pendingDistrictId,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (adminClient as any)
+    .from('digest_subscribers')
+    .update({ district_id: pendingDistrictId })
+    .eq('user_id', userId)
+
+  return pendingDistrictId
 }
 
 export async function GET(request: Request) {
@@ -23,8 +76,15 @@ export async function GET(request: Request) {
   const providerError = searchParams.get('error')
   const providerErrorCode = searchParams.get('error_code')
   const providerErrorDescription = searchParams.get('error_description')
+  const cookieHeader = request.headers.get('cookie')
+  const pendingDistrictId = readPendingDistrictCookie(cookieHeader)
   const redirectTo = sanitizeRedirectPath(
-    searchParams.get('redirectTo') ?? readAuthRedirectCookie(request.headers.get('cookie'))
+    searchParams.get('redirectTo') ?? readAuthRedirectCookie(cookieHeader)
+  )
+  const postAuthRedirectTo = sanitizeRedirectPath(
+    searchParams.get('redirectTo') ??
+      readAuthRedirectCookie(cookieHeader, DEFAULT_POST_AUTH_REDIRECT_PATH),
+    DEFAULT_POST_AUTH_REDIRECT_PATH
   )
   const relayOrigin = getLocalAuthCallbackRelayOrigin(searchParams.get('origin'), origin)
 
@@ -47,11 +107,25 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      const response = NextResponse.redirect(`${origin}${redirectTo}`)
+      const exchangeData = data as AuthCodeExchangeData
+      const metadataDistrictId = data.user?.user_metadata?.preferred_district_id
+      const districtToApply = pendingDistrictId ??
+        (isSchoolDistrictId(metadataDistrictId) ? metadataDistrictId : null)
+      const preferredDistrictId = data.user
+        ? await getOrApplyPreferredDistrict(data.user.id, data.user.email, districtToApply)
+        : null
+      const nextPath =
+        exchangeData.redirectType === 'recovery'
+          ? `/auth/reset-password?redirectTo=${encodeURIComponent(postAuthRedirectTo)}`
+          : preferredDistrictId
+            ? redirectTo
+            : chooseCountyRedirectPath(redirectTo)
+      const response = NextResponse.redirect(`${origin}${nextPath}`)
       response.cookies.set(AUTH_REDIRECT_COOKIE, '', { path: '/', maxAge: 0 })
+      response.cookies.set(AUTH_PENDING_DISTRICT_COOKIE, '', { path: '/', maxAge: 0 })
       return response
     }
 

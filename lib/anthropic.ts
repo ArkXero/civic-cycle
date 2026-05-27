@@ -14,7 +14,7 @@ export interface MeetingSummary {
 
 const SYSTEM_PROMPT = `You are an expert at analyzing and summarizing government meeting transcripts, specifically school board meetings. Your goal is to help citizens quickly understand what happened in meetings that affect their community.
 
-You will receive a transcript from a Fairfax County Public Schools (FCPS) School Board meeting. Your task is to create a comprehensive but accessible summary.
+You will receive a transcript from a local school board meeting. Your task is to create a comprehensive but accessible summary.
 
 Guidelines:
 - Write in clear, plain language that any resident can understand

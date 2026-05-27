@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMeetingById } from "@/lib/data/meetings";
 import { MeetingDetail } from "@/components/meetings/meeting-detail";
+import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
 
 interface MeetingPageProps {
@@ -21,7 +22,7 @@ export async function generateMetadata({
 
   return {
     title: meeting.title,
-    description: `Summary of ${meeting.body} meeting on ${new Date(meeting.meeting_date).toLocaleDateString()}`,
+    description: `Summary of ${meeting.body} meeting on ${formatDate(meeting.meeting_date)}`,
   };
 }
 

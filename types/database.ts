@@ -14,7 +14,8 @@ export type Database = {
           id: string
           external_id: string
           title: string
-          body: 'FCPS School Board' | 'Board of Supervisors'
+          body: string
+          district_id: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington'
           meeting_date: string
           source_url: string | null
           raw_content: string | null
@@ -33,7 +34,8 @@ export type Database = {
           id?: string
           external_id?: string
           title: string
-          body: 'FCPS School Board' | 'Board of Supervisors'
+          body: string
+          district_id?: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington'
           meeting_date: string
           source_url?: string | null
           raw_content?: string | null
@@ -52,7 +54,8 @@ export type Database = {
           id?: string
           external_id?: string
           title?: string
-          body?: 'FCPS School Board' | 'Board of Supervisors'
+          body?: string
+          district_id?: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington'
           meeting_date?: string
           source_url?: string | null
           raw_content?: string | null
@@ -105,6 +108,7 @@ export type Database = {
           id: string
           email: string
           display_name: string | null
+          preferred_district_id: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington' | null
           created_at: string
           updated_at: string
         }
@@ -112,6 +116,7 @@ export type Database = {
           id: string
           email: string
           display_name?: string | null
+          preferred_district_id?: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington' | null
           created_at?: string
           updated_at?: string
         }
@@ -119,6 +124,7 @@ export type Database = {
           id?: string
           email?: string
           display_name?: string | null
+          preferred_district_id?: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington' | null
           created_at?: string
           updated_at?: string
         }
@@ -261,6 +267,7 @@ export type Database = {
           id: string
           email: string
           user_id: string | null
+          district_id: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington'
           subscribed_at: string
           unsubscribe_token: string
           active: boolean
@@ -269,6 +276,7 @@ export type Database = {
           id?: string
           email: string
           user_id?: string | null
+          district_id?: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington'
           subscribed_at?: string
           unsubscribe_token?: string
           active?: boolean
@@ -277,6 +285,7 @@ export type Database = {
           id?: string
           email?: string
           user_id?: string | null
+          district_id?: 'fairfax' | 'loudoun' | 'prince-william' | 'arlington'
           subscribed_at?: string
           unsubscribe_token?: string
           active?: boolean

@@ -1,18 +1,21 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getMeetingList } from "@/lib/data/meetings";
+import { getPreferredDistrictId } from "@/lib/account-profile";
+import { getSchoolDistrict } from "@/lib/school-districts";
 import { MeetingListClient } from "./meeting-list-client";
 import { SearchBar } from "@/components/search/search-bar";
 import { MeetingFilters } from "@/components/meetings/meeting-filters";
+import { ViewingDistrict } from "@/components/school-district/viewing-district";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Meetings",
-  description: "Browse FCPS School Board meeting summaries",
+  description: "Browse school board meeting summaries",
 };
 
 interface MeetingsPageProps {
-  searchParams: Promise<{ page?: string; body?: string }>;
+  searchParams: Promise<{ page?: string; body?: string; districtId?: string }>;
 }
 
 export default async function MeetingsPage({
@@ -23,7 +26,14 @@ export default async function MeetingsPage({
   const body = params.body;
 
   const supabase = await createClient();
-  const { meetings, totalPages, count } = await getMeetingList(supabase, { page, body, pageSize: 9 });
+  const districtId = await getPreferredDistrictId(supabase, params.districtId);
+  const district = getSchoolDistrict(districtId);
+  const { meetings, totalPages, count } = await getMeetingList(supabase, {
+    page,
+    body,
+    pageSize: 9,
+    districtId,
+  });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -32,10 +42,17 @@ export default async function MeetingsPage({
           Meeting Summaries
         </h1>
         <p className="text-muted-foreground mb-4">
-          Browse AI-generated summaries of FCPS School Board meetings.
+          Browse AI-generated summaries of {district.boardBodyLabel} meetings.
           {count > 0 && ` ${count} meeting${count !== 1 ? "s" : ""} available.`}
         </p>
-        <SearchBar placeholder="Search meetings..." className="max-w-xl mb-4" />
+        <div className="mb-4">
+          <ViewingDistrict districtId={districtId} />
+        </div>
+        <SearchBar
+          placeholder="Search meetings..."
+          className="max-w-xl mb-4"
+          districtId={districtId}
+        />
         <MeetingFilters currentBody={body} />
       </div>
 

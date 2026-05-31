@@ -29,6 +29,14 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
 
       <SignupForm redirectTo={redirectTo} />
 
+      <p className="text-center text-xs text-muted-foreground mt-5 leading-6">
+        By creating an account, you acknowledge the{' '}
+        <Link href="/privacy" className="text-primary hover:underline font-medium">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
       <p className="text-center text-sm text-muted-foreground mt-6">
         Already have an account?{" "}
         <Link

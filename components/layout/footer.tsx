@@ -117,15 +117,27 @@ export function Footer() {
           className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"
           style={{ borderTop: '1px solid rgba(26,138,154,0.15)' }}
         >
-          <p
-            className="text-[12px]"
-            style={{
-              color: 'rgba(244,248,249,0.3)',
-              fontFamily: 'var(--font-body-var), ui-sans-serif, system-ui, sans-serif',
-            }}
-          >
-            © {currentYear} {APP_NAME}. Built by a TJHSST student for local communities.
-          </p>
+          <div className="space-y-2">
+            <p
+              className="text-[12px]"
+              style={{
+                color: 'rgba(244,248,249,0.3)',
+                fontFamily: 'var(--font-body-var), ui-sans-serif, system-ui, sans-serif',
+              }}
+            >
+              © {currentYear} {APP_NAME}. Built by a TJHSST student for local communities.
+            </p>
+            <Link
+              href="/privacy"
+              className="text-[12px] transition-colors hover:text-[#F4F8F9]"
+              style={{
+                color: 'rgba(244,248,249,0.4)',
+                fontFamily: 'var(--font-body-var), ui-sans-serif, system-ui, sans-serif',
+              }}
+            >
+              Privacy Policy
+            </Link>
+          </div>
           <p
             className="text-[11.5px]"
             style={{

@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { getSummaryModel } from '@/lib/anthropic-models'
 
 export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -63,18 +64,87 @@ Here is the transcript:
 export interface SummarizeResult {
   summary: MeetingSummary
   usage: { input_tokens: number; output_tokens: number }
+  model: string
+}
+
+export interface SummaryQualityIssue {
+  code:
+    | 'missing_summary_text'
+    | 'missing_topics'
+    | 'summary_too_short'
+    | 'invalid_key_decisions'
+    | 'invalid_action_items'
+  message: string
+}
+
+export class SummaryGenerationError extends Error {
+  constructor(
+    message: string,
+    public readonly model: string,
+    public readonly usage?: { input_tokens: number; output_tokens: number },
+    public readonly fallbackEligible = false
+  ) {
+    super(message)
+    this.name = 'SummaryGenerationError'
+  }
+}
+
+export function validateMeetingSummaryQuality(
+  summary: MeetingSummary,
+  transcript: string
+): SummaryQualityIssue[] {
+  const issues: SummaryQualityIssue[] = []
+
+  if (!summary.summary_text || typeof summary.summary_text !== 'string') {
+    issues.push({
+      code: 'missing_summary_text',
+      message: 'Summary text is required',
+    })
+  }
+
+  if (!Array.isArray(summary.topics) || summary.topics.length < 1) {
+    issues.push({
+      code: 'missing_topics',
+      message: 'At least one topic is required',
+    })
+  }
+
+  if (estimateTokens(transcript) > 1_000 && (summary.summary_text?.length ?? 0) < 200) {
+    issues.push({
+      code: 'summary_too_short',
+      message: 'Summary text is too short for a long transcript',
+    })
+  }
+
+  if (!Array.isArray(summary.key_decisions)) {
+    issues.push({
+      code: 'invalid_key_decisions',
+      message: 'Key decisions must be an array',
+    })
+  }
+
+  if (!Array.isArray(summary.action_items)) {
+    issues.push({
+      code: 'invalid_action_items',
+      message: 'Action items must be an array',
+    })
+  }
+
+  return issues
 }
 
 export async function summarizeMeeting(
   transcript: string,
-  meetingTitle?: string
+  meetingTitle?: string,
+  options?: { model?: string }
 ): Promise<SummarizeResult> {
+  const model = options?.model ?? getSummaryModel()
   const contextHeader = meetingTitle
     ? `Meeting: ${meetingTitle}\n\n`
     : ''
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+    model,
     max_tokens: 4096,
     messages: [
       {
@@ -88,7 +158,12 @@ export async function summarizeMeeting(
   // Extract text from response
   const textContent = response.content.find((block) => block.type === 'text')
   if (!textContent || textContent.type !== 'text') {
-    throw new Error('No text response from Claude')
+    throw new SummaryGenerationError(
+      'No text response from Claude',
+      model,
+      response.usage,
+      false
+    )
   }
 
   // Parse JSON response
@@ -109,12 +184,22 @@ export async function summarizeMeeting(
     parsed = JSON.parse(jsonText)
   } catch {
     console.error('Failed to parse Claude response:', textContent.text)
-    throw new Error('Failed to parse summary response as JSON')
+    throw new SummaryGenerationError(
+      'Failed to parse summary response as JSON',
+      model,
+      response.usage,
+      true
+    )
   }
 
-  // Validate required fields
-  if (!parsed.summary_text || !Array.isArray(parsed.topics)) {
-    throw new Error('Invalid summary structure returned from Claude')
+  const qualityIssues = validateMeetingSummaryQuality(parsed, transcript)
+  if (qualityIssues.length > 0) {
+    throw new SummaryGenerationError(
+      `Invalid summary structure returned from Claude: ${qualityIssues.map((issue) => issue.code).join(', ')}`,
+      model,
+      response.usage,
+      true
+    )
   }
 
   return {
@@ -129,6 +214,7 @@ export async function summarizeMeeting(
       input_tokens: response.usage.input_tokens,
       output_tokens: response.usage.output_tokens,
     },
+    model,
   }
 }
 
@@ -195,23 +281,31 @@ Here are the partial summaries to merge:
 
 export async function synthesizeChunkSummaries(
   chunkSummaries: MeetingSummary[],
-  meetingTitle?: string
+  meetingTitle?: string,
+  options?: { model?: string }
 ): Promise<SummarizeResult> {
+  const model = options?.model ?? getSummaryModel()
   const contextHeader = meetingTitle ? `Meeting: ${meetingTitle}\n\n` : ''
+  const synthesisInput = JSON.stringify(chunkSummaries, null, 2)
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+    model,
     max_tokens: 4096,
     messages: [{
       role: 'user',
-      content: SYNTHESIS_PROMPT + contextHeader + JSON.stringify(chunkSummaries, null, 2),
+      content: SYNTHESIS_PROMPT + contextHeader + synthesisInput,
     }],
     system: SYSTEM_PROMPT,
   })
 
   const textContent = response.content.find((block) => block.type === 'text')
   if (!textContent || textContent.type !== 'text') {
-    throw new Error('No text response from Claude during synthesis')
+    throw new SummaryGenerationError(
+      'No text response from Claude during synthesis',
+      model,
+      response.usage,
+      false
+    )
   }
 
   let parsed: MeetingSummary
@@ -222,11 +316,22 @@ export async function synthesizeChunkSummaries(
     if (jsonText.endsWith('```')) jsonText = jsonText.slice(0, -3)
     parsed = JSON.parse(jsonText.trim())
   } catch {
-    throw new Error('Failed to parse synthesis response as JSON')
+    throw new SummaryGenerationError(
+      'Failed to parse synthesis response as JSON',
+      model,
+      response.usage,
+      true
+    )
   }
 
-  if (!parsed.summary_text || !Array.isArray(parsed.topics)) {
-    throw new Error('Invalid synthesis structure returned from Claude')
+  const qualityIssues = validateMeetingSummaryQuality(parsed, synthesisInput)
+  if (qualityIssues.length > 0) {
+    throw new SummaryGenerationError(
+      `Invalid synthesis structure returned from Claude: ${qualityIssues.map((issue) => issue.code).join(', ')}`,
+      model,
+      response.usage,
+      true
+    )
   }
 
   return {
@@ -241,5 +346,6 @@ export async function synthesizeChunkSummaries(
       input_tokens: response.usage.input_tokens,
       output_tokens: response.usage.output_tokens,
     },
+    model,
   }
 }

@@ -10,7 +10,13 @@ vi.mock('@anthropic-ai/sdk', () => ({
   },
 }))
 
-import { summarizeMeeting, estimateTokens, chunkTranscript } from '@/lib/anthropic'
+import {
+  summarizeMeeting,
+  synthesizeChunkSummaries,
+  estimateTokens,
+  chunkTranscript,
+  SummaryGenerationError,
+} from '@/lib/anthropic'
 
 // ─── estimateTokens ────────────────────────────────────────────────────────
 
@@ -78,23 +84,43 @@ function mockResponse(text: string) {
 
 describe('summarizeMeeting', () => {
   const validSummaryJson = JSON.stringify({
-    summary_text: 'The board approved the FY2026 budget with amendments.',
+    summary_text: 'The board approved the FY2026 budget with amendments and directed staff to publish the final version.',
     topics: ['Budget', 'Staffing'],
-    key_decisions: [{ decision: 'Budget approved', context: 'After review' }],
+    key_decisions: [{ decision: 'Approved the budget', vote_yes: 9, vote_no: 0, vote_abstain: 0 }],
     action_items: [{ item: 'Publish final budget', responsible_party: 'CFO', deadline: '2026-04-01' }],
     sentiment: 'neutral',
   })
 
   beforeEach(() => {
     mockCreate.mockReset()
+    delete process.env.ANTHROPIC_SUMMARY_MODEL
   })
 
-  it('calls the Anthropic API with model claude-sonnet-4-6', async () => {
+  it('calls the Anthropic API with default model claude-haiku-4-5-20251001', async () => {
     mockCreate.mockResolvedValueOnce(mockResponse(validSummaryJson))
 
     await summarizeMeeting('Test transcript')
 
     expect(mockCreate).toHaveBeenCalledOnce()
+    const call = mockCreate.mock.calls[0][0]
+    expect(call.model).toBe('claude-haiku-4-5-20251001')
+  })
+
+  it('respects ANTHROPIC_SUMMARY_MODEL', async () => {
+    process.env.ANTHROPIC_SUMMARY_MODEL = 'claude-haiku-4-5'
+    mockCreate.mockResolvedValueOnce(mockResponse(validSummaryJson))
+
+    await summarizeMeeting('Test transcript')
+
+    const call = mockCreate.mock.calls[0][0]
+    expect(call.model).toBe('claude-haiku-4-5')
+  })
+
+  it('uses the per-call model override', async () => {
+    mockCreate.mockResolvedValueOnce(mockResponse(validSummaryJson))
+
+    await summarizeMeeting('Test transcript', undefined, { model: 'claude-sonnet-4-6' })
+
     const call = mockCreate.mock.calls[0][0]
     expect(call.model).toBe('claude-sonnet-4-6')
   })
@@ -114,7 +140,7 @@ describe('summarizeMeeting', () => {
 
     const { summary } = await summarizeMeeting('Test transcript')
 
-    expect(summary.summary_text).toBe('The board approved the FY2026 budget with amendments.')
+    expect(summary.summary_text).toBe('The board approved the FY2026 budget with amendments and directed staff to publish the final version.')
     expect(summary.topics).toEqual(['Budget', 'Staffing'])
     expect(summary.key_decisions).toHaveLength(1)
     expect(summary.action_items).toHaveLength(1)
@@ -129,12 +155,20 @@ describe('summarizeMeeting', () => {
     expect(usage.output_tokens).toBe(50)
   })
 
+  it('returns the actual model used', async () => {
+    mockCreate.mockResolvedValueOnce(mockResponse(validSummaryJson))
+
+    const { model } = await summarizeMeeting('Test transcript', undefined, { model: 'claude-sonnet-4-6' })
+
+    expect(model).toBe('claude-sonnet-4-6')
+  })
+
   it('strips ```json markdown fences from the response', async () => {
     const wrapped = '```json\n' + validSummaryJson + '\n```'
     mockCreate.mockResolvedValueOnce(mockResponse(wrapped))
 
     const { summary } = await summarizeMeeting('Test transcript')
-    expect(summary.summary_text).toBe('The board approved the FY2026 budget with amendments.')
+    expect(summary.summary_text).toBe('The board approved the FY2026 budget with amendments and directed staff to publish the final version.')
   })
 
   it('strips plain ``` fences (no language tag)', async () => {
@@ -148,18 +182,22 @@ describe('summarizeMeeting', () => {
   it('throws when the response contains invalid JSON', async () => {
     mockCreate.mockResolvedValueOnce(mockResponse('not valid json at all'))
 
-    await expect(summarizeMeeting('Test transcript')).rejects.toThrow(
-      'Failed to parse summary response as JSON'
-    )
+    const error = await summarizeMeeting('Test transcript').catch((err: unknown) => err)
+    expect(error).toBeInstanceOf(SummaryGenerationError)
+    expect(error.message).toBe('Failed to parse summary response as JSON')
+    expect(error.fallbackEligible).toBe(true)
+    expect(error.model).toBe('claude-haiku-4-5-20251001')
+    expect(error.usage).toEqual({ input_tokens: 100, output_tokens: 50 })
   })
 
   it('throws when summary_text is missing from response', async () => {
     const invalid = JSON.stringify({ topics: ['Budget'] })
     mockCreate.mockResolvedValueOnce(mockResponse(invalid))
 
-    await expect(summarizeMeeting('Test transcript')).rejects.toThrow(
-      'Invalid summary structure'
-    )
+    const error = await summarizeMeeting('Test transcript').catch((err: unknown) => err)
+    expect(error).toBeInstanceOf(SummaryGenerationError)
+    expect(error.message).toContain('missing_summary_text')
+    expect(error.fallbackEligible).toBe(true)
   })
 
   it('throws when the API returns no text content block', async () => {
@@ -168,17 +206,54 @@ describe('summarizeMeeting', () => {
       usage: { input_tokens: 0, output_tokens: 0 },
     })
 
-    await expect(summarizeMeeting('Test transcript')).rejects.toThrow(
-      'No text response from Claude'
-    )
+    const error = await summarizeMeeting('Test transcript').catch((err: unknown) => err)
+    expect(error).toBeInstanceOf(SummaryGenerationError)
+    expect(error.message).toBe('No text response from Claude')
+    expect(error.fallbackEligible).toBe(false)
   })
 
-  it('defaults missing key_decisions and action_items to empty arrays', async () => {
+  it('throws when key_decisions and action_items are missing', async () => {
     const minimal = JSON.stringify({ summary_text: 'Brief summary', topics: ['X'] })
     mockCreate.mockResolvedValueOnce(mockResponse(minimal))
 
-    const { summary } = await summarizeMeeting('Test transcript')
-    expect(summary.key_decisions).toEqual([])
-    expect(summary.action_items).toEqual([])
+    const error = await summarizeMeeting('Test transcript').catch((err: unknown) => err)
+    expect(error).toBeInstanceOf(SummaryGenerationError)
+    expect(error.message).toContain('invalid_key_decisions')
+    expect(error.message).toContain('invalid_action_items')
+    expect(error.fallbackEligible).toBe(true)
+  })
+})
+
+describe('synthesizeChunkSummaries', () => {
+  const chunkSummary = {
+    summary_text: 'The board discussed the budget and staffing updates.',
+    topics: ['Budget'],
+    key_decisions: [{ decision: 'Approved the budget', vote_yes: 9, vote_no: 0, vote_abstain: 0 }],
+    action_items: [{ item: 'Publish final budget', responsible_party: 'CFO', deadline: null }],
+    sentiment: 'neutral' as const,
+  }
+
+  beforeEach(() => {
+    mockCreate.mockReset()
+    delete process.env.ANTHROPIC_SUMMARY_MODEL
+  })
+
+  it('uses the default summary model', async () => {
+    mockCreate.mockResolvedValueOnce(mockResponse(JSON.stringify(chunkSummary)))
+
+    const result = await synthesizeChunkSummaries([chunkSummary], 'Long Meeting')
+
+    const call = mockCreate.mock.calls[0][0]
+    expect(call.model).toBe('claude-haiku-4-5-20251001')
+    expect(result.model).toBe('claude-haiku-4-5-20251001')
+  })
+
+  it('uses the per-call model override', async () => {
+    mockCreate.mockResolvedValueOnce(mockResponse(JSON.stringify(chunkSummary)))
+
+    await synthesizeChunkSummaries([chunkSummary], 'Long Meeting', { model: 'claude-sonnet-4-6' })
+
+    const call = mockCreate.mock.calls[0][0]
+    expect(call.model).toBe('claude-sonnet-4-6')
   })
 })

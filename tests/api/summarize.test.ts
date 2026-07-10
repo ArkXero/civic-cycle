@@ -41,15 +41,28 @@ vi.mock('@/lib/track-api-usage', () => ({
 const mockSummarizeMeeting = vi.fn()
 const mockChunkTranscript = vi.fn()
 const mockSynthesizeChunkSummaries = vi.fn()
+const MockSummaryGenerationError = vi.hoisted(() => class SummaryGenerationError extends Error {
+  constructor(
+    message: string,
+    public readonly model: string,
+    public readonly usage?: { input_tokens: number; output_tokens: number },
+    public readonly fallbackEligible = false
+  ) {
+    super(message)
+    this.name = 'SummaryGenerationError'
+  }
+})
 
 vi.mock('@/lib/anthropic', () => ({
   summarizeMeeting: (...args: unknown[]) => mockSummarizeMeeting(...args),
   chunkTranscript: (...args: unknown[]) => mockChunkTranscript(...args),
   synthesizeChunkSummaries: (...args: unknown[]) => mockSynthesizeChunkSummaries(...args),
+  SummaryGenerationError: MockSummaryGenerationError,
 }))
 
 // Import the route handler AFTER mocks are set up
 import { POST } from '@/app/api/meetings/[id]/summarize/route'
+import { trackApiUsage } from '@/lib/track-api-usage'
 import { makeChain } from '../helpers/supabase-chain'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -71,6 +84,7 @@ const fakeSummary = {
     sentiment: 'neutral',
   },
   usage: { input_tokens: 100, output_tokens: 50 },
+  model: 'claude-haiku-4-5-20251001',
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────
@@ -78,6 +92,8 @@ const fakeSummary = {
 describe('POST /api/meetings/[id]/summarize', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    delete process.env.ANTHROPIC_SUMMARY_MODEL
+    delete process.env.ANTHROPIC_SUMMARY_FALLBACK_MODEL
     // Default: single chunk
     mockChunkTranscript.mockReturnValue(['transcript content'])
   })
@@ -330,8 +346,136 @@ describe('POST /api/meetings/[id]/summarize', () => {
 
     expect(mockSummarizeMeeting).toHaveBeenCalledWith(
       'content',
-      'March Board Meeting'
+      'March Board Meeting',
+      { model: 'claude-haiku-4-5-20251001' }
     )
+  })
+
+  it('falls back to Sonnet when primary summary output is fallback eligible', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
+
+    const meeting = {
+      id: MEETING_ID,
+      title: 'Fallback Meeting',
+      transcript_text: 'content',
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    }
+
+    mockAdminFrom
+      .mockReturnValueOnce(makeChain({ data: meeting, error: null }))
+      .mockReturnValueOnce(makeChain({ data: null, error: new Error('no rows') }))
+      .mockReturnValueOnce(makeChain({ data: null, error: null }))
+      .mockReturnValueOnce(makeChain({ data: { id: 'summary-new', ...fakeSummary }, error: null }))
+      .mockReturnValueOnce(makeChain({ data: null, error: null }))
+
+    mockSummarizeMeeting
+      .mockRejectedValueOnce(new MockSummaryGenerationError(
+        'Failed to parse summary response as JSON',
+        'claude-haiku-4-5-20251001',
+        { input_tokens: 20, output_tokens: 10 },
+        true
+      ))
+      .mockResolvedValueOnce({
+        ...fakeSummary,
+        usage: { input_tokens: 100, output_tokens: 50 },
+        model: 'claude-sonnet-4-6',
+      })
+
+    const { req, params } = makeRequest()
+    const res = await POST(req, { params })
+
+    expect(res.status).toBe(200)
+    expect(mockSummarizeMeeting).toHaveBeenCalledTimes(2)
+    expect(mockSummarizeMeeting.mock.calls[0][2]).toEqual({ model: 'claude-haiku-4-5-20251001' })
+    expect(mockSummarizeMeeting.mock.calls[1][2]).toEqual({ model: 'claude-sonnet-4-6' })
+    expect(trackApiUsage).toHaveBeenCalledWith(expect.objectContaining({
+      model: 'claude-haiku-4-5-20251001',
+      success: false,
+      errorMessage: 'fallback:Failed to parse summary response as JSON',
+    }))
+    expect(trackApiUsage).toHaveBeenCalledWith(expect.objectContaining({
+      model: 'claude-sonnet-4-6',
+      success: true,
+    }))
+  })
+
+  it('does not fall back when primary summary error is not fallback eligible', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
+
+    const meeting = {
+      id: MEETING_ID,
+      title: 'Network Failure Meeting',
+      transcript_text: 'content',
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    }
+    const setFailedChain = makeChain({ data: null, error: null })
+
+    mockAdminFrom
+      .mockReturnValueOnce(makeChain({ data: meeting, error: null }))
+      .mockReturnValueOnce(makeChain({ data: null, error: new Error('no rows') }))
+      .mockReturnValueOnce(makeChain({ data: null, error: null }))
+      .mockReturnValueOnce(setFailedChain)
+
+    mockSummarizeMeeting.mockRejectedValue(new Error('network timeout'))
+
+    const { req, params } = makeRequest()
+    const res = await POST(req, { params })
+
+    expect(res.status).toBe(500)
+    expect(mockSummarizeMeeting).toHaveBeenCalledTimes(1)
+    expect(mockSummarizeMeeting.mock.calls[0][2]).toEqual({ model: 'claude-haiku-4-5-20251001' })
+    expect(setFailedChain.update.mock.calls[0][0].error_message).toBe('network timeout')
+  })
+
+  it('marks meeting failed when fallback also fails', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null })
+
+    const meeting = {
+      id: MEETING_ID,
+      title: 'Fallback Failure Meeting',
+      transcript_text: 'content',
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    }
+    const setFailedChain = makeChain({ data: null, error: null })
+
+    mockAdminFrom
+      .mockReturnValueOnce(makeChain({ data: meeting, error: null }))
+      .mockReturnValueOnce(makeChain({ data: null, error: new Error('no rows') }))
+      .mockReturnValueOnce(makeChain({ data: null, error: null }))
+      .mockReturnValueOnce(setFailedChain)
+
+    mockSummarizeMeeting
+      .mockRejectedValueOnce(new MockSummaryGenerationError(
+        'Failed to parse summary response as JSON',
+        'claude-haiku-4-5-20251001',
+        { input_tokens: 20, output_tokens: 10 },
+        true
+      ))
+      .mockRejectedValueOnce(new MockSummaryGenerationError(
+        'Invalid summary structure returned from Claude: missing_topics',
+        'claude-sonnet-4-6',
+        { input_tokens: 90, output_tokens: 30 },
+        true
+      ))
+
+    const { req, params } = makeRequest()
+    const res = await POST(req, { params })
+
+    expect(res.status).toBe(500)
+    expect(mockSummarizeMeeting).toHaveBeenCalledTimes(2)
+    expect(setFailedChain.update.mock.calls[0][0].status).toBe('failed')
+    expect(setFailedChain.update.mock.calls[0][0].error_message).toContain('Fallback summary failed')
+    expect(trackApiUsage).toHaveBeenCalledWith(expect.objectContaining({
+      model: 'claude-haiku-4-5-20251001',
+      success: false,
+    }))
+    expect(trackApiUsage).toHaveBeenCalledWith(expect.objectContaining({
+      model: 'claude-sonnet-4-6',
+      success: false,
+    }))
   })
 
   // ── Failure handling ──────────────────────────────────────────────────────
@@ -478,6 +622,8 @@ describe('POST /api/meetings/[id]/summarize', () => {
     expect(mockSummarizeMeeting.mock.calls[0][0]).toBe('chunk-one')
     expect(mockSummarizeMeeting.mock.calls[1][0]).toBe('chunk-two')
     expect(mockSummarizeMeeting.mock.calls[2][0]).toBe('chunk-three')
+    expect(mockSummarizeMeeting.mock.calls[0][2]).toEqual({ model: 'claude-haiku-4-5-20251001' })
+    expect(mockSynthesizeChunkSummaries.mock.calls[0][2]).toEqual({ model: 'claude-haiku-4-5-20251001' })
     // Chunk summaries synthesized into final output
     expect(mockSynthesizeChunkSummaries).toHaveBeenCalledOnce()
   })

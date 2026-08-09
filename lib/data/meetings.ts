@@ -3,6 +3,7 @@ import type { Database } from '@/types/database'
 import type { MeetingWithSummary } from '@/types'
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/lib/constants'
 import type { SchoolDistrictId } from '@/lib/school-districts'
+import { getApprovedTopicsByMeetingIds, getMeetingIdsForTopicSlugs } from '@/lib/data/topics'
 
 type DBClient = SupabaseClient<Database>
 
@@ -30,9 +31,12 @@ const MEETING_LIST_SELECT = `
   )
 ` as const
 
-function flattenSummary(row: Record<string, unknown>): MeetingWithSummary {
+function flattenSummary(
+  row: Record<string, unknown>,
+  approvedTopics: MeetingWithSummary['approvedTopics'] = []
+): MeetingWithSummary {
   const summaryArr = row.summary as unknown[]
-  return { ...row, summary: summaryArr?.[0] ?? null } as MeetingWithSummary
+  return { ...row, summary: summaryArr?.[0] ?? null, approvedTopics } as MeetingWithSummary
 }
 
 export function dedupeMeetingsBySourceUrl<T extends { source?: string | null; source_url?: string | null }>(
@@ -57,6 +61,9 @@ export interface MeetingListOptions {
   body?: string
   statusFilter?: string | string[]
   districtId?: SchoolDistrictId
+  topicSlugs?: string[]
+  dateFrom?: string
+  dateTo?: string
 }
 
 export interface MeetingListResult {
@@ -73,6 +80,11 @@ export async function getMeetingList(
 ): Promise<MeetingListResult> {
   const page = Math.max(1, options.page ?? 1)
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, options.pageSize ?? DEFAULT_PAGE_SIZE))
+  const topicMeetingIds = await getMeetingIdsForTopicSlugs(supabase, options.topicSlugs ?? [])
+
+  if (topicMeetingIds?.length === 0) {
+    return { meetings: [], count: 0, page, pageSize, totalPages: 0 }
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
@@ -93,16 +105,29 @@ export async function getMeetingList(
       query = query.eq('status', options.statusFilter)
     }
   }
+  if (topicMeetingIds) {
+    query = query.in('id', topicMeetingIds)
+  }
+  if (options.dateFrom) {
+    query = query.gte('meeting_date', options.dateFrom)
+  }
+  if (options.dateTo) {
+    query = query.lte('meeting_date', options.dateTo)
+  }
 
   const from = (page - 1) * pageSize
   query = query.range(from, from + pageSize - 1)
 
   const { data, error, count } = await query
   if (error) throw error
+  const rows = dedupeMeetingsBySourceUrl(data ?? []) as Record<string, unknown>[]
+  const topicsByMeeting = await getApprovedTopicsByMeetingIds(
+    supabase,
+    rows.map((row) => row.id as string)
+  )
 
   return {
-    meetings: dedupeMeetingsBySourceUrl(data ?? [])
-      .map((row: Record<string, unknown>) => flattenSummary(row)),
+    meetings: rows.map((row) => flattenSummary(row, topicsByMeeting.get(row.id as string) ?? [])),
     count: count ?? 0,
     page,
     pageSize,
@@ -116,6 +141,7 @@ export interface SearchOptions {
   pageSize?: number
   body?: string
   districtId?: SchoolDistrictId
+  topicSlugs?: string[]
 }
 
 export async function searchMeetings(
@@ -125,6 +151,11 @@ export async function searchMeetings(
   const page = Math.max(1, options.page ?? 1)
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, options.pageSize ?? DEFAULT_PAGE_SIZE))
   const from = (page - 1) * pageSize
+  const topicMeetingIds = await getMeetingIdsForTopicSlugs(supabase, options.topicSlugs ?? [])
+
+  if (topicMeetingIds?.length === 0) {
+    return { meetings: [], count: 0, page, pageSize, totalPages: 0 }
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
@@ -135,6 +166,9 @@ export async function searchMeetings(
 
   if (options.districtId) {
     meetingHitQuery = meetingHitQuery.eq('district_id', options.districtId)
+  }
+  if (topicMeetingIds) {
+    meetingHitQuery = meetingHitQuery.in('id', topicMeetingIds)
   }
 
   // FTS on summaries and meetings in parallel — returns only IDs (tiny payloads)
@@ -174,13 +208,20 @@ export async function searchMeetings(
   if (options.districtId) {
     fetchQuery = fetchQuery.eq('district_id', options.districtId)
   }
+  if (topicMeetingIds) {
+    fetchQuery = fetchQuery.in('id', topicMeetingIds)
+  }
 
   const { data, error, count } = await fetchQuery
   if (error) throw error
+  const rows = dedupeMeetingsBySourceUrl(data ?? []) as Record<string, unknown>[]
+  const topicsByMeeting = await getApprovedTopicsByMeetingIds(
+    supabase,
+    rows.map((row) => row.id as string)
+  )
 
   return {
-    meetings: dedupeMeetingsBySourceUrl(data ?? [])
-      .map((row: Record<string, unknown>) => flattenSummary(row)),
+    meetings: rows.map((row) => flattenSummary(row, topicsByMeeting.get(row.id as string) ?? [])),
     count: count ?? 0,
     page,
     pageSize,
@@ -210,5 +251,10 @@ export async function getMeetingById(
     .eq('meeting_id', id)
     .limit(1)
 
-  return Object.assign({}, meeting, { summary: summaries?.[0] ?? null }) as MeetingWithSummary
+  const topicsByMeeting = await getApprovedTopicsByMeetingIds(supabase, [id])
+
+  return Object.assign({}, meeting, {
+    summary: summaries?.[0] ?? null,
+    approvedTopics: topicsByMeeting.get(id) ?? [],
+  }) as MeetingWithSummary
 }

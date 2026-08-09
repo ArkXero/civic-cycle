@@ -82,6 +82,19 @@ function mockResponse(text: string) {
   }
 }
 
+async function captureSummaryGenerationError(
+  operation: Promise<unknown>
+): Promise<SummaryGenerationError> {
+  try {
+    await operation
+  } catch (error) {
+    expect(error).toBeInstanceOf(SummaryGenerationError)
+    if (error instanceof SummaryGenerationError) return error
+    throw error
+  }
+  throw new Error('Expected summarize operation to fail')
+}
+
 describe('summarizeMeeting', () => {
   const validSummaryJson = JSON.stringify({
     summary_text: 'The board approved the FY2026 budget with amendments and directed staff to publish the final version.',
@@ -182,8 +195,7 @@ describe('summarizeMeeting', () => {
   it('throws when the response contains invalid JSON', async () => {
     mockCreate.mockResolvedValueOnce(mockResponse('not valid json at all'))
 
-    const error = await summarizeMeeting('Test transcript').catch((err: unknown) => err)
-    expect(error).toBeInstanceOf(SummaryGenerationError)
+    const error = await captureSummaryGenerationError(summarizeMeeting('Test transcript'))
     expect(error.message).toBe('Failed to parse summary response as JSON')
     expect(error.fallbackEligible).toBe(true)
     expect(error.model).toBe('claude-haiku-4-5-20251001')
@@ -194,8 +206,7 @@ describe('summarizeMeeting', () => {
     const invalid = JSON.stringify({ topics: ['Budget'] })
     mockCreate.mockResolvedValueOnce(mockResponse(invalid))
 
-    const error = await summarizeMeeting('Test transcript').catch((err: unknown) => err)
-    expect(error).toBeInstanceOf(SummaryGenerationError)
+    const error = await captureSummaryGenerationError(summarizeMeeting('Test transcript'))
     expect(error.message).toContain('missing_summary_text')
     expect(error.fallbackEligible).toBe(true)
   })
@@ -206,8 +217,7 @@ describe('summarizeMeeting', () => {
       usage: { input_tokens: 0, output_tokens: 0 },
     })
 
-    const error = await summarizeMeeting('Test transcript').catch((err: unknown) => err)
-    expect(error).toBeInstanceOf(SummaryGenerationError)
+    const error = await captureSummaryGenerationError(summarizeMeeting('Test transcript'))
     expect(error.message).toBe('No text response from Claude')
     expect(error.fallbackEligible).toBe(false)
   })
@@ -216,8 +226,7 @@ describe('summarizeMeeting', () => {
     const minimal = JSON.stringify({ summary_text: 'Brief summary', topics: ['X'] })
     mockCreate.mockResolvedValueOnce(mockResponse(minimal))
 
-    const error = await summarizeMeeting('Test transcript').catch((err: unknown) => err)
-    expect(error).toBeInstanceOf(SummaryGenerationError)
+    const error = await captureSummaryGenerationError(summarizeMeeting('Test transcript'))
     expect(error.message).toContain('invalid_key_decisions')
     expect(error.message).toContain('invalid_action_items')
     expect(error.fallbackEligible).toBe(true)

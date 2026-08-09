@@ -38,6 +38,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/alerts", label: "My Alerts", protected: true },
   { href: "/settings", label: "Settings", protected: true },
   { href: "/admin/boarddocs", label: "Import", protected: true, adminOnly: true },
+  { href: "/admin/topics", label: "Topics", protected: true, adminOnly: true },
   { href: "/admin/dashboard", label: "Dashboard", protected: true, adminOnly: true },
 ];
 

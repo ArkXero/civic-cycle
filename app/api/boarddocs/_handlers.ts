@@ -4,6 +4,10 @@ import { isAdminUser } from '@/lib/auth/is-admin-server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getBoardDocsUrl, getMeetingAgenda, getMeetingContent, listMeetings } from '@/lib/boarddocs'
 import { runSummarize } from '@/lib/run-summarize'
+import {
+  attachmentIngestionEnabled,
+  persistMeetingIngestion,
+} from '@/lib/meeting-ingestion'
 import { logActivity, ActivityTypes } from '@/lib/activity'
 import {
   getSchoolDistrict,
@@ -152,7 +156,8 @@ export async function importBoardDocsMeetingResponse(rawDistrictId: string, id: 
     const district = getSchoolDistrict(districtId)
     const sourceUrl = getBoardDocsUrl(id, districtId)
     const adminClient = createAdminClient()
-    const content = await getMeetingContent(id, districtId)
+    const includeAttachments = attachmentIngestionEnabled()
+    const content = await getMeetingContent(id, districtId, { includeAttachments })
     const meetingDate = content.date.toISOString().split('T')[0]
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,13 +203,21 @@ export async function importBoardDocsMeetingResponse(rawDistrictId: string, id: 
         )
       }
 
+      await persistMeetingIngestion(adminClient, existingMeeting.id, content)
+      if (includeAttachments) {
+        await adminClient.from('meetings').update({ transcript_text: content.fullText }).eq('id', existingMeeting.id)
+      }
+
       return NextResponse.json({
         message: 'Meeting already imported',
         data: existingMeeting,
         itemCount: content.itemCount,
+        documentCount: content.documentCount,
         autoSummarizeStarted: false,
       }, { status: 200 })
     }
+
+    await persistMeetingIngestion(adminClient, insertedMeeting.id, content)
 
     logActivity(
       ActivityTypes.MEETING_IMPORTED,
@@ -220,6 +233,7 @@ export async function importBoardDocsMeetingResponse(rawDistrictId: string, id: 
       message: 'Meeting imported successfully',
       data: insertedMeeting,
       itemCount: content.itemCount,
+      documentCount: content.documentCount,
       autoSummarizeStarted: true,
     }, { status: 201 })
   } catch (error) {

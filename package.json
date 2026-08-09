@@ -13,7 +13,10 @@
     "check": "vp check && vp run lint",
     "test": "vp test",
     "test:watch": "vp test watch",
-    "test:coverage": "vp test run --coverage"
+    "test:coverage": "vp test run --coverage",
+    "benchmark:manifest": "tsx scripts/build-boarddocs-benchmark-manifest.ts",
+    "benchmark:parsers": "tsx scripts/benchmark-parsers.ts",
+    "benchmark:llamaindex": "python3 workers/llamaindex/worker.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
@@ -49,6 +52,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@llamaindex/liteparse": "2.11.1",
     "@tailwindcss/postcss": "^4.3.0",
     "@types/node": "^25",
     "@types/pdf-parse": "^1.1.5",

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { listMeetings, getMeetingContent, getBoardDocsUrl } from '@/lib/boarddocs'
 import { runSummarize } from '@/lib/run-summarize'
+import {
+  attachmentIngestionEnabled,
+  persistMeetingIngestion,
+} from '@/lib/meeting-ingestion'
 import { logActivity, ActivityTypes } from '@/lib/activity'
 import {
   SCHOOL_DISTRICT_IDS,
@@ -67,7 +71,9 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
 
     for (const meeting of regularMeetings) {
       try {
-        const content = await getMeetingContent(meeting.id, districtId)
+        const content = await getMeetingContent(meeting.id, districtId, {
+          includeAttachments: attachmentIngestionEnabled(),
+        })
         const sourceUrl = getBoardDocsUrl(meeting.id, districtId)
         const meetingDate = content.date.toISOString().split('T')[0]
 
@@ -100,6 +106,8 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
         }
 
         const insertedMeeting = insertedRows[0]
+
+        await persistMeetingIngestion(adminClient, insertedMeeting.id, content)
 
         runSummarize(insertedMeeting.id, content.fullText, content.title, adminClient).catch((err) => {
           console.error('Auto-summarization failed for meeting', insertedMeeting.id, err)

@@ -87,12 +87,10 @@ export function Footer() {
               Official Sources
             </p>
             <ul className="space-y-2.5">
-              {[
-                ...ACTIVE_SCHOOL_DISTRICTS.map((district) => ({
-                  href: district.sourceUrl(),
-                  label: `${district.uiLabel} BoardDocs`,
-                })),
-              ].map((link) => (
+              {ACTIVE_SCHOOL_DISTRICTS.map((district) => ({
+                href: district.sourceUrl(),
+                label: `${district.uiLabel} BoardDocs`,
+              })).map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}

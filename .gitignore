@@ -54,9 +54,20 @@ next-env.d.ts
 !/supabase/migrations/
 /supabase/migrations/*
 !/supabase/migrations/202605270*.sql
+!/supabase/migrations/20260808060839_benchmark_topics_ingestion.sql
 
 /scripts/*
 !/scripts/pre-commit-secrets-check.sh
+!/scripts/build-boarddocs-benchmark-manifest.ts
+!/scripts/benchmark-parsers.ts
+
+# local benchmark outputs and Python caches
+/benchmark/parser-report.json
+/benchmark/llamaindex-report.json
+/.cache/
+/.venv/
+__pycache__/
+*.pyc
 
 # IDE
 .idea/

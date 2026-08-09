@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMeetingById } from "@/lib/data/meetings";
 import { MeetingDetail } from "@/components/meetings/meeting-detail";
 import { formatDate } from "@/lib/utils";
+import { isAdminUser } from "@/lib/auth/is-admin-server";
 import type { Metadata } from "next";
 
 interface MeetingPageProps {
@@ -37,10 +38,11 @@ export default async function MeetingPage({ params }: MeetingPageProps) {
   if (!meeting) {
     notFound();
   }
+  const isAdmin = user ? await isAdminUser(user) : false;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <MeetingDetail meeting={meeting} isAuthenticated={!!user} />
+      <MeetingDetail meeting={meeting} isAuthenticated={!!user} isAdmin={isAdmin} />
     </div>
   );
 }

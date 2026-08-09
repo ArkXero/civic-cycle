@@ -1,0 +1,1609 @@
+{
+  "version": 1,
+  "frozenAt": "2026-08-08T06:24:48.926Z",
+  "source": "BoardDocs public attachments",
+  "documentCount": 80,
+  "meetingCount": 20,
+  "documents": [
+    {
+      "id": "fairfax:DJWQR669AFD3:DVQMGW5B3E81:DVSKYQ542B63",
+      "districtId": "fairfax",
+      "meetingId": "DJWQR669AFD3",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-07-16",
+      "agendaItemId": "DVQMGW5B3E81",
+      "agendaItemOrder": "7.03",
+      "agendaItemName": "FY 2026 Year End Review",
+      "fileId": "DVSKYQ542B63",
+      "fileName": "FY26 Year End.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DVSKYQ542B63/$file/FY26%20Year%20End.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQJ5697B8B:DJWQJB697B91:DVSJVH4F058C",
+      "districtId": "fairfax",
+      "meetingId": "DJWQJ5697B8B",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-07-09",
+      "agendaItemId": "DJWQJB697B91",
+      "agendaItemOrder": "3.05",
+      "agendaItemName": "Annual School Board Organizational Arrangements, including Election of the School Board Chair and Vice Chair",
+      "fileId": "DVSJVH4F058C",
+      "fileName": "Attachment A - Fairfax County School Board Meeting Schedule 2026-2027(DRAFT).pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DVSJVH4F058C/$file/Attachment%20A%20-%20Fairfax%20County%20School%20Board%20Meeting%20Schedule%202026-2027(DRAFT).pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQPK690EC0:DV5URG7D4F1B:DV5URK7D4F23",
+      "districtId": "fairfax",
+      "meetingId": "DJWQPK690EC0",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-06-25",
+      "agendaItemId": "DV5URG7D4F1B",
+      "agendaItemOrder": "4.01",
+      "agendaItemName": "Resolution on Responsible Instructional Technology",
+      "fileId": "DV5URK7D4F23",
+      "fileName": "6-4-26_Resolution for Responsible Instructional Technology.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DV5URK7D4F23/$file/6-4-26_Resolution%20for%20Responsible%20Instructional%20Technology.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWLQW57B9DF:DJWLQY57BA44:DV5PYS66F0FD",
+      "districtId": "fairfax",
+      "meetingId": "DJWLQW57B9DF",
+      "meetingName": "School Board Work Session",
+      "meetingDate": "2026-06-23",
+      "agendaItemId": "DJWLQY57BA44",
+      "agendaItemOrder": "1.01",
+      "agendaItemName": "Forum Topic: Energy Savings Performance Contracting and Energy Service Companies",
+      "fileId": "DV5PYS66F0FD",
+      "fileName": "FCSB - Forum Topic - ESPCs and ESCOs.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DV5PYS66F0FD/$file/FCSB%20-%20Forum%20Topic%20-%20ESPCs%20and%20ESCOs.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DT4HZ54ADE2F:DT4HZE4ADE46:DU3MJC5B72DE",
+      "districtId": "fairfax",
+      "meetingId": "DT4HZ54ADE2F",
+      "meetingName": "Comprehensive Planning and Development Committee (CPDC) Meeting CANCELED",
+      "meetingDate": "2026-06-18",
+      "agendaItemId": "DT4HZE4ADE46",
+      "agendaItemOrder": "1.02",
+      "agendaItemName": "Approval of Minutes",
+      "fileId": "DU3MJC5B72DE",
+      "fileName": "2026-03-05 - CPDC Minutes (DRAFT).pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DU3MJC5B72DE/$file/2026-03-05%20-%20CPDC%20Minutes%20(DRAFT).pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQR669AFD3:DVSPWJ669D42:DW2RQC6F149A",
+      "districtId": "fairfax",
+      "meetingId": "DJWQR669AFD3",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-07-16",
+      "agendaItemId": "DVSPWJ669D42",
+      "agendaItemOrder": "7.04",
+      "agendaItemName": "Skyview High School and Western Pyramids Boundary Study",
+      "fileId": "DW2RQC6F149A",
+      "fileName": "Skyview HS and Western Pyramids Boundary Recommendation Update.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DW2RQC6F149A/$file/Skyview%20HS%20and%20Western%20Pyramids%20Boundary%20Recommendation%20Update.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQJ5697B8B:DJWQJB697B91:DVSJTF4EB7C2",
+      "districtId": "fairfax",
+      "meetingId": "DJWQJ5697B8B",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-07-09",
+      "agendaItemId": "DJWQJB697B91",
+      "agendaItemOrder": "3.05",
+      "agendaItemName": "Annual School Board Organizational Arrangements, including Election of the School Board Chair and Vice Chair",
+      "fileId": "DVSJTF4EB7C2",
+      "fileName": "Attachment B - Organizational Arrangements Attachment B 2026-2027 Updated 7-7-2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DVSJTF4EB7C2/$file/Attachment%20B%20-%20Organizational%20Arrangements%20Attachment%20B%202026-2027%20Updated%207-7-2026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQPK690EC0:DV5UUQ7DC979:DVCVPN81BAE1",
+      "districtId": "fairfax",
+      "meetingId": "DJWQPK690EC0",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-06-25",
+      "agendaItemId": "DV5UUQ7DC979",
+      "agendaItemOrder": "7.03",
+      "agendaItemName": "Consideration of Extension to the Division Superintendent contract [NB 6/11/2026]",
+      "fileId": "DVCVPN81BAE1",
+      "fileName": "Proposed 2026 Superintendent Contract-clean-c.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DVCVPN81BAE1/$file/Proposed%202026%20Superintendent%20Contract-clean-c.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWLQW57B9DF:DJWLR557BA49:DV5NE95F8967",
+      "districtId": "fairfax",
+      "meetingId": "DJWLQW57B9DF",
+      "meetingName": "School Board Work Session",
+      "meetingDate": "2026-06-23",
+      "agendaItemId": "DJWLR557BA49",
+      "agendaItemOrder": "2.02",
+      "agendaItemName": "Fiscal Year 2027 Office of Auditor General (OAG) Risk Assessment and Audit Topics",
+      "fileId": "DV5NE95F8967",
+      "fileName": "1 - OAG FY 2025 Annual Report.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DV5NE95F8967/$file/1%20-%20OAG%20FY%202025%20Annual%20Report.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DT4HZ54ADE2F:DT4HZE4ADE46:DU3MJE5B74F7",
+      "districtId": "fairfax",
+      "meetingId": "DT4HZ54ADE2F",
+      "meetingName": "Comprehensive Planning and Development Committee (CPDC) Meeting CANCELED",
+      "meetingDate": "2026-06-18",
+      "agendaItemId": "DT4HZE4ADE46",
+      "agendaItemOrder": "1.02",
+      "agendaItemName": "Approval of Minutes",
+      "fileId": "DU3MJE5B74F7",
+      "fileName": "2026-04-13 - CPDC Minutes (DRAFT).pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DU3MJE5B74F7/$file/2026-04-13%20-%20CPDC%20Minutes%20(DRAFT).pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQR669AFD3:DVSQ2Q66DDF3:DW2RU26F9E2B",
+      "districtId": "fairfax",
+      "meetingId": "DJWQR669AFD3",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-07-16",
+      "agendaItemId": "DVSQ2Q66DDF3",
+      "agendaItemOrder": "7.05",
+      "agendaItemName": "Skyview High School Student Phasing and Transportation (Presentation & Vote)",
+      "fileId": "DW2RU26F9E2B",
+      "fileName": "Skyview Presentation SB Meeting July 16 Updated.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DW2RU26F9E2B/$file/Skyview%20Presentation%20SB%20Meeting%20July%2016%20Updated.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQJ5697B8B:DVLKEE51801F:DVLKG851C33B",
+      "districtId": "fairfax",
+      "meetingId": "DJWQJ5697B8B",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-07-09",
+      "agendaItemId": "DVLKEE51801F",
+      "agendaItemOrder": "6.03",
+      "agendaItemName": "2027-2028 and 2028-2029 Standard School Year Calendars",
+      "fileId": "DVLKG851C33B",
+      "fileName": "2027-2028 and 2028-2029 Standard School Year Calendars.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DVLKG851C33B/$file/2027-2028%20and%202028-2029%20Standard%20School%20Year%20Calendars.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQPK690EC0:DV5UUQ7DC979:DV6UEA7BAB49",
+      "districtId": "fairfax",
+      "meetingId": "DJWQPK690EC0",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-06-25",
+      "agendaItemId": "DV5UUQ7DC979",
+      "agendaItemOrder": "7.03",
+      "agendaItemName": "Consideration of Extension to the Division Superintendent contract [NB 6/11/2026]",
+      "fileId": "DV6UEA7BAB49",
+      "fileName": "SY24-25 Evaluation Summary.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DV6UEA7BAB49/$file/SY24-25%20Evaluation%20Summary.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWLQW57B9DF:DJWLR557BA49:DV5NEA5F8AA8",
+      "districtId": "fairfax",
+      "meetingId": "DJWLQW57B9DF",
+      "meetingName": "School Board Work Session",
+      "meetingDate": "2026-06-23",
+      "agendaItemId": "DJWLR557BA49",
+      "agendaItemOrder": "2.02",
+      "agendaItemName": "Fiscal Year 2027 Office of Auditor General (OAG) Risk Assessment and Audit Topics",
+      "fileId": "DV5NEA5F8AA8",
+      "fileName": "2 - OAG FY 2026 Midyear Briefing.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DV5NEA5F8AA8/$file/2%20-%20OAG%20FY%202026%20Midyear%20Briefing.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DT4HZ54ADE2F:DT4HZG4ADE49:DU6MZD5DA6BF",
+      "districtId": "fairfax",
+      "meetingId": "DT4HZ54ADE2F",
+      "meetingName": "Comprehensive Planning and Development Committee (CPDC) Meeting CANCELED",
+      "meetingDate": "2026-06-18",
+      "agendaItemId": "DT4HZG4ADE49",
+      "agendaItemOrder": "1.03",
+      "agendaItemName": "Policy Review - Policy 8410: Leasing for School Facilities",
+      "fileId": "DU6MZD5DA6BF",
+      "fileName": "Policy 8410 Redline 20260519 CPDC.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DU6MZD5DA6BF/$file/Policy%208410%20Redline%2020260519%20CPDC.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQR669AFD3:DVSM2Y593423:DVSNLV5A2643",
+      "districtId": "fairfax",
+      "meetingId": "DJWQR669AFD3",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-07-16",
+      "agendaItemId": "DVSM2Y593423",
+      "agendaItemOrder": "7.06",
+      "agendaItemName": "Secondary Mathematics Basal Instructional Resources (Presentation & Vote)",
+      "fileId": "DVSNLV5A2643",
+      "fileName": "Attachment A_Mathematics Secondary Basal Instructional Resources Adoption Timeline .pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DVSNLV5A2643/$file/Attachment%20A_Mathematics%20Secondary%20Basal%20Instructional%20Resources%20Adoption%20Timeline%20.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQJ5697B8B:DVLKEE51801F:DVLKGA51C571",
+      "districtId": "fairfax",
+      "meetingId": "DJWQJ5697B8B",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-07-09",
+      "agendaItemId": "DVLKEE51801F",
+      "agendaItemOrder": "6.03",
+      "agendaItemName": "2027-2028 and 2028-2029 Standard School Year Calendars",
+      "fileId": "DVLKGA51C571",
+      "fileName": "2027-2028-standard-school-year-calendar-draft.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DVLKGA51C571/$file/2027-2028-standard-school-year-calendar-draft.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWQPK690EC0:DV5UUQ7DC979:DVDNBP5F29BB",
+      "districtId": "fairfax",
+      "meetingId": "DJWQPK690EC0",
+      "meetingName": "Regular Meeting",
+      "meetingDate": "2026-06-25",
+      "agendaItemId": "DV5UUQ7DC979",
+      "agendaItemOrder": "7.03",
+      "agendaItemName": "Consideration of Extension to the Division Superintendent contract [NB 6/11/2026]",
+      "fileId": "DVDNBP5F29BB",
+      "fileName": "SY25-26 Evaluation Summary.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DVDNBP5F29BB/$file/SY25-26%20Evaluation%20Summary.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DJWLQW57B9DF:DJWLR557BA49:DV5NEE5F8FF0",
+      "districtId": "fairfax",
+      "meetingId": "DJWLQW57B9DF",
+      "meetingName": "School Board Work Session",
+      "meetingDate": "2026-06-23",
+      "agendaItemId": "DJWLR557BA49",
+      "agendaItemOrder": "2.02",
+      "agendaItemName": "Fiscal Year 2027 Office of Auditor General (OAG) Risk Assessment and Audit Topics",
+      "fileId": "DV5NEE5F8FF0",
+      "fileName": "3 - OAG FY 2027 Risk Assessment and Audit Topics Presentation.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DV5NEE5F8FF0/$file/3%20-%20OAG%20FY%202027%20Risk%20Assessment%20and%20Audit%20Topics%20Presentation.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "fairfax:DT4HZ54ADE2F:DT4HZG4ADE49:DU6MZF5DA7D3",
+      "districtId": "fairfax",
+      "meetingId": "DT4HZ54ADE2F",
+      "meetingName": "Comprehensive Planning and Development Committee (CPDC) Meeting CANCELED",
+      "meetingDate": "2026-06-18",
+      "agendaItemId": "DT4HZG4ADE49",
+      "agendaItemOrder": "1.03",
+      "agendaItemName": "Policy Review - Policy 8410: Leasing for School Facilities",
+      "fileId": "DU6MZF5DA7D3",
+      "fileName": "Policy 8410 Clean 20260519 CPDC.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/fairfax/Board.nsf/pfiles/DU6MZF5DA7D3/$file/Policy%208410%20Clean%2020260519%20CPDC.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVRQ2W671515:DVRQ33671520:DVXMQ65C4CDA",
+      "districtId": "loudoun",
+      "meetingId": "DVRQ2W671515",
+      "meetingName": "Legislative & Policy Committee 5:00 p.m.",
+      "meetingDate": "2026-08-12",
+      "agendaItemId": "DVRQ33671520",
+      "agendaItemOrder": "3.01",
+      "agendaItemName": "Draft Minutes for the June 24, 2026 meeting",
+      "fileId": "DVXMQ65C4CDA",
+      "fileName": "L&P Draft Minutes 6-24-2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DVXMQ65C4CDA/$file/L%26P%20Draft%20Minutes%206-24-2026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DV3GCL432C63:DV3GCQ432C6E:DWGJ884BE704",
+      "districtId": "loudoun",
+      "meetingId": "DV3GCL432C63",
+      "meetingName": "2nd Tuesday School Board Meeting 4:30 p.m.",
+      "meetingDate": "2026-08-11",
+      "agendaItemId": "DV3GCQ432C6E",
+      "agendaItemOrder": "2.01",
+      "agendaItemName": "Disclosures",
+      "fileId": "DWGJ884BE704",
+      "fileName": "Disclosure Chandler.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWGJ884BE704/$file/Disclosure%20Chandler.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVEQ3H6754F0:DWHHZD4AE724:DWHJ2C4B0B2A",
+      "districtId": "loudoun",
+      "meetingId": "DVEQ3H6754F0",
+      "meetingName": "Specialized Programs & Centers Committee 4:00 p.m.",
+      "meetingDate": "2026-08-06",
+      "agendaItemId": "DWHHZD4AE724",
+      "agendaItemOrder": "3.01",
+      "agendaItemName": "Approval of Draft Minutes for the June 3, 2026 Meeting",
+      "fileId": "DWHJ2C4B0B2A",
+      "fileName": "Draft June 3, 2026  SPC Committee Meeting Minutes.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWHJ2C4B0B2A/$file/Draft%20June%203%2C%202026%20%20SPC%20Committee%20Meeting%20Minutes.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVKMFZ5B1C1F:DVKMHQ5B5CC2:DWMLSG57F3DA",
+      "districtId": "loudoun",
+      "meetingId": "DVKMFZ5B1C1F",
+      "meetingName": "Audit Committee 4:00 p.m.",
+      "meetingDate": "2026-08-05",
+      "agendaItemId": "DVKMHQ5B5CC2",
+      "agendaItemOrder": "3.01",
+      "agendaItemName": "Draft Minutes for the June 17, 2026 meeting",
+      "fileId": "DWMLSG57F3DA",
+      "fileName": "06.17.2026 Draft AC Meeting Minutes.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWMLSG57F3DA/$file/06.17.2026%20Draft%20AC%20Meeting%20Minutes.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DW3KWM53E163:DWAL6J5508E5:DWGPAE630912",
+      "districtId": "loudoun",
+      "meetingId": "DW3KWM53E163",
+      "meetingName": "Curriculum & Instruction Committee 4:30 p.m.",
+      "meetingDate": "2026-08-05",
+      "agendaItemId": "DWAL6J5508E5",
+      "agendaItemOrder": "3.01",
+      "agendaItemName": "Approval of Draft Minutes for the June 4, 2026 Meeting",
+      "fileId": "DWGPAE630912",
+      "fileName": "Draft June 4, 2026 C&I Committee Meeting Minutes.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWGPAE630912/$file/Draft%20June%204%2C%202026%20C%26I%20Committee%20Meeting%20Minutes.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVRQ2W671515:DVXNYY624694:DWQR9Z6CF9C9",
+      "districtId": "loudoun",
+      "meetingId": "DVRQ2W671515",
+      "meetingName": "Legislative & Policy Committee 5:00 p.m.",
+      "meetingDate": "2026-08-12",
+      "agendaItemId": "DVXNYY624694",
+      "agendaItemOrder": "4.01",
+      "agendaItemName": "Policy 1010, School Division Legal Status",
+      "fileId": "DWQR9Z6CF9C9",
+      "fileName": "1010, School Division Legal Status Redline 8.12.2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWQR9Z6CF9C9/$file/1010%2C%20School%20Division%20Legal%20Status%20Redline%208.12.2026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DV3GCL432C63:DV3GCQ432C6E:DWGJ8A4BE88A",
+      "districtId": "loudoun",
+      "meetingId": "DV3GCL432C63",
+      "meetingName": "2nd Tuesday School Board Meeting 4:30 p.m.",
+      "meetingDate": "2026-08-11",
+      "agendaItemId": "DV3GCQ432C6E",
+      "agendaItemOrder": "2.01",
+      "agendaItemName": "Disclosures",
+      "fileId": "DWGJ8A4BE88A",
+      "fileName": "Disclosure Donohue.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWGJ8A4BE88A/$file/Disclosure%20Donohue.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVEQ3H6754F0:DWHM8359F2F3:DWHMW75D2F40",
+      "districtId": "loudoun",
+      "meetingId": "DVEQ3H6754F0",
+      "meetingName": "Specialized Programs & Centers Committee 4:00 p.m.",
+      "meetingDate": "2026-08-06",
+      "agendaItemId": "DWHM8359F2F3",
+      "agendaItemOrder": "4.01",
+      "agendaItemName": "Family and Community Engagement (FACE) Resource Hub",
+      "fileId": "DWHMW75D2F40",
+      "fileName": "8.6.26 Special Programs Presentation - FACE Resource Hub.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWHMW75D2F40/$file/8.6.26%20Special%20Programs%20Presentation%20-%20FACE%20Resource%20Hub.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVKMFZ5B1C1F:DVKND55F6098:DWLP6M631C26",
+      "districtId": "loudoun",
+      "meetingId": "DVKMFZ5B1C1F",
+      "meetingName": "Audit Committee 4:00 p.m.",
+      "meetingDate": "2026-08-05",
+      "agendaItemId": "DVKND55F6098",
+      "agendaItemOrder": "4.01",
+      "agendaItemName": "Audit Recommendation Follow-Up",
+      "fileId": "DWLP6M631C26",
+      "fileName": "FY2027 Audit Plan (Universe) Presentation.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWLP6M631C26/$file/FY2027%20Audit%20Plan%20(Universe)%20Presentation.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DW3KWM53E163:DWHLXV58BF8B:DWHM2A591945",
+      "districtId": "loudoun",
+      "meetingId": "DW3KWM53E163",
+      "meetingName": "Curriculum & Instruction Committee 4:30 p.m.",
+      "meetingDate": "2026-08-05",
+      "agendaItemId": "DWHLXV58BF8B",
+      "agendaItemOrder": "4.01",
+      "agendaItemName": "Update: Science Office",
+      "fileId": "DWHM2A591945",
+      "fileName": "Office of Science Update - August C&I Committee.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWHM2A591945/$file/Office%20of%20Science%20Update%20-%20August%20C%26I%20Committee.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVRQ2W671515:DVXNYY624694:DWQRA36CFB86",
+      "districtId": "loudoun",
+      "meetingId": "DVRQ2W671515",
+      "meetingName": "Legislative & Policy Committee 5:00 p.m.",
+      "meetingDate": "2026-08-12",
+      "agendaItemId": "DVXNYY624694",
+      "agendaItemOrder": "4.01",
+      "agendaItemName": "Policy 1010, School Division Legal Status",
+      "fileId": "DWQRA36CFB86",
+      "fileName": "1010, School Division Legal Status Clean 8.12.2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWQRA36CFB86/$file/1010%2C%20School%20Division%20Legal%20Status%20Clean%208.12.2026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DV3GCL432C63:DV3GCQ432C6E:DWGJ8D4BE9EF",
+      "districtId": "loudoun",
+      "meetingId": "DV3GCL432C63",
+      "meetingName": "2nd Tuesday School Board Meeting 4:30 p.m.",
+      "meetingDate": "2026-08-11",
+      "agendaItemId": "DV3GCQ432C6E",
+      "agendaItemOrder": "2.01",
+      "agendaItemName": "Disclosures",
+      "fileId": "DWGJ8D4BE9EF",
+      "fileName": "Disclosure Griffiths.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWGJ8D4BE9EF/$file/Disclosure%20Griffiths.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVEQ3H6754F0:DWHM8359F2F3:DWHMW95D3100",
+      "districtId": "loudoun",
+      "meetingId": "DVEQ3H6754F0",
+      "meetingName": "Specialized Programs & Centers Committee 4:00 p.m.",
+      "meetingDate": "2026-08-06",
+      "agendaItemId": "DWHM8359F2F3",
+      "agendaItemOrder": "4.01",
+      "agendaItemName": "Family and Community Engagement (FACE) Resource Hub",
+      "fileId": "DWHMW95D3100",
+      "fileName": "FACE ~ Resource Hub Proposal Form.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWHMW95D3100/$file/FACE%20~%20Resource%20Hub%20Proposal%20Form.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVKMFZ5B1C1F:DVKMW45D2D26:DWDRAX6D1C9B",
+      "districtId": "loudoun",
+      "meetingId": "DVKMFZ5B1C1F",
+      "meetingName": "Audit Committee 4:00 p.m.",
+      "meetingDate": "2026-08-05",
+      "agendaItemId": "DVKMW45D2D26",
+      "agendaItemOrder": "5.01",
+      "agendaItemName": "Approval of OAG Draft FY27 Audit Plan (universe)",
+      "fileId": "DWDRAX6D1C9B",
+      "fileName": "OAG FY2027 Audit Universe.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWDRAX6D1C9B/$file/OAG%20FY2027%20Audit%20Universe.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVRQ2W671515:DVXNZG625A55:DWNPW96691CA",
+      "districtId": "loudoun",
+      "meetingId": "DVRQ2W671515",
+      "meetingName": "Legislative & Policy Committee 5:00 p.m.",
+      "meetingDate": "2026-08-12",
+      "agendaItemId": "DVXNZG625A55",
+      "agendaItemOrder": "4.02",
+      "agendaItemName": "Policy 1035, School Board Norms, Protocols, and Violations",
+      "fileId": "DWNPW96691CA",
+      "fileName": "1035, School Board Norms, Protocols and Violations Redline 8.12.2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWNPW96691CA/$file/1035%2C%20School%20Board%20Norms%2C%20Protocols%20and%20Violations%20Redline%208.12.2026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DV3GCL432C63:DV3GCQ432C6E:DWGJ8F4BEBCE",
+      "districtId": "loudoun",
+      "meetingId": "DV3GCL432C63",
+      "meetingName": "2nd Tuesday School Board Meeting 4:30 p.m.",
+      "meetingDate": "2026-08-11",
+      "agendaItemId": "DV3GCQ432C6E",
+      "agendaItemOrder": "2.01",
+      "agendaItemName": "Disclosures",
+      "fileId": "DWGJ8F4BEBCE",
+      "fileName": "Disclosure LaBell.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWGJ8F4BEBCE/$file/Disclosure%20LaBell.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVEQ3H6754F0:DWHMCU5AA6A3:DWLNV961BC52",
+      "districtId": "loudoun",
+      "meetingId": "DVEQ3H6754F0",
+      "meetingName": "Specialized Programs & Centers Committee 4:00 p.m.",
+      "meetingDate": "2026-08-06",
+      "agendaItemId": "DWHMCU5AA6A3",
+      "agendaItemOrder": "4.02",
+      "agendaItemName": "Special Programs Update: Elementary School Special Programs and Admissions Windows",
+      "fileId": "DWLNV961BC52",
+      "fileName": "SPC Presentation - Special Programs and Admission Windows 8.6.2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWLNV961BC52/$file/SPC%20Presentation%20-%20Special%20Programs%20and%20Admission%20Windows%208.6.2026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVRQ2W671515:DVXNZG625A55:DWNPWB669357",
+      "districtId": "loudoun",
+      "meetingId": "DVRQ2W671515",
+      "meetingName": "Legislative & Policy Committee 5:00 p.m.",
+      "meetingDate": "2026-08-12",
+      "agendaItemId": "DVXNZG625A55",
+      "agendaItemOrder": "4.02",
+      "agendaItemName": "Policy 1035, School Board Norms, Protocols, and Violations",
+      "fileId": "DWNPWB669357",
+      "fileName": "1035, School Board Norms, Protocols and Violations Clean 8.12.2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWNPWB669357/$file/1035%2C%20School%20Board%20Norms%2C%20Protocols%20and%20Violations%20Clean%208.12.2026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DV3GCL432C63:DV3GCQ432C6E:DWGJ8L4BED48",
+      "districtId": "loudoun",
+      "meetingId": "DV3GCL432C63",
+      "meetingName": "2nd Tuesday School Board Meeting 4:30 p.m.",
+      "meetingDate": "2026-08-11",
+      "agendaItemId": "DV3GCQ432C6E",
+      "agendaItemOrder": "2.01",
+      "agendaItemName": "Disclosures",
+      "fileId": "DWGJ8L4BED48",
+      "fileName": "Disclosure Riccardi.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWGJ8L4BED48/$file/Disclosure%20Riccardi.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "loudoun:DVRQ2W671515:DVRQHX6974B6:DWQRCJ6D58D5",
+      "districtId": "loudoun",
+      "meetingId": "DVRQ2W671515",
+      "meetingName": "Legislative & Policy Committee 5:00 p.m.",
+      "meetingDate": "2026-08-12",
+      "agendaItemId": "DVRQHX6974B6",
+      "agendaItemOrder": "4.03",
+      "agendaItemName": "Policy 7712, Sick Leave",
+      "fileId": "DWQRCJ6D58D5",
+      "fileName": "7712, Sick Leave Redline 8.12.2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/loudoun/Board.nsf/pfiles/DWQRCJ6D58D5/$file/7712%2C%20Sick%20Leave%20Redline%208.12.2026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DSHLMS57255F:DTRJM74DCE93:DTRJTF4E931D",
+      "districtId": "prince-william",
+      "meetingId": "DSHLMS57255F",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-06-03",
+      "agendaItemId": "DTRJM74DCE93",
+      "agendaItemOrder": "11.02",
+      "agendaItemName": "Application for Federal Program Funds (Soliven)",
+      "fileId": "DTRJTF4E931D",
+      "fileName": "ESEA Federal Program Application and Assurances.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DTRJTF4E931D/$file/ESEA%20Federal%20Program%20Application%20and%20Assurances.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DSHLKY57015E:DSPKNE52AD17:DT7LKW56BFA5",
+      "districtId": "prince-william",
+      "meetingId": "DSHLKY57015E",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-05-20",
+      "agendaItemId": "DSPKNE52AD17",
+      "agendaItemOrder": "11.02",
+      "agendaItemName": "Resolution - Security Resident Program Dwellings (Bock)",
+      "fileId": "DT7LKW56BFA5",
+      "fileName": "Resolution Attorney in Fact (Title to Residential Trailers).pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DT7LKW56BFA5/$file/Resolution%20Attorney%20in%20Fact%20(Title%20to%20Residential%20Trailers).pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DRZQW76B406C:DRZKAD50CE46:DT7LKA56996F",
+      "districtId": "prince-william",
+      "meetingId": "DRZQW76B406C",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-05-06",
+      "agendaItemId": "DRZKAD50CE46",
+      "agendaItemOrder": "11.03",
+      "agendaItemName": "Contract Award - FY 2027 Liability/Property and Excess Workers Compensation Insurance - Renewal (Yusuf)",
+      "fileId": "DT7LKA56996F",
+      "fileName": "Insurance Renewal Package FY2027.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DT7LKA56996F/$file/Insurance%20Renewal%20Package%20FY2027.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DRLRMH6EAA42:DRSPSB65FEEC:DRSQEC68ED33",
+      "districtId": "prince-william",
+      "meetingId": "DRLRMH6EAA42",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-04-22",
+      "agendaItemId": "DRSPSB65FEEC",
+      "agendaItemOrder": "12.02",
+      "agendaItemName": "Appointment of Gifted Education Advisory Committee for SY2025-26 into SY2026-27 (Soliven)",
+      "fileId": "DRSQEC68ED33",
+      "fileName": "Gifted Advisory Committee Proposed Representatives.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DRSQEC68ED33/$file/Gifted%20Advisory%20Committee%20Proposed%20Representatives.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DR8SL9732BEE:DRUMW45D2C64:DS4PHG64B2E1",
+      "districtId": "prince-william",
+      "meetingId": "DR8SL9732BEE",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-04-08",
+      "agendaItemId": "DRUMW45D2C64",
+      "agendaItemOrder": "11.02",
+      "agendaItemName": "2026-27 Perkins Local Plan for Career and Technical Education (Soliven)",
+      "fileId": "DS4PHG64B2E1",
+      "fileName": "2026-27 Perkins Local Plan for CTE.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DS4PHG64B2E1/$file/2026-27%20Perkins%20Local%20Plan%20for%20CTE.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DSHLMS57255F:DU2PWE641D8E:DUHKH951E8F3",
+      "districtId": "prince-william",
+      "meetingId": "DSHLMS57255F",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-06-03",
+      "agendaItemId": "DU2PWE641D8E",
+      "agendaItemOrder": "11.03",
+      "agendaItemName": "Application Submission Approval for Head Start Grant (Reyher)",
+      "fileId": "DUHKH951E8F3",
+      "fileName": "Head Start 2026-27 Budget Consent.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DUHKH951E8F3/$file/Head%20Start%202026-27%20Budget%20Consent.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DSHLKY57015E:DTDKFE51A5BB:DTDKVA53AC9A",
+      "districtId": "prince-william",
+      "meetingId": "DSHLKY57015E",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-05-20",
+      "agendaItemId": "DTDKFE51A5BB",
+      "agendaItemOrder": "12.01",
+      "agendaItemName": "Approval of Acknowledgements & Recognitions (3)",
+      "fileId": "DTDKVA53AC9A",
+      "fileName": "Caribbean-American Heritage Month 2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DTDKVA53AC9A/$file/Caribbean-American%20Heritage%20Month%202026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DRZQW76B406C:DQ4NSE61531C:DSKHZ44ADC45",
+      "districtId": "prince-william",
+      "meetingId": "DRZQW76B406C",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-05-06",
+      "agendaItemId": "DQ4NSE61531C",
+      "agendaItemOrder": "11.05",
+      "agendaItemName": "Contact Award - Pennington Traditional School - Renovation and Addition (S-LD-26612) (Yusuf)",
+      "fileId": "DSKHZ44ADC45",
+      "fileName": "Bid Tab S-LD-26612 Pennington Traditional School Renovation and Addition.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DSKHZ44ADC45/$file/Bid%20Tab%20S-LD-26612%20Pennington%20Traditional%20School%20Renovation%20and%20Addition.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DRLRMH6EAA42:DS8Q96682BC3:DSPHUK4A31D9",
+      "districtId": "prince-william",
+      "meetingId": "DRLRMH6EAA42",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-04-22",
+      "agendaItemId": "DS8Q96682BC3",
+      "agendaItemOrder": "12.03",
+      "agendaItemName": "Virginia School Board Association Excellence in Workforce Readiness Award Submission (Soliven)",
+      "fileId": "DSPHUK4A31D9",
+      "fileName": "2026 VSBA Excellence in Workplace Readiness Award.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DSPHUK4A31D9/$file/2026%20VSBA%20Excellence%20in%20Workplace%20Readiness%20Award.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DR8SL9732BEE:DRTHE9481A5F:DRTHFK484AB8",
+      "districtId": "prince-william",
+      "meetingId": "DR8SL9732BEE",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-04-08",
+      "agendaItemId": "DRTHE9481A5F",
+      "agendaItemOrder": "11.03",
+      "agendaItemName": "Special Warrant for School Board Review and Approval of February 2026 Payrolls (Yusuf)",
+      "fileId": "DRTHFK484AB8",
+      "fileName": "Board Item_Payroll Attachment February 2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DRTHFK484AB8/$file/Board%20Item_Payroll%20Attachment%20February%202026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DSHLMS57255F:DTRMHS5AC7A9:DU2G594217D9",
+      "districtId": "prince-william",
+      "meetingId": "DSHLMS57255F",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-06-03",
+      "agendaItemId": "DTRMHS5AC7A9",
+      "agendaItemOrder": "11.04",
+      "agendaItemName": "Appointment of Career and Technical Education Advisory Council Representatives (Soliven)",
+      "fileId": "DU2G594217D9",
+      "fileName": "2026-27 Board Briefing_June 2026 CTEAC Appointments.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DU2G594217D9/$file/2026-27%20Board%20Briefing_June%202026%20CTEAC%20Appointments.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DSHLKY57015E:DTDKFE51A5BB:DTDL2X547E53",
+      "districtId": "prince-william",
+      "meetingId": "DSHLKY57015E",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-05-20",
+      "agendaItemId": "DTDKFE51A5BB",
+      "agendaItemOrder": "12.01",
+      "agendaItemName": "Approval of Acknowledgements & Recognitions (3)",
+      "fileId": "DTDL2X547E53",
+      "fileName": "LGBTQ+ Pride Month 2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DTDL2X547E53/$file/LGBTQ%2B%20Pride%20Month%202026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DRZQW76B406C:DSPJPN4E016E:DSPKBZ50E7EE",
+      "districtId": "prince-william",
+      "meetingId": "DRZQW76B406C",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-05-06",
+      "agendaItemId": "DSPJPN4E016E",
+      "agendaItemOrder": "11.06",
+      "agendaItemName": "Local Special Education Annual Plan (Reyher)",
+      "fileId": "DSPKBZ50E7EE",
+      "fileName": "2026-2027 Annual Plan.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DSPKBZ50E7EE/$file/2026-2027%20Annual%20Plan.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DRLRMH6EAA42:DS5QFJ68FF24:DS5R9A6CDF0C",
+      "districtId": "prince-william",
+      "meetingId": "DRLRMH6EAA42",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-04-22",
+      "agendaItemId": "DS5QFJ68FF24",
+      "agendaItemOrder": "13.01",
+      "agendaItemName": "Adoption of Acknowledgements & Recognitions (2)",
+      "fileId": "DS5R9A6CDF0C",
+      "fileName": "Asian American and Pacific Islander Heritage Month 2026.docx.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DS5R9A6CDF0C/$file/Asian%20American%20and%20Pacific%20Islander%20Heritage%20Month%202026.docx.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DR8SL9732BEE:DSHPAP63B52D:DSHPR465D083",
+      "districtId": "prince-william",
+      "meetingId": "DR8SL9732BEE",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-04-08",
+      "agendaItemId": "DSHPAP63B52D",
+      "agendaItemOrder": "11.04",
+      "agendaItemName": "Virginia School Board Association Showcasing Innovation Award Submission (Sampson)",
+      "fileId": "DSHPR465D083",
+      "fileName": "2026 VSBA Showcasing Innovation Entry BoardDocs.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DSHPR465D083/$file/2026%20VSBA%20Showcasing%20Innovation%20Entry%20BoardDocs.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DSHLMS57255F:DT4PK864EBE8:DT4Q2R673A8F",
+      "districtId": "prince-william",
+      "meetingId": "DSHLMS57255F",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-06-03",
+      "agendaItemId": "DT4PK864EBE8",
+      "agendaItemOrder": "11.05",
+      "agendaItemName": "Appointment of Special Education Advisory Committee Representatives (Reyher)",
+      "fileId": "DT4Q2R673A8F",
+      "fileName": "Board Agenda SEAC Appointments - Occoquan, Potomac, Gainesville, Superintendent.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DT4Q2R673A8F/$file/Board%20Agenda%20SEAC%20Appointments%20-%20Occoquan%2C%20Potomac%2C%20Gainesville%2C%20Superintendent.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DSHLKY57015E:DTDKFE51A5BB:DTDL2Z547F6C",
+      "districtId": "prince-william",
+      "meetingId": "DSHLKY57015E",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-05-20",
+      "agendaItemId": "DTDKFE51A5BB",
+      "agendaItemOrder": "12.01",
+      "agendaItemName": "Approval of Acknowledgements & Recognitions (3)",
+      "fileId": "DTDL2Z547F6C",
+      "fileName": "National Immigrant Heritage Month 2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DTDL2Z547F6C/$file/National%20Immigrant%20Heritage%20Month%202026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DRZQW76B406C:DSQLRH57C730:DSQLXV58BDF8",
+      "districtId": "prince-william",
+      "meetingId": "DRZQW76B406C",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-05-06",
+      "agendaItemId": "DSQLRH57C730",
+      "agendaItemOrder": "11.07",
+      "agendaItemName": "Special Warrant for School Board Review and Approval of March 2026 Payrolls (Yusuf)",
+      "fileId": "DSQLXV58BDF8",
+      "fileName": "Board Item_Payroll Attachment March 2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DSQLXV58BDF8/$file/Board%20Item_Payroll%20Attachment%20March%202026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DRLRMH6EAA42:DS5QFJ68FF24:DS5R9C6CE025",
+      "districtId": "prince-william",
+      "meetingId": "DRLRMH6EAA42",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-04-22",
+      "agendaItemId": "DS5QFJ68FF24",
+      "agendaItemOrder": "13.01",
+      "agendaItemName": "Adoption of Acknowledgements & Recognitions (2)",
+      "fileId": "DS5R9C6CE025",
+      "fileName": "Jewish-American Heritage Month 2026.docx.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DS5R9C6CE025/$file/Jewish-American%20Heritage%20Month%202026.docx.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "prince-william:DR8SL9732BEE:DS5Q8E67F076:DS5QBH68818B",
+      "districtId": "prince-william",
+      "meetingId": "DR8SL9732BEE",
+      "meetingName": "School Board Meeting",
+      "meetingDate": "2026-04-08",
+      "agendaItemId": "DS5Q8E67F076",
+      "agendaItemOrder": "12.01",
+      "agendaItemName": "Adoption of Acknowledgements & Recognitions (10)",
+      "fileId": "DS5QBH68818B",
+      "fileName": "Better Hearing and Speech Month 2026.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/pwcs/Board.nsf/pfiles/DS5QBH68818B/$file/Better%20Hearing%20and%20Speech%20Month%202026.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DWHPVM667B57:DWQJ4A4B5514:DWQPRK65E168",
+      "districtId": "arlington",
+      "meetingId": "DWHPVM667B57",
+      "meetingName": "Closed Meeting - 5:30 p.m. and School Board Meeting - 7 p.m. (Open to the Public)",
+      "meetingDate": "2026-08-13",
+      "agendaItemId": "DWQJ4A4B5514",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Safety and Security Audit Update",
+      "fileId": "DWQPRK65E168",
+      "fileName": "F-1 SSEM Audit Update.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DWQPRK65E168/$file/F-1%20SSEM%20Audit%20Update.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DWEK6A505049:DWEKQW53040A:DWERSS6F6E1E",
+      "districtId": "arlington",
+      "meetingId": "DWEK6A505049",
+      "meetingName": "School Board and Cabinet Retreat (Open to the Public) 8:30 a.m. - 4:15 p.m. and Closed Meeting - 9:25 a.m. - 10:15 a.m.",
+      "meetingDate": "2026-07-31",
+      "agendaItemId": "DWEKQW53040A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "School Board and Cabinet Retreat",
+      "fileId": "DWERSS6F6E1E",
+      "fileName": "Section 1 - Monitoring Items and Work Sessions by Date SY2026-27 (Rev. 072826)).pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DWERSS6F6E1E/$file/Section%201%20-%20Monitoring%20Items%20and%20Work%20Sessions%20by%20Date%20SY2026-27%20(Rev.%20072826)).pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DW3K8Y50B513:DW9KGZ51C493:DW9LZW590A90",
+      "districtId": "arlington",
+      "meetingId": "DW3K8Y50B513",
+      "meetingName": "Closed Meeting - 5:30 p.m. and School Board Meeting - 7 p.m. (Open to the Public)",
+      "meetingDate": "2026-07-30",
+      "agendaItemId": "DW9KGZ51C493",
+      "agendaItemOrder": "4.",
+      "agendaItemName": "Amendments to Policies B-4 School Board Meetings, G-6.3.13 Student Use of Cell Phones and Personal Electronic Communication Devices, J-8.3.8.30 Food and Nutrition Service-Unpaid Meal Charges, and J-8.7 Safety of Students and Child Abuse and Neglect-Child Protective Services and new Policies A-8 Digital Accessibility, I-11 Academic Planning and Course Selection, I-12.2.3 College Board School Day Program, and J-12.2 Financial Aid Information and Guidance for High School Students.",
+      "fileId": "DW9LZW590A90",
+      "fileName": "A-8 Digital Accessibility.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DW9LZW590A90/$file/A-8%20Digital%20Accessibility.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DW3KQW530A96:DW3KQZ530A9A:DW3KRK5321A3",
+      "districtId": "arlington",
+      "meetingId": "DW3KQW530A96",
+      "meetingName": "Policy Subcommittee Meeting- 8:30 a.m. (Open to the Public)",
+      "meetingDate": "2026-07-22",
+      "agendaItemId": "DW3KQZ530A9A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Meeting Materials",
+      "fileId": "DW3KRK5321A3",
+      "fileName": "I-1.34 Early Childhood Programs.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DW3KRK5321A3/$file/I-1.34%20Early%20Childhood%20Programs.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DVJUFC7BD3AA:DVJUFF7BD3AD:DVJUSQ7D7D51",
+      "districtId": "arlington",
+      "meetingId": "DVJUFC7BD3AA",
+      "meetingName": "Policy Subcommittee Meeting- 8:30 a.m. (Open to the Public)",
+      "meetingDate": "2026-07-08",
+      "agendaItemId": "DVJUFF7BD3AD",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Meeting Materials",
+      "fileId": "DVJUSQ7D7D51",
+      "fileName": "I-11 Academic Planning and Course Selection.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DVJUSQ7D7D51/$file/I-11%20Academic%20Planning%20and%20Course%20Selection.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DWHPVM667B57:DWPSJA72E1D6:DWQQN66A10F0",
+      "districtId": "arlington",
+      "meetingId": "DWHPVM667B57",
+      "meetingName": "Closed Meeting - 5:30 p.m. and School Board Meeting - 7 p.m. (Open to the Public)",
+      "meetingDate": "2026-08-13",
+      "agendaItemId": "DWPSJA72E1D6",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Update on Changes to Non-Traditional Secondary Programs",
+      "fileId": "DWQQN66A10F0",
+      "fileName": "H-1 8.13.26 Update on Changes to Non-Traditional Secondary Programs.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DWQQN66A10F0/$file/H-1%208.13.26%20Update%20on%20Changes%20to%20Non-Traditional%20Secondary%20Programs.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DWEK6A505049:DWEKQW53040A:DWERHJ6E1389",
+      "districtId": "arlington",
+      "meetingId": "DWEK6A505049",
+      "meetingName": "School Board and Cabinet Retreat (Open to the Public) 8:30 a.m. - 4:15 p.m. and Closed Meeting - 9:25 a.m. - 10:15 a.m.",
+      "meetingDate": "2026-07-31",
+      "agendaItemId": "DWEKQW53040A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "School Board and Cabinet Retreat",
+      "fileId": "DWERHJ6E1389",
+      "fileName": "Section 1 - Board member liaison duties.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DWERHJ6E1389/$file/Section%201%20-%20Board%20member%20liaison%20duties.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DW3K8Y50B513:DW9KGZ51C493:DW9LZY590BE9",
+      "districtId": "arlington",
+      "meetingId": "DW3K8Y50B513",
+      "meetingName": "Closed Meeting - 5:30 p.m. and School Board Meeting - 7 p.m. (Open to the Public)",
+      "meetingDate": "2026-07-30",
+      "agendaItemId": "DW9KGZ51C493",
+      "agendaItemOrder": "4.",
+      "agendaItemName": "Amendments to Policies B-4 School Board Meetings, G-6.3.13 Student Use of Cell Phones and Personal Electronic Communication Devices, J-8.3.8.30 Food and Nutrition Service-Unpaid Meal Charges, and J-8.7 Safety of Students and Child Abuse and Neglect-Child Protective Services and new Policies A-8 Digital Accessibility, I-11 Academic Planning and Course Selection, I-12.2.3 College Board School Day Program, and J-12.2 Financial Aid Information and Guidance for High School Students.",
+      "fileId": "DW9LZY590BE9",
+      "fileName": "B-4 School Board Meetings.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DW9LZY590BE9/$file/B-4%20School%20Board%20Meetings.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DW3KQW530A96:DW3KQZ530A9A:DW3KRP532323",
+      "districtId": "arlington",
+      "meetingId": "DW3KQW530A96",
+      "meetingName": "Policy Subcommittee Meeting- 8:30 a.m. (Open to the Public)",
+      "meetingDate": "2026-07-22",
+      "agendaItemId": "DW3KQZ530A9A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Meeting Materials",
+      "fileId": "DW3KRP532323",
+      "fileName": "I-7.2.5.32 Summer Learning Opportunities.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DW3KRP532323/$file/I-7.2.5.32%20Summer%20Learning%20Opportunities.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DVJUFC7BD3AA:DVJUFF7BD3AD:DVJUST7D811F",
+      "districtId": "arlington",
+      "meetingId": "DVJUFC7BD3AA",
+      "meetingName": "Policy Subcommittee Meeting- 8:30 a.m. (Open to the Public)",
+      "meetingDate": "2026-07-08",
+      "agendaItemId": "DVJUFF7BD3AD",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Meeting Materials",
+      "fileId": "DVJUST7D811F",
+      "fileName": "J-5.1.30 Attendance.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DVJUST7D811F/$file/J-5.1.30%20Attendance.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DWHPVM667B57:DWPTQ87870D7:DWPTRC78992D",
+      "districtId": "arlington",
+      "meetingId": "DWHPVM667B57",
+      "meetingName": "Closed Meeting - 5:30 p.m. and School Board Meeting - 7 p.m. (Open to the Public)",
+      "meetingDate": "2026-08-13",
+      "agendaItemId": "DWPTQ87870D7",
+      "agendaItemOrder": "2.",
+      "agendaItemName": "Proposed Revisions to the 2026-27 School Year Calendar",
+      "fileId": "DWPTRC78992D",
+      "fileName": "H-2 Proposed Revisions to the 2026-2027 School Year Calendar.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DWPTRC78992D/$file/H-2%20Proposed%20Revisions%20to%20the%202026-2027%20School%20Year%20Calendar.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DWEK6A505049:DWEKQW53040A:DWERHU6E1E0E",
+      "districtId": "arlington",
+      "meetingId": "DWEK6A505049",
+      "meetingName": "School Board and Cabinet Retreat (Open to the Public) 8:30 a.m. - 4:15 p.m. and Closed Meeting - 9:25 a.m. - 10:15 a.m.",
+      "meetingDate": "2026-07-31",
+      "agendaItemId": "DWEKQW53040A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "School Board and Cabinet Retreat",
+      "fileId": "DWERHU6E1E0E",
+      "fileName": "Section 2 - FY 2028 Budget Development Calendar Final.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DWERHU6E1E0E/$file/Section%202%20-%20FY%202028%20Budget%20Development%20Calendar%20Final.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DW3K8Y50B513:DW9KGZ51C493:DW9M2659139A",
+      "districtId": "arlington",
+      "meetingId": "DW3K8Y50B513",
+      "meetingName": "Closed Meeting - 5:30 p.m. and School Board Meeting - 7 p.m. (Open to the Public)",
+      "meetingDate": "2026-07-30",
+      "agendaItemId": "DW9KGZ51C493",
+      "agendaItemOrder": "4.",
+      "agendaItemName": "Amendments to Policies B-4 School Board Meetings, G-6.3.13 Student Use of Cell Phones and Personal Electronic Communication Devices, J-8.3.8.30 Food and Nutrition Service-Unpaid Meal Charges, and J-8.7 Safety of Students and Child Abuse and Neglect-Child Protective Services and new Policies A-8 Digital Accessibility, I-11 Academic Planning and Course Selection, I-12.2.3 College Board School Day Program, and J-12.2 Financial Aid Information and Guidance for High School Students.",
+      "fileId": "DW9M2659139A",
+      "fileName": "I-12.2.3 College Board School Day Program.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DW9M2659139A/$file/I-12.2.3%20College%20Board%20School%20Day%20Program.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DW3KQW530A96:DW3KQZ530A9A:DW3KRR532430",
+      "districtId": "arlington",
+      "meetingId": "DW3KQW530A96",
+      "meetingName": "Policy Subcommittee Meeting- 8:30 a.m. (Open to the Public)",
+      "meetingDate": "2026-07-22",
+      "agendaItemId": "DW3KQZ530A9A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Meeting Materials",
+      "fileId": "DW3KRR532430",
+      "fileName": "I-7.2.8 Instructional Delivery Options.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DW3KRR532430/$file/I-7.2.8%20Instructional%20Delivery%20Options.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DVJUFC7BD3AA:DVJUFF7BD3AD:DVJUSV7D837E",
+      "districtId": "arlington",
+      "meetingId": "DVJUFC7BD3AA",
+      "meetingName": "Policy Subcommittee Meeting- 8:30 a.m. (Open to the Public)",
+      "meetingDate": "2026-07-08",
+      "agendaItemId": "DVJUFF7BD3AD",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Meeting Materials",
+      "fileId": "DVJUSV7D837E",
+      "fileName": "K-16.1 Notification of Safe Storage of Prescription Drugs and Firearms.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DVJUSV7D837E/$file/K-16.1%20Notification%20of%20Safe%20Storage%20of%20Prescription%20Drugs%20and%20Firearms.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DWEK6A505049:DWEKQW53040A:DWERHW6E2015",
+      "districtId": "arlington",
+      "meetingId": "DWEK6A505049",
+      "meetingName": "School Board and Cabinet Retreat (Open to the Public) 8:30 a.m. - 4:15 p.m. and Closed Meeting - 9:25 a.m. - 10:15 a.m.",
+      "meetingDate": "2026-07-31",
+      "agendaItemId": "DWEKQW53040A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "School Board and Cabinet Retreat",
+      "fileId": "DWERHW6E2015",
+      "fileName": "Section 2 - Budget Forecast.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DWERHW6E2015/$file/Section%202%20-%20Budget%20Forecast.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DW3K8Y50B513:DW9KGZ51C493:DW9M2R592A9D",
+      "districtId": "arlington",
+      "meetingId": "DW3K8Y50B513",
+      "meetingName": "Closed Meeting - 5:30 p.m. and School Board Meeting - 7 p.m. (Open to the Public)",
+      "meetingDate": "2026-07-30",
+      "agendaItemId": "DW9KGZ51C493",
+      "agendaItemOrder": "4.",
+      "agendaItemName": "Amendments to Policies B-4 School Board Meetings, G-6.3.13 Student Use of Cell Phones and Personal Electronic Communication Devices, J-8.3.8.30 Food and Nutrition Service-Unpaid Meal Charges, and J-8.7 Safety of Students and Child Abuse and Neglect-Child Protective Services and new Policies A-8 Digital Accessibility, I-11 Academic Planning and Course Selection, I-12.2.3 College Board School Day Program, and J-12.2 Financial Aid Information and Guidance for High School Students.",
+      "fileId": "DW9M2R592A9D",
+      "fileName": "J-8.7 Safety of Students and Child Abuse and Neglect-Child Protective Services.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DW9M2R592A9D/$file/J-8.7%20Safety%20of%20Students%20and%20Child%20Abuse%20and%20Neglect-Child%20Protective%20Services.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DW3KQW530A96:DW3KQZ530A9A:DW3KRT53256E",
+      "districtId": "arlington",
+      "meetingId": "DW3KQW530A96",
+      "meetingName": "Policy Subcommittee Meeting- 8:30 a.m. (Open to the Public)",
+      "meetingDate": "2026-07-22",
+      "agendaItemId": "DW3KQZ530A9A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Meeting Materials",
+      "fileId": "DW3KRT53256E",
+      "fileName": "K-11.1 Use of Service Animals in Schools.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DW3KRT53256E/$file/K-11.1%20Use%20of%20Service%20Animals%20in%20Schools.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DVJUFC7BD3AA:DVJUFF7BD3AD:DVJUSX7D85E8",
+      "districtId": "arlington",
+      "meetingId": "DVJUFC7BD3AA",
+      "meetingName": "Policy Subcommittee Meeting- 8:30 a.m. (Open to the Public)",
+      "meetingDate": "2026-07-08",
+      "agendaItemId": "DVJUFF7BD3AD",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "Meeting Materials",
+      "fileId": "DVJUSX7D85E8",
+      "fileName": "F-1 Capital Improvement Plan.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DVJUSX7D85E8/$file/F-1%20Capital%20Improvement%20Plan.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    },
+    {
+      "id": "arlington:DWEK6A505049:DWEKQW53040A:DWERJ26E23BF",
+      "districtId": "arlington",
+      "meetingId": "DWEK6A505049",
+      "meetingName": "School Board and Cabinet Retreat (Open to the Public) 8:30 a.m. - 4:15 p.m. and Closed Meeting - 9:25 a.m. - 10:15 a.m.",
+      "meetingDate": "2026-07-31",
+      "agendaItemId": "DWEKQW53040A",
+      "agendaItemOrder": "1.",
+      "agendaItemName": "School Board and Cabinet Retreat",
+      "fileId": "DWERJ26E23BF",
+      "fileName": "Section 2 - SY2026-27_CIP_Leadership_Timeline.pdf",
+      "sourceUrl": "https://go.boarddocs.com/vsba/arlington/Board.nsf/pfiles/DWERJ26E23BF/$file/Section%202%20-%20SY2026-27_CIP_Leadership_Timeline.pdf",
+      "traits": [],
+      "visibleFacts": [],
+      "humanScores": {
+        "readingOrder": null,
+        "tablePreservation": null,
+        "overallFidelity": null
+      }
+    }
+  ]
+}

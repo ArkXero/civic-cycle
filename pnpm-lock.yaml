@@ -102,6 +102,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@llamaindex/liteparse':
+        specifier: 2.11.1
+        version: 2.11.1
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0
@@ -642,6 +645,49 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@llamaindex/liteparse-darwin-arm64@2.11.1':
+    resolution: {integrity: sha512-5fKaGA94L8cmKYGMBpR/aaRSe2Cm26/t9gYeWG6A4SGRW2fymdGpdzsm0DAojQ1Muvd/AOsCiSkt3uTjDYcSvA==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@llamaindex/liteparse-darwin-x64@2.11.1':
+    resolution: {integrity: sha512-oXu6+hKpCRltLRXUcRqp1An4CncGZh5kHs0ZYhosHb/EZxWKAQnIyQMmkfQ5zBrb/CwzOwSHGN1p6Gnn7qiyRg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@llamaindex/liteparse-linux-arm64-gnu@2.11.1':
+    resolution: {integrity: sha512-WdndldwDNdGnj+35NhIGm0ENxt+pZuOdyzNRJl+u15qbkR3LmvXw8z3xotzrboCTScPErcDZv8eZYjwDNbAqMg==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@llamaindex/liteparse-linux-x64-gnu@2.11.1':
+    resolution: {integrity: sha512-nZPj0g65wxmKK34OzfLYXTXMSTe74WxzfCmVnFsJR/WRAmnapmg6fcS9Oj5fjRLTnjGH7B4qpE2miUsJJkvRhw==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@llamaindex/liteparse-linux-x64-musl@2.11.1':
+    resolution: {integrity: sha512-uL/eVCivsOPDGOmmk2QC7hiEYOrer9VrzZMDz2OBxhOeNcnMNwtbRfntCNm0FMBOMkVO7W5T5bsfLiEkBsVz8g==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@llamaindex/liteparse-win32-arm64-msvc@2.11.1':
+    resolution: {integrity: sha512-n6XE9ugOxt3YnyfTNI2KV/Z4ul1ky+kY1DHchGRtfSKY5FiWX5wsdGGs8SNLqhjY3q9Ktz8kfzwqvKjpvZs3vQ==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@llamaindex/liteparse-win32-x64-msvc@2.11.1':
+    resolution: {integrity: sha512-gLSCPbP3CxUJfNGiZZ50Ct4piVilOSO4T2pL5Ca+SvB/RWvaLLjxjlFvr9ly6y04xSdvAUBUaMPdkHEcANPyqA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@llamaindex/liteparse@2.11.1':
+    resolution: {integrity: sha512-VxTSYDYYrweAQ03Eq3G34TKu7kgVBmstIgbjF2pFaeA+loMoYjEQKvw5l89a9smWfT/F0aZSSl0yRICiCzUxVw==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   '@mediapipe/tasks-vision@0.10.17':
     resolution: {integrity: sha512-CZWV/q6TTe8ta61cZXjfnnHsfWIdFhms03M9T7Cnd5y2mdpylJM0rF1qRq+wsQVRMLz1OYPVEBU9ph2Bx8cxrg==}
@@ -2724,6 +2770,10 @@ packages:
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
+
+  commander@12.1.0:
+    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
+    engines: {node: '>=18'}
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
@@ -4964,6 +5014,39 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@llamaindex/liteparse-darwin-arm64@2.11.1':
+    optional: true
+
+  '@llamaindex/liteparse-darwin-x64@2.11.1':
+    optional: true
+
+  '@llamaindex/liteparse-linux-arm64-gnu@2.11.1':
+    optional: true
+
+  '@llamaindex/liteparse-linux-x64-gnu@2.11.1':
+    optional: true
+
+  '@llamaindex/liteparse-linux-x64-musl@2.11.1':
+    optional: true
+
+  '@llamaindex/liteparse-win32-arm64-msvc@2.11.1':
+    optional: true
+
+  '@llamaindex/liteparse-win32-x64-msvc@2.11.1':
+    optional: true
+
+  '@llamaindex/liteparse@2.11.1':
+    dependencies:
+      commander: 12.1.0
+    optionalDependencies:
+      '@llamaindex/liteparse-darwin-arm64': 2.11.1
+      '@llamaindex/liteparse-darwin-x64': 2.11.1
+      '@llamaindex/liteparse-linux-arm64-gnu': 2.11.1
+      '@llamaindex/liteparse-linux-x64-gnu': 2.11.1
+      '@llamaindex/liteparse-linux-x64-musl': 2.11.1
+      '@llamaindex/liteparse-win32-arm64-msvc': 2.11.1
+      '@llamaindex/liteparse-win32-x64-msvc': 2.11.1
+
   '@mediapipe/tasks-vision@0.10.17': {}
 
   '@monogrid/gainmap-js@3.4.0(three@0.184.0)':
@@ -6803,6 +6886,8 @@ snapshots:
   client-only@0.0.1: {}
 
   clsx@2.1.1: {}
+
+  commander@12.1.0: {}
 
   concat-map@0.0.1: {}
 

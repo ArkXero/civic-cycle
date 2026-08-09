@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated reports and local Ariadne fixtures are gitignored artifacts.
+    "coverage/**",
+    ".ariadne/**",
     // shadcn generated components — never edited manually
     "components/ui/**",
   ]),

@@ -14,6 +14,7 @@ import {
   Settings,
   Shield,
   Sun,
+  Tags,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_NAME, NAV_LINKS } from '@/lib/constants'
@@ -30,6 +31,7 @@ const mobileNavIcons = {
   '/alerts': Bell,
   '/settings': Settings,
   '/admin/boarddocs': FileDown,
+  '/admin/topics': Tags,
   '/admin/dashboard': LayoutDashboard,
 } as const
 

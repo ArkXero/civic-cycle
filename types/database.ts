@@ -70,6 +70,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       summaries: {
         Row: {
@@ -102,6 +103,250 @@ export type Database = {
           published?: boolean
           created_at?: string
         }
+        Relationships: []
+      }
+      agenda_items: {
+        Row: {
+          id: string
+          meeting_id: string
+          external_id: string
+          item_order: string
+          category: string
+          item_type: string
+          title: string
+          recommended_action: string
+          body_markdown: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          meeting_id: string
+          external_id: string
+          item_order: string
+          category?: string
+          item_type?: string
+          title: string
+          recommended_action?: string
+          body_markdown?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          meeting_id?: string
+          external_id?: string
+          item_order?: string
+          category?: string
+          item_type?: string
+          title?: string
+          recommended_action?: string
+          body_markdown?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meeting_documents: {
+        Row: {
+          id: string
+          meeting_id: string
+          agenda_item_id: string
+          external_file_id: string
+          title: string
+          source_url: string
+          checksum_sha256: string | null
+          parser_name: string | null
+          parser_version: string | null
+          extracted_markdown: string | null
+          page_count: number | null
+          byte_size: number | null
+          extraction_status: 'pending' | 'processing' | 'extracted' | 'failed' | 'rejected'
+          error_details: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          meeting_id: string
+          agenda_item_id: string
+          external_file_id: string
+          title: string
+          source_url: string
+          checksum_sha256?: string | null
+          parser_name?: string | null
+          parser_version?: string | null
+          extracted_markdown?: string | null
+          page_count?: number | null
+          byte_size?: number | null
+          extraction_status?: 'pending' | 'processing' | 'extracted' | 'failed' | 'rejected'
+          error_details?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          meeting_id?: string
+          agenda_item_id?: string
+          external_file_id?: string
+          title?: string
+          source_url?: string
+          checksum_sha256?: string | null
+          parser_name?: string | null
+          parser_version?: string | null
+          extracted_markdown?: string | null
+          page_count?: number | null
+          byte_size?: number | null
+          extraction_status?: 'pending' | 'processing' | 'extracted' | 'failed' | 'rejected'
+          error_details?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      topics: {
+        Row: {
+          id: string
+          slug: string
+          display_name: string
+          description: string
+          parent_id: string | null
+          synonyms: string[]
+          active: boolean
+          taxonomy_version: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          display_name: string
+          description?: string
+          parent_id?: string | null
+          synonyms?: string[]
+          active?: boolean
+          taxonomy_version?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          display_name?: string
+          description?: string
+          parent_id?: string | null
+          synonyms?: string[]
+          active?: boolean
+          taxonomy_version?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agenda_item_topics: {
+        Row: {
+          agenda_item_id: string
+          topic_id: string
+          confidence: number
+          rationale: string
+          evidence: Json
+          classifier_version: string
+          review_status: 'pending' | 'approved' | 'rejected'
+          reviewed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          agenda_item_id: string
+          topic_id: string
+          confidence: number
+          rationale?: string
+          evidence?: Json
+          classifier_version: string
+          review_status?: 'pending' | 'approved' | 'rejected'
+          reviewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          agenda_item_id?: string
+          topic_id?: string
+          confidence?: number
+          rationale?: string
+          evidence?: Json
+          classifier_version?: string
+          review_status?: 'pending' | 'approved' | 'rejected'
+          reviewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meeting_topics: {
+        Row: {
+          meeting_id: string
+          topic_id: string
+          assignment_count: number
+          max_confidence: number
+          generated_at: string
+        }
+        Insert: {
+          meeting_id: string
+          topic_id: string
+          assignment_count: number
+          max_confidence: number
+          generated_at?: string
+        }
+        Update: {
+          meeting_id?: string
+          topic_id?: string
+          assignment_count?: number
+          max_confidence?: number
+          generated_at?: string
+        }
+        Relationships: []
+      }
+      topic_suggestions: {
+        Row: {
+          id: string
+          proposed_slug: string
+          proposed_name: string
+          rationale: string
+          examples: Json
+          occurrence_count: number
+          review_state: 'pending' | 'approved' | 'rejected' | 'merged'
+          merged_topic_id: string | null
+          classifier_version: string
+          created_at: string
+          reviewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          proposed_slug: string
+          proposed_name: string
+          rationale?: string
+          examples?: Json
+          occurrence_count?: number
+          review_state?: 'pending' | 'approved' | 'rejected' | 'merged'
+          merged_topic_id?: string | null
+          classifier_version: string
+          created_at?: string
+          reviewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          proposed_slug?: string
+          proposed_name?: string
+          rationale?: string
+          examples?: Json
+          occurrence_count?: number
+          review_state?: 'pending' | 'approved' | 'rejected' | 'merged'
+          merged_topic_id?: string | null
+          classifier_version?: string
+          created_at?: string
+          reviewed_at?: string | null
+        }
+        Relationships: []
       }
       user_profiles: {
         Row: {
@@ -128,6 +373,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       alert_preferences: {
         Row: {
@@ -157,6 +403,7 @@ export type Database = {
           unsubscribe_token?: string
           created_at?: string
         }
+        Relationships: []
       }
       alert_history: {
         Row: {
@@ -183,6 +430,7 @@ export type Database = {
           sent_at?: string
           email_status?: 'sent' | 'failed' | 'bounced'
         }
+        Relationships: []
       }
       activity_logs: {
         Row: {
@@ -206,6 +454,7 @@ export type Database = {
           metadata?: Json | null
           created_at?: string
         }
+        Relationships: []
       }
       api_usage: {
         Row: {
@@ -241,6 +490,7 @@ export type Database = {
           error_message?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -261,6 +511,7 @@ export type Database = {
           role?: 'admin' | 'user'
           created_at?: string
         }
+        Relationships: []
       }
       digest_subscribers: {
         Row: {
@@ -290,16 +541,27 @@ export type Database = {
           unsubscribe_token?: string
           active?: boolean
         }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      refresh_meeting_topics: {
+        Args: { target_meeting_id: string }
+        Returns: undefined
+      }
+      refresh_topic_meeting_rollups: {
+        Args: { target_topic_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: 'admin' | 'user'
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }

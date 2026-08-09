@@ -35,6 +35,25 @@ const responseSchema = z.object({
 export type TopicAssignmentCandidate = z.infer<typeof assignmentSchema>
 export type TopicSuggestionCandidate = z.infer<typeof suggestionSchema>
 
+const CLASSIFIER_REQUEST_CONCURRENCY = 2
+
+async function mapWithConcurrency<T, R>(
+  values: T[],
+  concurrency: number,
+  mapper: (value: T) => Promise<R>
+) {
+  const results: R[] = []
+  let cursor = 0
+  const workers = Array.from({ length: Math.min(concurrency, values.length) }, async () => {
+    while (cursor < values.length) {
+      const index = cursor++
+      results[index] = await mapper(values[index])
+    }
+  })
+  await Promise.all(workers)
+  return results
+}
+
 export function assignmentReviewStatus(
   confidence: number,
   calibratedPrecision: number,
@@ -140,7 +159,7 @@ export async function classifyMarkdownAgainstTopics(params: {
     synonyms: topic.synonyms,
   }))
   const chunks = splitMarkdownByHeadings(params.markdown)
-  const responses = await Promise.all(chunks.map(async (chunk) => {
+  const responses = await mapWithConcurrency(chunks, CLASSIFIER_REQUEST_CONCURRENCY, async (chunk) => {
     const response = await anthropic.messages.create({
       model: params.model,
       max_tokens: 2_048,
@@ -153,7 +172,7 @@ export async function classifyMarkdownAgainstTopics(params: {
     const textBlock = response.content.find((block) => block.type === 'text')
     if (!textBlock || textBlock.type !== 'text') throw new Error('Topic classifier returned no text')
     return responseSchema.parse(JSON.parse(extractJson(textBlock.text)))
-  }))
+  })
 
   const approvedIds = new Set(params.topics.map((topic) => topic.id))
   const assignments = responses

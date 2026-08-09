@@ -78,40 +78,50 @@ export async function PATCH(request: Request) {
       : NextResponse.json({ ok: true })
   }
 
+  const { data: existingTopic, error: existingError } = await admin
+    .from('topics')
+    .select('id')
+    .eq('slug', parsed.data.slug)
+    .maybeSingle()
+  if (existingError) {
+    return NextResponse.json({ error: 'Could not validate topic slug' }, { status: 500 })
+  }
+  if (existingTopic) {
+    return NextResponse.json(
+      { error: 'Topic slug already exists; merge the suggestion instead' },
+      { status: 409 }
+    )
+  }
+
   if (parsed.data.parentId) {
-    const [{ data: parent, error: parentError }, { data: existingTopic, error: existingError }] =
-      await Promise.all([
-        admin.from('topics').select('id, parent_id').eq('id', parsed.data.parentId).maybeSingle(),
-        admin.from('topics').select('id').eq('slug', parsed.data.slug).maybeSingle(),
-      ])
-    if (parentError || existingError) {
+    const { data: parent, error: parentError } = await admin
+      .from('topics')
+      .select('id, parent_id')
+      .eq('id', parsed.data.parentId)
+      .maybeSingle()
+    if (parentError) {
       return NextResponse.json({ error: 'Could not validate topic hierarchy' }, { status: 500 })
     }
-    if (!parent || parent.parent_id || existingTopic?.id === parent.id) {
+    if (!parent || parent.parent_id) {
       return NextResponse.json({ error: 'Parent must be a different top-level topic' }, { status: 400 })
-    }
-    if (existingTopic) {
-      const { data: child, error: childError } = await admin
-        .from('topics')
-        .select('id')
-        .eq('parent_id', existingTopic.id)
-        .limit(1)
-        .maybeSingle()
-      if (childError) return NextResponse.json({ error: 'Could not validate topic hierarchy' }, { status: 500 })
-      if (child) {
-        return NextResponse.json({ error: 'Topic with children must remain top-level' }, { status: 400 })
-      }
     }
   }
 
-  const { data: topic, error: topicError } = await admin.from('topics').upsert({
+  const { data: topic, error: topicError } = await admin.from('topics').insert({
     slug: parsed.data.slug,
     display_name: parsed.data.displayName,
     description: parsed.data.description,
     parent_id: parsed.data.parentId,
     active: true,
-  }, { onConflict: 'slug' }).select('id').single()
-  if (topicError) return NextResponse.json({ error: topicError.message }, { status: 500 })
+  }).select('id').single()
+  if (topicError) {
+    return topicError.code === '23505'
+      ? NextResponse.json(
+          { error: 'Topic slug already exists; merge the suggestion instead' },
+          { status: 409 }
+        )
+      : NextResponse.json({ error: topicError.message }, { status: 500 })
+  }
 
   const { error } = await admin.from('topic_suggestions').update({
     review_state: 'approved',

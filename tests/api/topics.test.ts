@@ -12,13 +12,19 @@ vi.mock('@/lib/data/topics', () => ({
 }))
 
 import { GET as getPublicTopics } from '@/app/api/topics/route'
-import { GET as getAdminReviewQueue } from '@/app/api/admin/topics/suggestions/route'
+import {
+  GET as getAdminReviewQueue,
+  PATCH as updateSuggestion,
+} from '@/app/api/admin/topics/suggestions/route'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { getApprovedTopicHierarchy } from '@/lib/data/topics'
+import { isAdminUser } from '@/lib/auth/is-admin-server'
+import { makeChain } from '@/tests/helpers/supabase-chain'
 
 const mockedCreateClient = vi.mocked(createClient)
 const mockedCreateAdminClient = vi.mocked(createAdminClient)
 const mockedHierarchy = vi.mocked(getApprovedTopicHierarchy)
+const mockedIsAdminUser = vi.mocked(isAdminUser)
 
 describe('topic API visibility', () => {
   beforeEach(() => {
@@ -59,5 +65,37 @@ describe('topic API visibility', () => {
     const response = await getAdminReviewQueue()
     expect(response.status).toBe(403)
     expect(mockedCreateAdminClient).not.toHaveBeenCalled()
+  })
+
+  it('rejects suggestion approval when its slug already belongs to a topic', async () => {
+    mockedCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'admin' } } }) },
+    } as never)
+    mockedIsAdminUser.mockResolvedValue(true)
+    const existingTopic = makeChain({
+      data: { id: '11111111-1111-4111-8111-111111111111' },
+      error: null,
+    })
+    const admin = { from: vi.fn().mockReturnValue(existingTopic) }
+    mockedCreateAdminClient.mockReturnValue(admin as never)
+
+    const response = await updateSuggestion(new Request('http://localhost/api/admin/topics/suggestions', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        action: 'approve',
+        id: '22222222-2222-4222-8222-222222222222',
+        slug: 'budget',
+        displayName: 'Budget rewrite',
+        description: '',
+        parentId: null,
+      }),
+    }))
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      error: 'Topic slug already exists; merge the suggestion instead',
+    })
+    expect(existingTopic.insert).not.toHaveBeenCalled()
   })
 })

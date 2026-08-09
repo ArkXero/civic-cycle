@@ -1,7 +1,15 @@
 import { describe, expect, it, vi } from 'vite-plus/test'
+const { mockAnthropicCreate } = vi.hoisted(() => ({
+  mockAnthropicCreate: vi.fn(),
+}))
+vi.mock('@/lib/anthropic', () => ({
+  anthropic: { messages: { create: mockAnthropicCreate } },
+}))
+
 import { getMeetingIdsForTopicSlugs, normalizeTopicSlugs } from '@/lib/data/topics'
 import {
   assignmentReviewStatus,
+  classifyMarkdownAgainstTopics,
   rollupTopicAssignments,
   validateTopicAssignments,
 } from '@/lib/topic-classification'
@@ -94,5 +102,33 @@ describe('topic filtering and confidence gates', () => {
         { quote: 'vote', source: 'item', page: 2 },
       ],
     }])
+  })
+
+  it('limits concurrent classifier requests for oversized documents', async () => {
+    let activeRequests = 0
+    let maxActiveRequests = 0
+    mockAnthropicCreate.mockImplementation(async () => {
+      activeRequests++
+      maxActiveRequests = Math.max(maxActiveRequests, activeRequests)
+      await new Promise((resolve) => setTimeout(resolve, 2))
+      activeRequests--
+      return {
+        content: [{ type: 'text', text: '{"assignments":[],"suggestions":[]}' }],
+      } as never
+    })
+
+    const markdown = Array.from(
+      { length: 6 },
+      (_, index) => `## Section ${index}\n${`word-${index} `.repeat(1_800)}`
+    ).join('\n\n')
+    await classifyMarkdownAgainstTopics({
+      markdown,
+      sourceLabel: 'Oversized attachment',
+      topics: [],
+      model: 'test-model',
+    })
+
+    expect(mockAnthropicCreate.mock.calls.length).toBeGreaterThan(2)
+    expect(maxActiveRequests).toBe(2)
   })
 })

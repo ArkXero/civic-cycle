@@ -64,6 +64,19 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
       shouldImportRegularMeeting(districtId, m.name)
     )
 
+    const { data: existingMeetings, error: existingMeetingsError } = await adminClient
+      .from('meetings')
+      .select('id, source_url, status')
+      .eq('source', 'boarddocs')
+      .eq('district_id', districtId)
+    if (existingMeetingsError) {
+      console.error(`Failed to load existing meetings for ${districtId}:`, existingMeetingsError)
+      continue
+    }
+    const existingBySourceUrl = new Map(
+      (existingMeetings ?? []).map((existing) => [existing.source_url, existing])
+    )
+
     let imported = 0
     let retriedIncomplete = 0
     let skippedDuplicates = 0
@@ -72,10 +85,16 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
 
     for (const meeting of regularMeetings) {
       try {
+        const sourceUrl = getBoardDocsUrl(meeting.id, districtId)
+        const knownMeeting = existingBySourceUrl.get(sourceUrl)
+        if (knownMeeting && knownMeeting.status !== 'pending' && knownMeeting.status !== 'failed') {
+          skippedDuplicates++
+          continue
+        }
+
         const content = await getMeetingContent(meeting.id, districtId, {
           includeAttachments: attachmentIngestionEnabled(),
         })
-        const sourceUrl = getBoardDocsUrl(meeting.id, districtId)
         const meetingDate = content.date.toISOString().split('T')[0]
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,12 +124,18 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
         let isRetry = false
 
         if (!targetMeeting) {
-          const { data: existingMeeting, error: existingError } = await adminClient
-            .from('meetings')
-            .select('id, status')
-            .eq('source', 'boarddocs')
-            .eq('source_url', sourceUrl)
-            .single()
+          let existingMeeting = knownMeeting
+          let existingError = null
+          if (!existingMeeting) {
+            const lookup = await adminClient
+              .from('meetings')
+              .select('id, source_url, status')
+              .eq('source', 'boarddocs')
+              .eq('source_url', sourceUrl)
+              .single()
+            existingMeeting = lookup.data ?? undefined
+            existingError = lookup.error
+          }
 
           if (existingError || !existingMeeting) {
             console.error(`Failed to load existing ${districtId} meeting "${content.title}":`, existingError)

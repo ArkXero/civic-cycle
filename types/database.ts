@@ -548,6 +548,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      replace_meeting_topic_assignments: {
+        Args: { target_meeting_id: string; new_assignments: Json }
+        Returns: number
+      }
       refresh_meeting_topics: {
         Args: { target_meeting_id: string }
         Returns: undefined

@@ -11,6 +11,7 @@ import {
 } from '@/lib/topic-classification'
 import type { Json } from '@/types/database'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { selectCurrentMeetingDocuments } from '@/lib/meeting-ingestion'
 
 export async function POST(
   request: Request,
@@ -42,7 +43,11 @@ export async function POST(
       { data: topics, error: topicError },
     ] = await Promise.all([
       admin.from('agenda_items').select('*').eq('meeting_id', meetingId).order('item_order'),
-      admin.from('meeting_documents').select('*').eq('meeting_id', meetingId).eq('extraction_status', 'extracted'),
+      admin.from('meeting_documents')
+        .select('*')
+        .eq('meeting_id', meetingId)
+        .eq('extraction_status', 'extracted')
+        .order('created_at', { ascending: false }),
       admin.from('topics').select('*').eq('active', true),
     ])
 
@@ -58,8 +63,10 @@ export async function POST(
     const classifierVersion = `node-anthropic:${model}:v1`
     const calibratedPrecision = Number(process.env.TOPIC_CLASSIFIER_CALIBRATED_PRECISION ?? 0)
     const publishThreshold = Number(process.env.TOPIC_AUTO_PUBLISH_THRESHOLD ?? 1)
-    let assignmentCount = 0
     let preservedReviewedCount = 0
+    const currentDocuments = selectCurrentMeetingDocuments(documents ?? [])
+    const stagedAssignments: Json[] = []
+    const stagedSuggestions: TopicSuggestionCandidate[] = []
 
     for (const item of items) {
       const itemLabel = `${item.item_order} ${item.title}`
@@ -72,7 +79,7 @@ export async function POST(
       ].filter(Boolean).join('\n\n')
       const sources = [
         { markdown: agendaSource, sourceLabel: itemLabel },
-        ...(documents ?? [])
+        ...currentDocuments
           .filter((document) => document.agenda_item_id === item.id && document.extracted_markdown)
           .map((document) => ({
             markdown: document.extracted_markdown as string,
@@ -102,18 +109,12 @@ export async function POST(
         (reviewedAssignments ?? []).map((assignment) => assignment.topic_id)
       )
 
-      const { error: clearError } = await admin.from('agenda_item_topics')
-        .delete()
-        .eq('agenda_item_id', item.id)
-        .is('reviewed_at', null)
-      if (clearError) throw clearError
-
       for (const assignment of rollupTopicAssignments(itemAssignments)) {
         if (reviewedTopicIds.has(assignment.topic_id)) {
           preservedReviewedCount++
           continue
         }
-        const { error } = await admin.from('agenda_item_topics').upsert({
+        stagedAssignments.push({
           agenda_item_id: item.id,
           topic_id: assignment.topic_id,
           confidence: assignment.confidence,
@@ -126,58 +127,58 @@ export async function POST(
             publishThreshold
           ),
           reviewed_at: null,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'agenda_item_id,topic_id',
-          ignoreDuplicates: true,
         })
-        if (error) throw error
-        assignmentCount++
       }
 
-      for (const suggestion of itemSuggestions) {
-        const { data: existingSuggestion, error: suggestionLookupError } = await admin
-          .from('topic_suggestions')
-          .select('id, occurrence_count, examples')
-          .eq('proposed_slug', suggestion.slug)
-          .eq('classifier_version', classifierVersion)
-          .maybeSingle()
-        if (suggestionLookupError) throw suggestionLookupError
-
-        const existingExamples = existingSuggestion && Array.isArray(existingSuggestion.examples)
-          ? existingSuggestion.examples
-          : []
-        const serializedExamples = new Set(existingExamples.map((example) => JSON.stringify(example)))
-        const newExamples = suggestion.evidence.filter(
-          (example) => !serializedExamples.has(JSON.stringify(example))
-        )
-        const examples = [...existingExamples, ...newExamples].slice(-20)
-        const suggestionResult = existingSuggestion
-          ? await admin.from('topic_suggestions').update({
-              proposed_name: suggestion.name,
-              rationale: suggestion.rationale,
-              examples: examples as Json,
-              occurrence_count: existingSuggestion.occurrence_count + (newExamples.length > 0 ? 1 : 0),
-            }).eq('id', existingSuggestion.id)
-          : await admin.from('topic_suggestions').insert({
-              proposed_slug: suggestion.slug,
-              proposed_name: suggestion.name,
-              rationale: suggestion.rationale,
-              examples: examples as Json,
-              classifier_version: classifierVersion,
-            })
-        if (suggestionResult.error) throw suggestionResult.error
-      }
+      stagedSuggestions.push(...itemSuggestions)
     }
 
-    const { error: rollupError } = await admin.rpc('refresh_meeting_topics', {
-      target_meeting_id: meetingId,
-    })
-    if (rollupError) throw rollupError
+    for (const suggestion of stagedSuggestions) {
+      const { data: existingSuggestion, error: suggestionLookupError } = await admin
+        .from('topic_suggestions')
+        .select('id, occurrence_count, examples')
+        .eq('proposed_slug', suggestion.slug)
+        .eq('classifier_version', classifierVersion)
+        .maybeSingle()
+      if (suggestionLookupError) throw suggestionLookupError
+
+      const existingExamples = existingSuggestion && Array.isArray(existingSuggestion.examples)
+        ? existingSuggestion.examples
+        : []
+      const serializedExamples = new Set(existingExamples.map((example) => JSON.stringify(example)))
+      const newExamples = suggestion.evidence.filter(
+        (example) => !serializedExamples.has(JSON.stringify(example))
+      )
+      const examples = [...existingExamples, ...newExamples].slice(-20)
+      const suggestionResult = existingSuggestion
+        ? await admin.from('topic_suggestions').update({
+            proposed_name: suggestion.name,
+            rationale: suggestion.rationale,
+            examples: examples as Json,
+            occurrence_count: existingSuggestion.occurrence_count + (newExamples.length > 0 ? 1 : 0),
+          }).eq('id', existingSuggestion.id)
+        : await admin.from('topic_suggestions').insert({
+            proposed_slug: suggestion.slug,
+            proposed_name: suggestion.name,
+            rationale: suggestion.rationale,
+            examples: examples as Json,
+            classifier_version: classifierVersion,
+          })
+      if (suggestionResult.error) throw suggestionResult.error
+    }
+
+    const { data: assignmentCount, error: replaceError } = await admin.rpc(
+      'replace_meeting_topic_assignments',
+      {
+        target_meeting_id: meetingId,
+        new_assignments: stagedAssignments,
+      }
+    )
+    if (replaceError) throw replaceError
 
     return NextResponse.json({
       ok: true,
-      assignmentCount,
+      assignmentCount: assignmentCount ?? 0,
       preservedReviewedCount,
       autoPublishEnabled: calibratedPrecision >= 0.9,
       classifierVersion,

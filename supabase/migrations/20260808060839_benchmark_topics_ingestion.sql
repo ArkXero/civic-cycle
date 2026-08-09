@@ -188,6 +188,82 @@ as $$
   group by ai.meeting_id, ait.topic_id;
 $$;
 
+create or replace function public.replace_meeting_topic_assignments(
+  target_meeting_id uuid,
+  new_assignments jsonb
+)
+returns integer
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  inserted_count integer;
+begin
+  if new_assignments is null or jsonb_typeof(new_assignments) is distinct from 'array' then
+    raise exception 'new_assignments must be a JSON array' using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1
+    from jsonb_to_recordset(new_assignments) as assignment(agenda_item_id uuid)
+    left join public.agenda_items ai
+      on ai.id = assignment.agenda_item_id
+      and ai.meeting_id = target_meeting_id
+    where ai.id is null
+  ) then
+    raise exception 'assignment agenda item does not belong to target meeting'
+      using errcode = '22023';
+  end if;
+
+  perform pg_advisory_xact_lock(
+    hashtextextended('meeting-topic-retag:' || target_meeting_id::text, 0)
+  );
+
+  delete from public.agenda_item_topics ait
+  using public.agenda_items ai
+  where ait.agenda_item_id = ai.id
+    and ai.meeting_id = target_meeting_id
+    and ait.reviewed_at is null;
+
+  insert into public.agenda_item_topics (
+    agenda_item_id,
+    topic_id,
+    confidence,
+    rationale,
+    evidence,
+    classifier_version,
+    review_status,
+    reviewed_at,
+    updated_at
+  )
+  select
+    assignment.agenda_item_id,
+    assignment.topic_id,
+    assignment.confidence,
+    assignment.rationale,
+    assignment.evidence,
+    assignment.classifier_version,
+    assignment.review_status,
+    null,
+    now()
+  from jsonb_to_recordset(new_assignments) as assignment(
+    agenda_item_id uuid,
+    topic_id uuid,
+    confidence numeric,
+    rationale text,
+    evidence jsonb,
+    classifier_version text,
+    review_status text
+  )
+  on conflict (agenda_item_id, topic_id) do nothing;
+
+  get diagnostics inserted_count = row_count;
+  perform public.refresh_meeting_topics(target_meeting_id);
+  return inserted_count;
+end;
+$$;
+
 create or replace function public.refresh_topic_meeting_rollups(target_topic_id uuid)
 returns void
 language plpgsql
@@ -263,5 +339,7 @@ grant select, insert, update, delete on
 to service_role;
 grant execute on function public.refresh_meeting_topics(uuid) to service_role;
 grant execute on function public.refresh_topic_meeting_rollups(uuid) to service_role;
+grant execute on function public.replace_meeting_topic_assignments(uuid, jsonb) to service_role;
 revoke execute on function public.refresh_meeting_topics(uuid) from public, anon, authenticated;
 revoke execute on function public.refresh_topic_meeting_rollups(uuid) from public, anon, authenticated;
+revoke execute on function public.replace_meeting_topic_assignments(uuid, jsonb) from public, anon, authenticated;

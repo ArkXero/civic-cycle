@@ -65,6 +65,7 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
     )
 
     let imported = 0
+    let retriedIncomplete = 0
     let skippedDuplicates = 0
     const skippedOld = boardDocsMeetings.length - recentMeetings.length
     const skippedNonRegular = recentMeetings.length - regularMeetings.length
@@ -100,26 +101,53 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
           continue
         }
 
-        if (!insertedRows || insertedRows.length === 0) {
-          skippedDuplicates++
-          continue
+        let targetMeeting = insertedRows?.[0] as { id: string; status?: string } | undefined
+        let isRetry = false
+
+        if (!targetMeeting) {
+          const { data: existingMeeting, error: existingError } = await adminClient
+            .from('meetings')
+            .select('id, status')
+            .eq('source', 'boarddocs')
+            .eq('source_url', sourceUrl)
+            .single()
+
+          if (existingError || !existingMeeting) {
+            console.error(`Failed to load existing ${districtId} meeting "${content.title}":`, existingError)
+            continue
+          }
+          if (existingMeeting.status !== 'pending' && existingMeeting.status !== 'failed') {
+            skippedDuplicates++
+            continue
+          }
+
+          targetMeeting = existingMeeting
+          isRetry = true
         }
 
-        const insertedMeeting = insertedRows[0]
+        try {
+          await persistMeetingIngestion(adminClient, targetMeeting.id, content)
+        } catch (ingestionError) {
+          const detail = ingestionError instanceof Error ? ingestionError.message : String(ingestionError)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (adminClient.from('meetings') as any)
+            .update({ status: 'failed', error_message: `Agenda ingestion failed: ${detail}` })
+            .eq('id', targetMeeting.id)
+          throw ingestionError
+        }
 
-        await persistMeetingIngestion(adminClient, insertedMeeting.id, content)
-
-        runSummarize(insertedMeeting.id, content.fullText, content.title, adminClient).catch((err) => {
-          console.error('Auto-summarization failed for meeting', insertedMeeting.id, err)
+        runSummarize(targetMeeting.id, content.fullText, content.title, adminClient).catch((err) => {
+          console.error('Auto-summarization failed for meeting', targetMeeting.id, err)
         })
 
         logActivity(
           ActivityTypes.MEETING_IMPORTED,
           `Auto-imported ${district.uiLabel} meeting "${content.title}"`,
-          { meetingId: insertedMeeting.id, districtId, boarddocsId: meeting.id, itemCount: content.itemCount }
+          { meetingId: targetMeeting.id, districtId, boarddocsId: meeting.id, itemCount: content.itemCount, isRetry }
         ).catch(() => {})
 
-        imported++
+        if (isRetry) retriedIncomplete++
+        else imported++
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error'
         console.error(`Failed to import ${districtId} meeting "${meeting.name}":`, msg)
@@ -127,7 +155,7 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
     }
 
     console.log(
-      `Import complete for ${districtId}: ${imported} imported, ` +
+      `Import complete for ${districtId}: ${imported} imported, ${retriedIncomplete} incomplete retried, ` +
       `${skippedDuplicates} duplicates skipped, ${skippedNonRegular} non-regular skipped, ` +
       `${skippedOld} old skipped, ${boardDocsMeetings.length} total`
     )

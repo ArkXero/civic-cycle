@@ -30,7 +30,17 @@ describe('topic ingestion migration security', () => {
     expect(migration).toContain('to service_role')
     expect(migration).toContain('refresh_topic_meeting_rollups')
     expect(migration).toContain('revoke execute on function public.refresh_topic_meeting_rollups(uuid) from public, anon, authenticated')
+    expect(migration).toContain('replace_meeting_topic_assignments')
+    expect(migration).toContain('revoke execute on function public.replace_meeting_topic_assignments(uuid, jsonb) from public, anon, authenticated')
     expect(migration).toContain("review_status = 'approved'")
+  })
+
+  it('replaces automatic assignments and meeting rollups in one transaction', () => {
+    expect(migration).toMatch(
+      /function public\.replace_meeting_topic_assignments[\s\S]*delete from public\.agenda_item_topics[\s\S]*insert into public\.agenda_item_topics[\s\S]*perform public\.refresh_meeting_topics/
+    )
+    expect(migration).toContain('pg_advisory_xact_lock')
+    expect(migration).toContain('ait.reviewed_at is null')
   })
 
   it('indexes attachment lookups and every non-primary foreign key', () => {

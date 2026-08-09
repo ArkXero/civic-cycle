@@ -4,8 +4,32 @@ import type { IngestedAgendaItem, MeetingContentResult } from '@/lib/boarddocs'
 
 type DatabaseClient = SupabaseClient<Database>
 
+type VersionedMeetingDocument = Pick<
+  Database['public']['Tables']['meeting_documents']['Row'],
+  'id' | 'external_file_id' | 'created_at'
+>
+
 export function attachmentIngestionEnabled() {
   return process.env.BOARDDOCS_ATTACHMENT_INGESTION === 'enabled'
+}
+
+export function selectCurrentMeetingDocuments<T extends VersionedMeetingDocument>(
+  documents: T[]
+): T[] {
+  const currentByExternalId = new Map<string, T>()
+
+  for (const document of documents) {
+    const current = currentByExternalId.get(document.external_file_id)
+    if (
+      !current ||
+      document.created_at > current.created_at ||
+      (document.created_at === current.created_at && document.id > current.id)
+    ) {
+      currentByExternalId.set(document.external_file_id, document)
+    }
+  }
+
+  return [...currentByExternalId.values()]
 }
 
 async function persistDocument(

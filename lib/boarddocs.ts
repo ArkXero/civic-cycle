@@ -30,6 +30,51 @@ export interface AgendaItem {
   hasAttachment: boolean
 }
 
+export const BOARD_DOCS_MOTION_PARSER_VERSION = 'boarddocs-motion-v2'
+
+export type BoardDocsMotionType =
+  | 'original'
+  | 'main'
+  | 'amendment'
+  | 'amendment_to_amendment'
+  | 'amended_amendment'
+  | 'amended_final'
+  | 'procedural'
+  | 'postponed'
+  | 'tabled'
+  | 'withdrawn'
+  | 'other'
+
+export type BoardDocsMotionOutcome =
+  | 'passed'
+  | 'failed'
+  | 'postponed'
+  | 'tabled'
+  | 'withdrawn'
+  | 'unknown'
+
+export interface BoardDocsMotion {
+  sourceOrdinal: number
+  contentHash: string
+  rawHtml: string
+  rawText: string
+  normalizedText: string
+  motionType: BoardDocsMotionType
+  parentOrdinal: number | null
+  isFinal: boolean
+  isSuperseded: boolean
+  outcome: BoardDocsMotionOutcome
+  voteYes: number | null
+  voteNo: number | null
+  voteAbstain: number | null
+  mover: string | null
+  seconder: string | null
+  rollCallYes: string[]
+  rollCallNo: string[]
+  rollCallAbstain: string[]
+  parserVersion: string
+}
+
 export interface AgendaItemContent {
   id: string
   name: string
@@ -39,7 +84,7 @@ export interface AgendaItemContent {
   bodyHtml: string
   bodyText: string
   bodyMarkdown: string
-  motions: string[]
+  motions: BoardDocsMotion[]
 }
 
 export interface BoardDocsPublicFile {
@@ -72,6 +117,11 @@ export interface MeetingContentResult {
   itemCount: number
   documentCount: number
   agendaItems: IngestedAgendaItem[]
+  expectedItemCount: number
+  complete: boolean
+  fetchErrors: string[]
+  hasOfficialResults: boolean
+  contentHash: string
 }
 
 const BOARD_DOCS_HOST = 'go.boarddocs.com'
@@ -223,16 +273,7 @@ export async function getAgendaItemContent(
   const bodyText = stripHtml(bodyHtml)
   const bodyMarkdown = htmlToMarkdown(bodyHtml)
 
-  // Extract motions and voting
-  const motions: string[] = []
-  const motionRegex = /<div class="motion[^"]*">([\s\S]*?)<\/div>\s*<\/div>/g
-  let motionMatch
-  while ((motionMatch = motionRegex.exec(html)) !== null) {
-    const motionText = stripHtml(motionMatch[1]).trim()
-    if (motionText) {
-      motions.push(motionText)
-    }
-  }
+  const motions = parseBoardDocsMotions(html)
 
   return {
     id: itemId,
@@ -245,6 +286,237 @@ export async function getAgendaItemContent(
     bodyMarkdown,
     motions,
   }
+}
+
+function getClassNames(tag: string) {
+  const quoted = tag.match(/\bclass\s*=\s*(["'])(.*?)\1/i)
+  const unquoted = tag.match(/\bclass\s*=\s*([^\s>]+)/i)
+  return (quoted?.[2] ?? unquoted?.[1] ?? '').split(/\s+/).filter(Boolean)
+}
+
+/**
+ * Extract matching divs while counting nested div tags. BoardDocs motion blocks
+ * contain nested divs, so a non-greedy regex truncates official vote records.
+ */
+export function extractBalancedDivBlocks(
+  html: string,
+  matches: (classNames: string[]) => boolean
+): string[] {
+  const blocks: string[] = []
+  const openTag = /<div\b[^>]*>/gi
+  let opening: RegExpExecArray | null
+
+  while ((opening = openTag.exec(html)) !== null) {
+    if (!matches(getClassNames(opening[0]))) continue
+
+    const start = opening.index
+    let depth = 1
+    const divTag = /<\/?div\b[^>]*>/gi
+    divTag.lastIndex = openTag.lastIndex
+    let tag: RegExpExecArray | null
+    let end = html.length
+
+    while ((tag = divTag.exec(html)) !== null) {
+      if (/^<\/div/i.test(tag[0])) {
+        depth--
+        if (depth === 0) {
+          end = divTag.lastIndex
+          break
+        }
+      } else if (!tag[0].endsWith('/>')) {
+        depth++
+      }
+    }
+
+    blocks.push(html.slice(start, end))
+    openTag.lastIndex = end
+  }
+
+  return blocks
+}
+
+function normalizeSourceText(value: string) {
+  return value
+    .replace(/\u200b/g, '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function parseRollCall(rawText: string, label: 'Yes' | 'No' | 'Abstain') {
+  const match = rawText.match(new RegExp(`(?:^|\\n)\\s*${label}:\\s*([^\\n]+)`, 'i'))
+  if (!match) return []
+  return match[1]
+    .split(',')
+    .map((name) => normalizeSourceText(name))
+    .filter((name) => name && !/^(none|n\/a)$/i.test(name))
+}
+
+function parseMotionPeople(rawText: string) {
+  const match = rawText.match(/(?:^|\n)\s*Motion by\s+(.+?),\s*second by\s+(.+?)(?:\.|\n|$)/i)
+  return {
+    mover: match ? normalizeSourceText(match[1]) : null,
+    seconder: match ? normalizeSourceText(match[2]) : null,
+  }
+}
+
+function explicitMotionOutcome(rawText: string): BoardDocsMotionOutcome {
+  const resolution = rawText.match(/Final Resolution:\s*([^\n]+)/i)?.[1] ?? ''
+  if (/\b(carries|carried|passes|passed|approved|adopted)\b/i.test(resolution)) return 'passed'
+  if (/\b(fails|failed|defeated|rejected|denied)\b/i.test(resolution)) return 'failed'
+  if (/\bpostponed\b/i.test(resolution)) return 'postponed'
+  if (/\btabled\b/i.test(resolution)) return 'tabled'
+  if (/\bwithdrawn\b/i.test(resolution)) return 'withdrawn'
+
+  if (/\bapproved with unanimous consent\b/i.test(rawText)) return 'passed'
+  if (/\bmotion (?:was )?withdrawn\b/i.test(rawText)) return 'withdrawn'
+  return 'unknown'
+}
+
+function explicitMotionType(rawText: string): BoardDocsMotionType {
+  const firstLine = rawText.split('\n').find((line) => line.trim())?.trim() ?? ''
+  if (/^Amendment to (?:the )?Amendment\b/i.test(firstLine)) return 'amendment_to_amendment'
+  if (/^Amended Amendment\b/i.test(firstLine)) return 'amended_amendment'
+  if (/^(?:Final )?Amended Main Motion\b/i.test(firstLine)) return 'amended_final'
+  if (/^Original Amendment\b|^Amendment to (?:the )?Main Motion\b/i.test(firstLine)) return 'amendment'
+  if (/^Original Main Motion\b/i.test(firstLine)) return 'original'
+  if (/^(?:Main Motion|Motion)\s*(?:#\d+)?\s*:/i.test(firstLine)) return 'main'
+  if (/\bI move to postpone\b/i.test(firstLine)) return 'postponed'
+  if (/\bI move to table\b/i.test(firstLine)) return 'tabled'
+  if (/\bwithdrawn\b/i.test(firstLine)) return 'withdrawn'
+  if (/^(?:Motion to (?:Suspend|Adjourn|Recess)|Follow-on Motion)\b/i.test(firstLine)) return 'procedural'
+  return 'other'
+}
+
+function motionNumber(rawText: string) {
+  const match = rawText.match(/(?:Main Motion|Motion)\s*#\s*(\d+)/i)
+  return match ? Number(match[1]) : null
+}
+
+function normalizeMotionText(rawText: string) {
+  const metadataStart = rawText.search(
+    /\n\s*(?:Motion by\b|Final Resolution:|Yes:|No:|Abstain:|This was approved with unanimous consent)/i
+  )
+  const wording = metadataStart >= 0 ? rawText.slice(0, metadataStart) : rawText
+  return normalizeSourceText(
+    wording.replace(
+      /^(?:(?:Original|Amended|Final Amended)\s+)?(?:Main Motion|Amendment to (?:the )?(?:Main Motion|Amendment)|Amended Amendment|Follow-on Motion|Motion to [^:]+)(?:\s*#\s*\d+)?\s*:\s*/i,
+      ''
+    )
+  )
+}
+
+function findClosestPriorMotion(
+  motions: BoardDocsMotion[],
+  currentIndex: number,
+  types: BoardDocsMotionType[],
+  number: number | null
+) {
+  for (let index = currentIndex - 1; index >= 0; index--) {
+    const candidate = motions[index]
+    if (!types.includes(candidate.motionType)) continue
+    if (number !== null && motionNumber(candidate.rawText) !== number) continue
+    return candidate
+  }
+  return null
+}
+
+export function parseBoardDocsMotions(html: string): BoardDocsMotion[] {
+  const blocks = extractBalancedDivBlocks(html, (classNames) => classNames.includes('motion'))
+  const motions = blocks.map((rawHtml, sourceOrdinal): BoardDocsMotion => {
+    const rawText = stripHtml(rawHtml)
+    const rollCallYes = parseRollCall(rawText, 'Yes')
+    const rollCallNo = parseRollCall(rawText, 'No')
+    const rollCallAbstain = parseRollCall(rawText, 'Abstain')
+    const people = parseMotionPeople(rawText)
+    const motionType = explicitMotionType(rawText)
+
+    return {
+      sourceOrdinal,
+      contentHash: createHash('sha256').update(rawHtml.replace(/\r\n?/g, '\n').trim()).digest('hex'),
+      rawHtml,
+      rawText,
+      normalizedText: normalizeMotionText(rawText),
+      motionType,
+      parentOrdinal: null,
+      isFinal: motionType === 'amended_final' || motionType === 'amended_amendment',
+      isSuperseded: false,
+      outcome: explicitMotionOutcome(rawText),
+      voteYes: rollCallYes.length > 0 ? rollCallYes.length : null,
+      voteNo: rollCallNo.length > 0 ? rollCallNo.length : null,
+      voteAbstain: rollCallAbstain.length > 0 ? rollCallAbstain.length : null,
+      ...people,
+      rollCallYes,
+      rollCallNo,
+      rollCallAbstain,
+      parserVersion: BOARD_DOCS_MOTION_PARSER_VERSION,
+    }
+  })
+
+  for (let index = 0; index < motions.length; index++) {
+    const motion = motions[index]
+    const number = motionNumber(motion.rawText)
+    let parent: BoardDocsMotion | null = null
+
+    if (motion.motionType === 'amendment_to_amendment') {
+      parent = findClosestPriorMotion(motions, index, ['amendment'], number)
+    } else if (motion.motionType === 'amendment') {
+      parent = findClosestPriorMotion(motions, index, ['original', 'main'], number)
+    } else if (motion.motionType === 'amended_amendment') {
+      parent = findClosestPriorMotion(motions, index, ['amendment'], number)
+    } else if (motion.motionType === 'amended_final') {
+      parent = findClosestPriorMotion(motions, index, ['original', 'main'], number)
+    }
+
+    if (parent) {
+      motion.parentOrdinal = parent.sourceOrdinal
+      if (motion.motionType === 'amended_amendment' || motion.motionType === 'amended_final') {
+        parent.isSuperseded = true
+      }
+    }
+  }
+
+  for (const motion of motions) {
+    if (
+      (motion.motionType === 'main' || motion.motionType === 'original') &&
+      !motion.isSuperseded &&
+      motion.outcome !== 'unknown'
+    ) {
+      motion.isFinal = true
+    }
+  }
+
+  return motions
+}
+
+export function hashBoardDocsContent(
+  title: string,
+  date: Date,
+  agendaItems: IngestedAgendaItem[]
+) {
+  const canonical = {
+    title: normalizeSourceText(title),
+    date: date.toISOString().slice(0, 10),
+    agendaItems: agendaItems.map(({ agenda, content, documents }) => ({
+      id: agenda.id,
+      order: agenda.order,
+      name: normalizeSourceText(content.name || agenda.name),
+      category: normalizeSourceText(content.category || agenda.category),
+      type: normalizeSourceText(content.type || agenda.type),
+      recommendedAction: normalizeSourceText(content.recommendedAction),
+      bodyMarkdown: content.bodyMarkdown,
+      motions: content.motions.map((motion) => ({
+        contentHash: motion.contentHash,
+        parserVersion: motion.parserVersion,
+      })),
+      documents: documents.map((document) => ({
+        id: document.id,
+        checksumSha256: document.checksumSha256,
+        status: document.status,
+      })),
+    })),
+  }
+  return createHash('sha256').update(JSON.stringify(canonical)).digest('hex')
 }
 
 // Extract a labeled field from the agenda item HTML
@@ -512,6 +784,7 @@ export async function getMeetingContent(
   const agendaItems = await getMeetingAgenda(meetingId, districtId)
 
   const ingestedItems: IngestedAgendaItem[] = []
+  const fetchErrors: string[] = []
 
   for (const item of agendaItems) {
     try {
@@ -535,7 +808,9 @@ export async function getMeetingContent(
         })),
       })
     } catch (err) {
-      console.error(`Failed to fetch agenda item ${item.id} (${item.name}):`, err)
+      const detail = err instanceof Error ? err.message : String(err)
+      fetchErrors.push(`${item.id}: ${detail}`)
+      console.error(`Failed to fetch agenda item ${item.id} (${item.name}):`, detail)
     }
   }
 
@@ -559,7 +834,10 @@ export async function getMeetingContent(
     if (content.recommendedAction) section += `Recommended Action: ${content.recommendedAction}\n`
     if (content.bodyMarkdown) section += `\n${content.bodyMarkdown}\n`
     if (content.motions.length > 0) {
-      section += `\n### Motions & Voting\n${content.motions.map((motion) => `- ${motion}`).join('\n')}\n`
+      section += `\n### Motions & Voting\n${content.motions.map((motion) =>
+        `- [source_motion_hash: ${motion.contentHash}] [type: ${motion.motionType}] ` +
+        `[outcome: ${motion.outcome}] ${motion.rawText}`
+      ).join('\n')}\n`
     }
     for (const document of documents) {
       if (document.markdown) {
@@ -571,6 +849,9 @@ export async function getMeetingContent(
 
   const header = `# ${meeting.name}\nDate: ${meeting.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n\n`
   const fullText = header + sections.join('\n---\n\n')
+  const hasOfficialResults = ingestedItems.some((item) =>
+    item.content.motions.some((motion) => motion.outcome !== 'unknown')
+  )
 
   return {
     title: meeting.name,
@@ -579,6 +860,11 @@ export async function getMeetingContent(
     itemCount: ingestedItems.length,
     documentCount: ingestedItems.reduce((count, item) => count + item.documents.length, 0),
     agendaItems: ingestedItems,
+    expectedItemCount: agendaItems.length,
+    complete: fetchErrors.length === 0 && ingestedItems.length === agendaItems.length,
+    fetchErrors,
+    hasOfficialResults,
+    contentHash: hashBoardDocsContent(meeting.name, meeting.date, ingestedItems),
   }
 }
 

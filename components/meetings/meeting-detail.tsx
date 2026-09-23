@@ -3,20 +3,29 @@ import { Calendar, Building2, ExternalLink, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { KeyDecisions } from './key-decisions'
+import { MotionTimeline } from './motion-timeline'
 import { ActionItems } from './action-items'
 import { SummarizeButton } from './summarize-button'
 import { RetagButton } from './retag-button'
 import { formatDate } from '@/lib/utils'
 import type { MeetingWithSummary } from '@/types'
+import type { MotionTimelineItem } from '@/lib/data/motions'
 
 interface MeetingDetailProps {
   meeting: MeetingWithSummary
   isAuthenticated?: boolean
   isAdmin?: boolean
+  motions?: MotionTimelineItem[]
+  motionError?: string | null
 }
 
-export function MeetingDetail({ meeting, isAuthenticated = false, isAdmin = false }: MeetingDetailProps) {
+export function MeetingDetail({
+  meeting,
+  isAuthenticated = false,
+  isAdmin = false,
+  motions = [],
+  motionError = null,
+}: MeetingDetailProps) {
   return (
     <div className="space-y-6">
       {/* Back button */}
@@ -102,8 +111,12 @@ export function MeetingDetail({ meeting, isAuthenticated = false, isAdmin = fals
             </CardContent>
           </Card>
 
-          {/* Key Decisions */}
-          <KeyDecisions decisions={meeting.summary.key_decisions} />
+          <MotionTimeline
+            motions={motions}
+            legacyDecisions={meeting.summary.key_decisions}
+            boardDocsUrl={meeting.source_url}
+            error={motionError}
+          />
 
           {/* Action Items */}
           <ActionItems items={meeting.summary.action_items} />

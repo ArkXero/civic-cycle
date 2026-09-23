@@ -16,6 +16,7 @@ import {
   estimateTokens,
   chunkTranscript,
   SummaryGenerationError,
+  validateAndCanonicalizeKeyDecisions,
 } from '@/lib/anthropic'
 
 // ─── estimateTokens ────────────────────────────────────────────────────────
@@ -69,6 +70,21 @@ describe('chunkTranscript', () => {
     const chunks = chunkTranscript(transcript, 150)
     const rejoined = chunks.join('\n\n')
     expect(rejoined).toContain('paragraph-')
+  })
+
+  it('splits a single oversized paragraph within the token limit', () => {
+    const transcript = 'x'.repeat(2_001)
+    const chunks = chunkTranscript(transcript, 100)
+
+    expect(chunks.length).toBeGreaterThan(1)
+    expect(chunks.every((chunk) => estimateTokens(chunk) <= 100)).toBe(true)
+    expect(chunks.join('')).toBe(transcript)
+  })
+
+  it.each([0, -1, 1.5, Number.NaN])('rejects invalid maxTokens value %s', (maxTokens) => {
+    expect(() => chunkTranscript('Transcript', maxTokens)).toThrow(
+      'maxTokens must be a positive integer'
+    )
   })
 })
 
@@ -211,6 +227,30 @@ describe('summarizeMeeting', () => {
     expect(error.fallbackEligible).toBe(true)
   })
 
+  it('turns a null JSON response into a fallback-eligible structure error', async () => {
+    mockCreate.mockResolvedValueOnce(mockResponse('null'))
+
+    const error = await captureSummaryGenerationError(summarizeMeeting('Test transcript'))
+    expect(error.message).toContain('invalid_summary')
+    expect(error.fallbackEligible).toBe(true)
+  })
+
+  it.each([
+    ['topic', { topics: ['Budget', null] }, 'missing_topics'],
+    ['decision', { key_decisions: [null] }, 'invalid_key_decisions'],
+    ['action item', { action_items: [{ item: '', responsible_party: null, deadline: null }] }, 'invalid_action_items'],
+    ['sentiment', { sentiment: 'optimistic' }, 'invalid_sentiment'],
+  ])('rejects a malformed %s entry', async (_label, override, issueCode) => {
+    mockCreate.mockResolvedValueOnce(mockResponse(JSON.stringify({
+      ...JSON.parse(validSummaryJson),
+      ...override,
+    })))
+
+    const error = await captureSummaryGenerationError(summarizeMeeting('Test transcript'))
+    expect(error.message).toContain(issueCode)
+    expect(error.fallbackEligible).toBe(true)
+  })
+
   it('throws when the API returns no text content block', async () => {
     mockCreate.mockResolvedValueOnce({
       content: [{ type: 'tool_use', id: 'x', name: 'y', input: {} }],
@@ -264,5 +304,77 @@ describe('synthesizeChunkSummaries', () => {
 
     const call = mockCreate.mock.calls[0][0]
     expect(call.model).toBe('claude-sonnet-4-6')
+  })
+})
+
+describe('official motion validation', () => {
+  const officialMotion = {
+    contentHash: 'a'.repeat(64),
+    normalizedText: 'Adopt the amended policy effective September 1.',
+    motionType: 'amended_final' as const,
+    outcome: 'passed' as const,
+    voteYes: 9,
+    voteNo: 2,
+    voteAbstain: null,
+    isFinal: true,
+    isSuperseded: false,
+  }
+
+  it('uses official final wording after exact fact validation', () => {
+    const decisions = validateAndCanonicalizeKeyDecisions([{
+      decision: 'AI paraphrase',
+      source_motion_hash: officialMotion.contentHash,
+      motion_type: 'amended_final',
+      outcome: 'passed',
+      vote_yes: 9,
+      vote_no: 2,
+      vote_abstain: null,
+    }], [officialMotion])
+
+    expect(decisions[0]).toMatchObject({
+      decision: officialMotion.normalizedText,
+      source_motion_hash: officialMotion.contentHash,
+      vote_yes: 9,
+      vote_no: 2,
+      vote_abstain: null,
+    })
+  })
+
+  it('rejects model-invented outcome or tally', () => {
+    expect(() => validateAndCanonicalizeKeyDecisions([{
+      decision: 'Adopt policy',
+      source_motion_hash: officialMotion.contentHash,
+      motion_type: 'amended_final',
+      outcome: 'failed',
+      vote_yes: 1,
+      vote_no: 0,
+      vote_abstain: 0,
+    }], [officialMotion])).toThrow(`motion_fact_mismatch: ${officialMotion.contentHash}`)
+  })
+
+  it('preserves null official tallies for voice votes', () => {
+    const voiceVote = {
+      ...officialMotion,
+      contentHash: 'b'.repeat(64),
+      normalizedText: 'Postpone the item until August 27.',
+      motionType: 'postponed' as const,
+      outcome: 'passed' as const,
+      voteYes: null,
+      voteNo: null,
+      voteAbstain: null,
+    }
+    const [decision] = validateAndCanonicalizeKeyDecisions([{
+      decision: voiceVote.normalizedText,
+      source_motion_hash: voiceVote.contentHash,
+      motion_type: 'postponed',
+      outcome: 'passed',
+      vote_yes: null,
+      vote_no: null,
+      vote_abstain: null,
+    }], [voiceVote])
+
+    expect(decision.vote_yes).toBeNull()
+    expect(decision.vote_no).toBeNull()
+    expect(decision.vote_abstain).toBeNull()
   })
 })

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { getMeetingById } from "@/lib/data/meetings";
+import { getMeetingMotionTimeline } from "@/lib/data/motions";
 import { MeetingDetail } from "@/components/meetings/meeting-detail";
 import { formatDate } from "@/lib/utils";
 import { isAdminUser } from "@/lib/auth/is-admin-server";
@@ -30,9 +31,16 @@ export async function generateMetadata({
 export default async function MeetingPage({ params }: MeetingPageProps) {
   const { id } = await params;
   const supabase = await createClient();
-  const [meeting, { data: { user } }] = await Promise.all([
+  const motionResult = getMeetingMotionTimeline(createAdminClient(), id)
+    .then((motions) => ({ motions, error: null }))
+    .catch(() => ({
+      motions: [],
+      error: "Official motion records could not be loaded.",
+    }));
+  const [meeting, { data: { user } }, officialMotions] = await Promise.all([
     getMeetingById(supabase, id),
     supabase.auth.getUser(),
+    motionResult,
   ]);
 
   if (!meeting) {
@@ -42,7 +50,13 @@ export default async function MeetingPage({ params }: MeetingPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <MeetingDetail meeting={meeting} isAuthenticated={!!user} isAdmin={isAdmin} />
+      <MeetingDetail
+        meeting={meeting}
+        isAuthenticated={!!user}
+        isAdmin={isAdmin}
+        motions={officialMotions.motions}
+        motionError={officialMotions.error}
+      />
     </div>
   );
 }

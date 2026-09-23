@@ -2,12 +2,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { isAdminUser } from '@/lib/auth/is-admin-server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
-import { getBoardDocsUrl, getMeetingAgenda, getMeetingContent, listMeetings } from '@/lib/boarddocs'
-import { runSummarize } from '@/lib/run-summarize'
-import {
-  attachmentIngestionEnabled,
-  persistMeetingIngestion,
-} from '@/lib/meeting-ingestion'
+import { getBoardDocsUrl, getMeetingAgenda, listMeetings } from '@/lib/boarddocs'
+import { refreshBoardDocsMeeting } from '@/lib/boarddocs-refresh'
 import { logActivity, ActivityTypes } from '@/lib/activity'
 import {
   getSchoolDistrict,
@@ -56,9 +52,18 @@ export async function getBoardDocsMeetingsResponse(rawDistrictId: string) {
 
     const meetings = await listMeetings(districtId)
 
-    const { data: existingMeetings } = await auth.supabase
+    const { data: existingMeetings, error: existingMeetingsError } = await auth.supabase
       .from('meetings')
-      .select('id, source_url, status, district_id')
+      .select(`
+        id,
+        source_url,
+        status,
+        district_id,
+        boarddocs_last_checked_at,
+        boarddocs_results_seen_at,
+        boarddocs_refresh_error,
+        boarddocs_refresh_started_at
+      `)
       .eq('source', 'boarddocs')
       .eq('district_id', districtId) as unknown as {
         data: {
@@ -66,13 +71,33 @@ export async function getBoardDocsMeetingsResponse(rawDistrictId: string) {
           source_url: string
           status: string
           district_id: SchoolDistrictId
+          boarddocs_last_checked_at: string | null
+          boarddocs_results_seen_at: string | null
+          boarddocs_refresh_error: string | null
+          boarddocs_refresh_started_at: string | null
         }[] | null
+        error: Error | null
       }
+    if (existingMeetingsError) throw existingMeetingsError
 
-    const importedMap = new Map<string, { id: string; status: string }>(
+    const importedMap = new Map<string, {
+      id: string
+      status: string
+      lastCheckedAt: string | null
+      resultsSeenAt: string | null
+      refreshError: string | null
+      refreshStartedAt: string | null
+    }>(
       existingMeetings?.map((m) => [
         m.source_url,
-        { id: m.id, status: m.status },
+        {
+          id: m.id,
+          status: m.status,
+          lastCheckedAt: m.boarddocs_last_checked_at,
+          resultsSeenAt: m.boarddocs_results_seen_at,
+          refreshError: m.boarddocs_refresh_error,
+          refreshStartedAt: m.boarddocs_refresh_started_at,
+        },
       ]) || []
     )
 
@@ -85,6 +110,10 @@ export async function getBoardDocsMeetingsResponse(rawDistrictId: string) {
         isImported: !!dbRow,
         dbId: dbRow?.id ?? null,
         dbStatus: dbRow?.status ?? null,
+        boarddocsLastCheckedAt: dbRow?.lastCheckedAt ?? null,
+        boarddocsResultsSeenAt: dbRow?.resultsSeenAt ?? null,
+        boarddocsRefreshError: dbRow?.refreshError ?? null,
+        boarddocsRefreshStartedAt: dbRow?.refreshStartedAt ?? null,
         isRegularMeeting: shouldImportRegularMeeting(districtId, meeting.name),
       }
     })
@@ -154,88 +183,48 @@ export async function importBoardDocsMeetingResponse(rawDistrictId: string, id: 
     if (auth.error) return auth.error
 
     const district = getSchoolDistrict(districtId)
-    const sourceUrl = getBoardDocsUrl(id, districtId)
     const adminClient = createAdminClient()
-    const includeAttachments = attachmentIngestionEnabled()
-    const content = await getMeetingContent(id, districtId, { includeAttachments })
-    const meetingDate = content.date.toISOString().split('T')[0]
+    const meetings = await listMeetings(districtId)
+    const meeting = meetings.find((candidate) => candidate.id === id)
+    if (!meeting) {
+      return NextResponse.json({ error: 'Meeting not found in BoardDocs' }, { status: 404 })
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: insertedRows, error: insertError } = await (adminClient as any)
+    const result = await refreshBoardDocsMeeting(adminClient, districtId, meeting)
+    const { data: savedMeeting, error: savedMeetingError } = await adminClient
       .from('meetings')
-      .upsert({
-        title: content.title,
-        body: district.boardBodyLabel,
-        district_id: districtId,
-        meeting_date: meetingDate,
-        transcript_text: content.fullText,
-        transcript_source: 'boarddocs',
-        source: 'boarddocs',
-        source_url: sourceUrl,
-        boarddocs_id: id,
-        status: 'pending',
-      }, { onConflict: 'source,source_url', ignoreDuplicates: true })
-      .select()
-
-    if (insertError) {
-      console.error('Failed to upsert meeting:', insertError)
-      return NextResponse.json(
-        { error: 'Failed to save meeting to database' },
-        { status: 500 }
-      )
-    }
-
-    const insertedMeeting = (insertedRows as { id: string }[] | null)?.[0]
-
-    if (!insertedMeeting) {
-      const { data: existingMeeting, error: existingError } = await adminClient
-        .from('meetings')
-        .select('id, title, body, district_id, meeting_date, source_url, status, created_at, updated_at')
-        .eq('source', 'boarddocs')
-        .eq('source_url', sourceUrl)
-        .single()
-
-      if (existingError || !existingMeeting) {
-        console.error('Failed to fetch existing imported meeting:', existingError)
-        return NextResponse.json(
-          { error: 'Failed to load existing meeting' },
-          { status: 500 }
-        )
-      }
-
-      await persistMeetingIngestion(adminClient, existingMeeting.id, content)
-      if (includeAttachments) {
-        await adminClient.from('meetings').update({ transcript_text: content.fullText }).eq('id', existingMeeting.id)
-      }
-
-      return NextResponse.json({
-        message: 'Meeting already imported',
-        data: existingMeeting,
-        itemCount: content.itemCount,
-        documentCount: content.documentCount,
-        autoSummarizeStarted: false,
-      }, { status: 200 })
-    }
-
-    await persistMeetingIngestion(adminClient, insertedMeeting.id, content)
+      .select('id, status, boarddocs_last_checked_at, boarddocs_results_seen_at, boarddocs_refresh_error')
+      .eq('id', result.meetingId)
+      .single()
+    if (savedMeetingError) throw savedMeetingError
 
     logActivity(
       ActivityTypes.MEETING_IMPORTED,
-      `Imported ${district.uiLabel} meeting "${content.title}"`,
-      { meetingId: insertedMeeting.id, districtId, boarddocsId: id, itemCount: content.itemCount }
+      `BoardDocs ${result.status} for ${district.uiLabel} meeting "${meeting.name}"`,
+      {
+        meetingId: result.meetingId,
+        districtId,
+        boarddocsId: id,
+        itemCount: result.itemCount,
+        refreshStatus: result.status,
+      }
     ).catch(() => {})
 
-    runSummarize(insertedMeeting.id, content.fullText, content.title, adminClient).catch((err) => {
-      console.error('Auto-summarization failed for meeting', insertedMeeting.id, err)
-    })
-
     return NextResponse.json({
-      message: 'Meeting imported successfully',
-      data: insertedMeeting,
-      itemCount: content.itemCount,
-      documentCount: content.documentCount,
-      autoSummarizeStarted: true,
-    }, { status: 201 })
+      message: result.status === 'refreshed'
+        ? 'Meeting refreshed from BoardDocs'
+        : result.status === 'unchanged'
+          ? 'BoardDocs content unchanged'
+          : result.status === 'awaiting_results'
+            ? 'Meeting saved; awaiting official BoardDocs results'
+            : 'BoardDocs refresh failed; previous complete version preserved',
+      refreshStatus: result.status,
+      data: savedMeeting,
+      itemCount: result.itemCount,
+      documentCount: result.documentCount,
+      summaryRevision: result.summaryRevision,
+      error: result.error,
+    }, { status: 200 })
   } catch (error) {
     console.error('Error importing meeting:', error)
     return NextResponse.json(

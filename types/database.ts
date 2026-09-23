@@ -23,6 +23,12 @@ export type Database = {
           transcript_source: 'boarddocs' | 'manual_upload' | null
           source: 'boarddocs' | null
           boarddocs_id: string | null
+          boarddocs_content_hash: string | null
+          boarddocs_last_checked_at: string | null
+          boarddocs_results_seen_at: string | null
+          boarddocs_refresh_started_at: string | null
+          boarddocs_refresh_token: string | null
+          boarddocs_refresh_error: string | null
           status: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message: string | null
           digest_sent: boolean
@@ -43,6 +49,12 @@ export type Database = {
           transcript_source?: 'boarddocs' | 'manual_upload' | null
           source?: 'boarddocs' | null
           boarddocs_id?: string | null
+          boarddocs_content_hash?: string | null
+          boarddocs_last_checked_at?: string | null
+          boarddocs_results_seen_at?: string | null
+          boarddocs_refresh_started_at?: string | null
+          boarddocs_refresh_token?: string | null
+          boarddocs_refresh_error?: string | null
           status?: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message?: string | null
           digest_sent?: boolean
@@ -63,6 +75,12 @@ export type Database = {
           transcript_source?: 'boarddocs' | 'manual_upload' | null
           source?: 'boarddocs' | null
           boarddocs_id?: string | null
+          boarddocs_content_hash?: string | null
+          boarddocs_last_checked_at?: string | null
+          boarddocs_results_seen_at?: string | null
+          boarddocs_refresh_started_at?: string | null
+          boarddocs_refresh_token?: string | null
+          boarddocs_refresh_error?: string | null
           status?: 'pending' | 'processing' | 'summarized' | 'failed'
           error_message?: string | null
           digest_sent?: boolean
@@ -81,7 +99,11 @@ export type Database = {
           action_items: ActionItem[]
           topics: string[]
           published: boolean
+          source_content_hash: string | null
+          revision: number
+          schema_version: number
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -91,7 +113,11 @@ export type Database = {
           action_items?: ActionItem[]
           topics?: string[]
           published?: boolean
+          source_content_hash?: string | null
+          revision?: number
+          schema_version?: number
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -101,7 +127,11 @@ export type Database = {
           action_items?: ActionItem[]
           topics?: string[]
           published?: boolean
+          source_content_hash?: string | null
+          revision?: number
+          schema_version?: number
           created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -142,6 +172,87 @@ export type Database = {
           title?: string
           recommended_action?: string
           body_markdown?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agenda_item_motions: {
+        Row: {
+          id: string
+          meeting_id: string
+          agenda_item_id: string
+          source_ordinal: number
+          content_hash: string
+          raw_html: string
+          raw_motion_text: string
+          normalized_motion_text: string
+          motion_type: MotionType
+          parent_ordinal: number | null
+          is_final: boolean
+          is_superseded: boolean
+          outcome: MotionOutcome
+          vote_yes: number | null
+          vote_no: number | null
+          vote_abstain: number | null
+          mover: string | null
+          seconder: string | null
+          roll_call_yes: string[]
+          roll_call_no: string[]
+          roll_call_abstain: string[]
+          parser_version: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          meeting_id: string
+          agenda_item_id: string
+          source_ordinal: number
+          content_hash: string
+          raw_html: string
+          raw_motion_text: string
+          normalized_motion_text: string
+          motion_type: MotionType
+          parent_ordinal?: number | null
+          is_final?: boolean
+          is_superseded?: boolean
+          outcome?: MotionOutcome
+          vote_yes?: number | null
+          vote_no?: number | null
+          vote_abstain?: number | null
+          mover?: string | null
+          seconder?: string | null
+          roll_call_yes?: string[]
+          roll_call_no?: string[]
+          roll_call_abstain?: string[]
+          parser_version: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          meeting_id?: string
+          agenda_item_id?: string
+          source_ordinal?: number
+          content_hash?: string
+          raw_html?: string
+          raw_motion_text?: string
+          normalized_motion_text?: string
+          motion_type?: MotionType
+          parent_ordinal?: number | null
+          is_final?: boolean
+          is_superseded?: boolean
+          outcome?: MotionOutcome
+          vote_yes?: number | null
+          vote_no?: number | null
+          vote_abstain?: number | null
+          mover?: string | null
+          seconder?: string | null
+          roll_call_yes?: string[]
+          roll_call_no?: string[]
+          roll_call_abstain?: string[]
+          parser_version?: string
           created_at?: string
           updated_at?: string
         }
@@ -411,6 +522,7 @@ export type Database = {
           user_id: string
           meeting_id: string
           alert_preference_id: string | null
+          matched_keyword: string
           sent_at: string
           email_status: 'sent' | 'failed' | 'bounced'
         }
@@ -419,6 +531,7 @@ export type Database = {
           user_id: string
           meeting_id: string
           alert_preference_id?: string | null
+          matched_keyword: string
           sent_at?: string
           email_status?: 'sent' | 'failed' | 'bounced'
         }
@@ -427,6 +540,7 @@ export type Database = {
           user_id?: string
           meeting_id?: string
           alert_preference_id?: string | null
+          matched_keyword?: string
           sent_at?: string
           email_status?: 'sent' | 'failed' | 'bounced'
         }
@@ -548,6 +662,47 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      replace_agenda_item_motions: {
+        Args: { target_meeting_id: string; target_agenda_item_id: string; new_motions: Json }
+        Returns: number
+      }
+      replace_meeting_summary: {
+        Args: {
+          target_meeting_id: string
+          new_summary_text: string
+          new_topics: string[]
+          new_key_decisions: Json
+          new_action_items: Json
+          new_source_content_hash: string
+          new_schema_version: number
+          expected_refresh_token?: string | null
+          expected_boarddocs_content_hash?: string | null
+        }
+        Returns: number
+      }
+      replace_boarddocs_meeting_content: {
+        Args: {
+          target_meeting_id: string
+          target_refresh_token: string
+          new_title: string
+          new_meeting_date: string
+          new_content_hash: string
+          new_transcript_text: string | null
+          new_last_checked_at: string
+          new_results_seen_at: string | null
+          new_agenda_items: Json
+        }
+        Returns: undefined
+      }
+      mark_meeting_summary_failure: {
+        Args: {
+          target_meeting_id: string
+          failure_message: string
+          expected_refresh_token?: string | null
+          expected_boarddocs_content_hash?: string | null
+        }
+        Returns: boolean
+      }
       replace_meeting_topic_assignments: {
         Args: { target_meeting_id: string; new_assignments: Json }
         Returns: number
@@ -559,6 +714,10 @@ export type Database = {
       refresh_topic_meeting_rollups: {
         Args: { target_topic_id: string }
         Returns: undefined
+      }
+      try_begin_boarddocs_refresh: {
+        Args: { target_meeting_id: string; lease_seconds?: number }
+        Returns: string | null
       }
     }
     Enums: {
@@ -573,13 +732,37 @@ export type Database = {
 // Helper types for JSONB fields
 export interface KeyDecision {
   decision: string
-  vote_yes: number
-  vote_no: number
-  vote_abstain: number
+  source_motion_hash?: string | null
+  motion_type?: MotionType | null
+  outcome?: MotionOutcome | null
+  vote_yes: number | null
+  vote_no: number | null
+  vote_abstain: number | null
 }
+
+export type MotionType =
+  | 'original'
+  | 'main'
+  | 'amendment'
+  | 'amendment_to_amendment'
+  | 'amended_amendment'
+  | 'amended_final'
+  | 'procedural'
+  | 'postponed'
+  | 'tabled'
+  | 'withdrawn'
+  | 'other'
+
+export type MotionOutcome =
+  | 'passed'
+  | 'failed'
+  | 'postponed'
+  | 'tabled'
+  | 'withdrawn'
+  | 'unknown'
 
 export interface ActionItem {
   item: string
-  responsible_party: string
-  deadline: string
+  responsible_party: string | null
+  deadline: string | null
 }

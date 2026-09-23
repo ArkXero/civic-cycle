@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test'
-import { selectCurrentMeetingDocuments } from '@/lib/meeting-ingestion'
+import { parseBoardDocsMotions } from '@/lib/boarddocs'
+import { motionRowsForPersistence, selectCurrentMeetingDocuments } from '@/lib/meeting-ingestion'
 
 describe('meeting ingestion', () => {
   it('keeps only the newest attachment version per external file ID', () => {
@@ -22,5 +23,45 @@ describe('meeting ingestion', () => {
     ]
 
     expect(selectCurrentMeetingDocuments(documents)).toEqual([documents[1]])
+  })
+
+  it('maps nullable official motion facts without synthesizing vote counts', () => {
+    const [motion] = parseBoardDocsMotions(
+      '<div class="motion"><div>Main Motion: Adopt policy.</div><div>Final Resolution: Motion Carries</div></div>'
+    )
+    const [row] = motionRowsForPersistence({
+      agenda: {
+        id: 'agenda-1',
+        name: 'Policy',
+        order: '7.01',
+        category: 'Action',
+        type: 'Action',
+        hasAttachment: false,
+      },
+      content: {
+        id: 'agenda-1',
+        name: 'Policy',
+        category: 'Action',
+        type: 'Action',
+        recommendedAction: '',
+        bodyHtml: '',
+        bodyText: '',
+        bodyMarkdown: '',
+        motions: [motion],
+      },
+      documents: [],
+    })
+
+    expect(row).toMatchObject({
+      source_ordinal: 0,
+      content_hash: motion.contentHash,
+      normalized_motion_text: 'Adopt policy.',
+      motion_type: 'main',
+      outcome: 'passed',
+      vote_yes: null,
+      vote_no: null,
+      vote_abstain: null,
+      parser_version: 'boarddocs-motion-v2',
+    })
   })
 })

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import {
   summarizeMeeting,
   synthesizeChunkSummaries,
@@ -5,15 +6,18 @@ import {
   SummaryGenerationError,
   type MeetingSummary,
   type SummarizeResult,
+  type OfficialMotion,
 } from '@/lib/anthropic'
 import { createAdminClient } from '@/lib/supabase/server'
 import { logActivity, ActivityTypes } from '@/lib/activity'
 import { trackApiUsage } from '@/lib/track-api-usage'
 import { getSummaryFallbackModel, getSummaryModel } from '@/lib/anthropic-models'
+import type { Json } from '@/types/database'
 
 type AdminClient = ReturnType<typeof createAdminClient>
 
 const CLAUDE_TIMEOUT_MS = 120_000
+export const SUMMARY_SCHEMA_VERSION = 2
 
 interface SummaryAttemptRecord {
   model: string
@@ -33,11 +37,13 @@ type SummarizeWithFallbackParams =
       transcript: string
       title: string
       mode: 'summary'
+      officialMotions?: OfficialMotion[]
     }
   | {
       chunkSummaries: MeetingSummary[]
       title: string
       mode: 'synthesis'
+      officialMotions?: OfficialMotion[]
     }
 
 class SummarizeWithFallbackError extends Error {
@@ -86,8 +92,14 @@ async function summarizeWithFallback(params: SummarizeWithFallbackParams): Promi
   const primaryModel = getSummaryModel()
   const fallbackModel = getSummaryFallbackModel()
   const runAttempt = (model: string) => params.mode === 'summary'
-    ? summarizeMeeting(params.transcript, params.title, { model })
-    : synthesizeChunkSummaries(params.chunkSummaries, params.title, { model })
+    ? summarizeMeeting(params.transcript, params.title, {
+        model,
+        officialMotions: params.officialMotions,
+      })
+    : synthesizeChunkSummaries(params.chunkSummaries, params.title, {
+        model,
+        officialMotions: params.officialMotions,
+      })
 
   try {
     const result = await runAttempt(primaryModel)
@@ -146,22 +158,51 @@ async function summarizeWithFallback(params: SummarizeWithFallbackParams): Promi
 }
 
 /**
- * Runs the full summarization flow for a meeting:
- * sets status → processing, calls Claude, saves summary, sets status → summarized.
- *
- * On failure: sets status → failed and re-throws so callers can handle it.
- * For fire-and-forget usage, call with .catch() to swallow the throw.
+ * Generates a summary replacement while any prior summary stays visible.
+ * The database RPC swaps the summary and meeting status in one transaction.
+ * First-generation failures mark the meeting failed; refresh failures preserve
+ * the prior summary and summarized meeting status.
  */
 export async function runSummarize(
   meetingId: string,
   transcript: string,
   title: string,
-  adminClient: AdminClient
-): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (adminClient.from('meetings') as any)
-    .update({ status: 'processing', error_message: null })
-    .eq('id', meetingId)
+  adminClient: AdminClient,
+  options: {
+    sourceContentHash?: string
+    officialMotions?: OfficialMotion[]
+    refreshToken?: string
+    expectedBoardDocsContentHash?: string
+  } = {}
+): Promise<{ revision: number; replacedExisting: boolean }> {
+  const { data: existingSummary, error: existingSummaryError } = await adminClient
+    .from('summaries')
+    .select('id, revision')
+    .eq('meeting_id', meetingId)
+    .maybeSingle()
+  if (existingSummaryError) throw existingSummaryError
+  const replacedExisting = Boolean(existingSummary)
+
+  if (!replacedExisting) {
+    const processingUpdate = adminClient
+      .from('meetings')
+      .update({ status: 'processing', error_message: null })
+      .eq('id', meetingId)
+    if (options.refreshToken) processingUpdate.eq('boarddocs_refresh_token', options.refreshToken)
+    if (options.expectedBoardDocsContentHash) {
+      processingUpdate.eq('boarddocs_content_hash', options.expectedBoardDocsContentHash)
+    }
+    const { data: processingMeeting, error: processingError } = await processingUpdate
+      .select('id')
+      .maybeSingle()
+    if (processingError) throw processingError
+    if (
+      (options.refreshToken || options.expectedBoardDocsContentHash) &&
+      !processingMeeting
+    ) {
+      throw new Error('BoardDocs source changed or refresh lease was lost')
+    }
+  }
 
   let capturedAttempts: SummaryAttemptRecord[] = []
 
@@ -171,7 +212,12 @@ export async function runSummarize(
 
     if (chunks.length === 1) {
       const summaryRun = await withTimeout(
-        summarizeWithFallback({ transcript, title, mode: 'summary' }),
+        summarizeWithFallback({
+          transcript,
+          title,
+          mode: 'summary',
+          officialMotions: options.officialMotions,
+        }),
         'Claude summary request'
       )
       result = summaryRun.result
@@ -185,6 +231,7 @@ export async function runSummarize(
               transcript: chunk,
               title: `${title} (Part ${i + 1} of ${chunks.length})`,
               mode: 'summary',
+              officialMotions: options.officialMotions,
             }),
             `Claude summary request for chunk ${i + 1}`
           )
@@ -203,6 +250,7 @@ export async function runSummarize(
           chunkSummaries: chunkResults.map((r) => r.result.summary),
           title,
           mode: 'synthesis',
+          officialMotions: options.officialMotions,
         }),
         'Claude synthesis request'
       )
@@ -219,25 +267,27 @@ export async function runSummarize(
     }
 
     const { summary, usage } = result
+    const sourceContentHash = options.sourceContentHash ??
+      createHash('sha256').update(transcript).digest('hex')
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: saveError } = await (adminClient.from('summaries') as any)
-      .insert({
-        meeting_id: meetingId,
-        summary_text: summary.summary_text,
-        topics: summary.topics,
-        key_decisions: summary.key_decisions,
-        action_items: summary.action_items,
-      })
+    const { data: revision, error: saveError } = await adminClient.rpc(
+      'replace_meeting_summary',
+      {
+        target_meeting_id: meetingId,
+        new_summary_text: summary.summary_text,
+        new_topics: summary.topics,
+        new_key_decisions: summary.key_decisions as unknown as Json,
+        new_action_items: summary.action_items as unknown as Json,
+        new_source_content_hash: sourceContentHash,
+        new_schema_version: SUMMARY_SCHEMA_VERSION,
+        expected_refresh_token: options.refreshToken ?? null,
+        expected_boarddocs_content_hash: options.expectedBoardDocsContentHash ?? null,
+      }
+    )
 
     if (saveError) {
       throw new Error(`Failed to save summary: ${saveError.message}`)
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (adminClient.from('meetings') as any)
-      .update({ status: 'summarized' })
-      .eq('id', meetingId)
 
     // Track API usage and log the activity (fire-and-forget, never throws)
     const totalTokens = usage.input_tokens + usage.output_tokens
@@ -265,19 +315,22 @@ export async function runSummarize(
         }
       ),
     ])
+    return { revision: revision ?? 1, replacedExisting }
   } catch (error) {
     console.error('Summarization failed for meeting', meetingId, error)
     if (error instanceof SummarizeWithFallbackError) {
       capturedAttempts = error.attempts
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (adminClient.from('meetings') as any)
-      .update({
-        status: 'failed',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-      })
-      .eq('id', meetingId)
+    const { error: failureSaveError } = await adminClient.rpc('mark_meeting_summary_failure', {
+      target_meeting_id: meetingId,
+      failure_message: error instanceof Error ? error.message : 'Unknown error',
+      expected_refresh_token: options.refreshToken ?? null,
+      expected_boarddocs_content_hash: options.expectedBoardDocsContentHash ?? null,
+    })
+    if (failureSaveError) {
+      console.error('Failed to record summary failure for meeting', meetingId, failureSaveError)
+    }
 
     // Log the failure (fire-and-forget)
     await Promise.all([

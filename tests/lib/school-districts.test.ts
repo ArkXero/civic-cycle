@@ -4,6 +4,7 @@ import {
   SCHOOL_DISTRICT_IDS,
   getBoardDocsBaseUrl,
   getSchoolDistrict,
+  dateInSchoolDistrict,
   shouldImportRegularMeeting,
 } from '@/lib/school-districts'
 
@@ -32,6 +33,11 @@ describe('school district config', () => {
     expect(getSchoolDistrict('loudoun').schoolSystemLabel).toBe(
       'Loudoun County Public Schools'
     )
+  })
+
+  it('uses the district calendar date rather than UTC', () => {
+    expect(dateInSchoolDistrict('America/New_York', new Date('2026-08-29T01:30:00.000Z')))
+      .toBe('2026-08-28')
   })
 })
 

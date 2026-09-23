@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { listMeetings, getMeetingContent, getBoardDocsUrl } from '@/lib/boarddocs'
-import { runSummarize } from '@/lib/run-summarize'
+import { listMeetings } from '@/lib/boarddocs'
 import {
-  attachmentIngestionEnabled,
-  persistMeetingIngestion,
-} from '@/lib/meeting-ingestion'
+  refreshBoardDocsMeeting,
+  boardDocsResultsGraceDays,
+  isFutureBoardDocsMeeting,
+  shouldPollBoardDocsResults,
+} from '@/lib/boarddocs-refresh'
 import { logActivity, ActivityTypes } from '@/lib/activity'
 import {
   SCHOOL_DISTRICT_IDS,
+  dateInSchoolDistrict,
   getSchoolDistrict,
   isSchoolDistrictId,
   shouldImportRegularMeeting,
@@ -40,15 +42,16 @@ export async function POST(request: NextRequest) {
   }, { status: 202 })
 }
 
-async function runImport(targetDistrictId: SchoolDistrictId | null) {
+export async function runImport(targetDistrictId: SchoolDistrictId | null) {
   const adminClient = createAdminClient()
   const districtIds = targetDistrictId ? [targetDistrictId] : [...SCHOOL_DISTRICT_IDS]
 
-  const sixtyDaysAgo = new Date()
-  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
+  const lookbackDays = Math.max(60, boardDocsResultsGraceDays())
 
   for (const districtId of districtIds) {
     const district = getSchoolDistrict(districtId)
+    const oldestEligibleMeeting = new Date(`${dateInSchoolDistrict(district.timeZone)}T00:00:00`)
+    oldestEligibleMeeting.setDate(oldestEligibleMeeting.getDate() - lookbackDays)
     let boardDocsMeetings
 
     try {
@@ -59,162 +62,58 @@ async function runImport(targetDistrictId: SchoolDistrictId | null) {
       continue
     }
 
-    const recentMeetings = boardDocsMeetings.filter((m) => m.date >= sixtyDaysAgo)
+    const recentMeetings = boardDocsMeetings.filter((m) => m.date >= oldestEligibleMeeting)
     const regularMeetings = recentMeetings.filter((m) =>
       shouldImportRegularMeeting(districtId, m.name)
     )
 
-    const { data: existingMeetings, error: existingMeetingsError } = await adminClient
-      .from('meetings')
-      .select('id, source_url, status')
-      .eq('source', 'boarddocs')
-      .eq('district_id', districtId)
-    if (existingMeetingsError) {
-      console.error(`Failed to load existing meetings for ${districtId}:`, existingMeetingsError)
-      continue
-    }
-    const existingBySourceUrl = new Map(
-      (existingMeetings ?? []).map((existing) => [existing.source_url, existing])
-    )
-
-    let imported = 0
-    let retriedIncomplete = 0
-    let skippedDuplicates = 0
+    let refreshed = 0
+    let unchanged = 0
+    let awaitingResults = 0
+    let refreshFailed = 0
+    let skippedOutsideGrace = 0
     const skippedOld = boardDocsMeetings.length - recentMeetings.length
     const skippedNonRegular = recentMeetings.length - regularMeetings.length
 
     for (const meeting of regularMeetings) {
       try {
-        const sourceUrl = getBoardDocsUrl(meeting.id, districtId)
-        const knownMeeting = existingBySourceUrl.get(sourceUrl)
-        if (knownMeeting && knownMeeting.status !== 'pending' && knownMeeting.status !== 'failed') {
-          skippedDuplicates++
+        if (
+          !isFutureBoardDocsMeeting(meeting.date, district.timeZone) &&
+          !shouldPollBoardDocsResults(meeting.date, district.timeZone)
+        ) {
+          skippedOutsideGrace++
           continue
         }
 
-        const content = await getMeetingContent(meeting.id, districtId, {
-          includeAttachments: attachmentIngestionEnabled(),
-        })
-        const meetingDate = content.date.toISOString().split('T')[0]
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: inserted, error: insertError } = await (adminClient as any)
-          .from('meetings')
-          .upsert({
-            title: content.title,
-            body: district.boardBodyLabel,
-            district_id: districtId,
-            meeting_date: meetingDate,
-            transcript_text: content.fullText,
-            transcript_source: 'boarddocs',
-            source: 'boarddocs',
-            source_url: sourceUrl,
-            boarddocs_id: meeting.id,
-            status: 'pending',
-          }, { onConflict: 'source,source_url', ignoreDuplicates: true })
-          .select()
-        const insertedRows = inserted as { id: string }[] | null
-
-        if (insertError) {
-          console.error(`Failed to upsert ${districtId} meeting "${content.title}":`, insertError)
-          continue
-        }
-
-        let targetMeeting = insertedRows?.[0] as { id: string; status?: string } | undefined
-        let isRetry = false
-
-        if (!targetMeeting) {
-          let existingMeeting = knownMeeting
-          let existingError = null
-          if (!existingMeeting) {
-            const lookup = await adminClient
-              .from('meetings')
-              .select('id, source_url, status')
-              .eq('source', 'boarddocs')
-              .eq('source_url', sourceUrl)
-              .single()
-            existingMeeting = lookup.data ?? undefined
-            existingError = lookup.error
-          }
-
-          if (existingError || !existingMeeting) {
-            console.error(`Failed to load existing ${districtId} meeting "${content.title}":`, existingError)
-            continue
-          }
-          if (existingMeeting.status !== 'pending' && existingMeeting.status !== 'failed') {
-            skippedDuplicates++
-            continue
-          }
-
-          targetMeeting = existingMeeting
-          isRetry = true
-        }
-
-        try {
-          await persistMeetingIngestion(adminClient, targetMeeting.id, content)
-        } catch (ingestionError) {
-          const detail = ingestionError instanceof Error ? ingestionError.message : String(ingestionError)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (adminClient.from('meetings') as any)
-            .update({ status: 'failed', error_message: `Agenda ingestion failed: ${detail}` })
-            .eq('id', targetMeeting.id)
-          throw ingestionError
-        }
-
-        runSummarize(targetMeeting.id, content.fullText, content.title, adminClient).catch((err) => {
-          console.error('Auto-summarization failed for meeting', targetMeeting.id, err)
-        })
+        const result = await refreshBoardDocsMeeting(adminClient, districtId, meeting)
+        if (result.status === 'refreshed') refreshed++
+        else if (result.status === 'unchanged') unchanged++
+        else if (result.status === 'awaiting_results') awaitingResults++
+        else refreshFailed++
 
         logActivity(
           ActivityTypes.MEETING_IMPORTED,
-          `Auto-imported ${district.uiLabel} meeting "${content.title}"`,
-          { meetingId: targetMeeting.id, districtId, boarddocsId: meeting.id, itemCount: content.itemCount, isRetry }
+          `BoardDocs ${result.status} for ${district.uiLabel} meeting "${meeting.name}"`,
+          {
+            meetingId: result.meetingId,
+            districtId,
+            boarddocsId: meeting.id,
+            itemCount: result.itemCount,
+            refreshStatus: result.status,
+          }
         ).catch(() => {})
-
-        if (isRetry) retriedIncomplete++
-        else imported++
       } catch (err) {
+        refreshFailed++
         const msg = err instanceof Error ? err.message : 'Unknown error'
         console.error(`Failed to import ${districtId} meeting "${meeting.name}":`, msg)
       }
     }
 
     console.log(
-      `Import complete for ${districtId}: ${imported} imported, ${retriedIncomplete} incomplete retried, ` +
-      `${skippedDuplicates} duplicates skipped, ${skippedNonRegular} non-regular skipped, ` +
+      `Import complete for ${districtId}: ${refreshed} refreshed, ${unchanged} unchanged, ` +
+      `${awaitingResults} awaiting results, ${refreshFailed} failed, ${skippedOutsideGrace} outside grace, ` +
+      `${skippedNonRegular} non-regular skipped, ` +
       `${skippedOld} old skipped, ${boardDocsMeetings.length} total`
     )
-  }
-
-  const ninetyDaysAgo = new Date()
-  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
-  const cutoff = ninetyDaysAgo.toISOString().split('T')[0]
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let staleQuery = (adminClient.from('meetings') as any)
-    .select('id')
-    .eq('source', 'boarddocs')
-    .lt('meeting_date', cutoff)
-
-  if (targetDistrictId) {
-    staleQuery = staleQuery.eq('district_id', targetDistrictId)
-  }
-
-  const { data: staleRows } = await staleQuery as { data: { id: string }[] | null }
-
-  if (staleRows && staleRows.length > 0) {
-    const staleIds = staleRows.map((r: { id: string }) => r.id)
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (adminClient.from('summaries') as any)
-      .delete()
-      .in('meeting_id', staleIds)
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (adminClient.from('meetings') as any)
-      .delete()
-      .in('id', staleIds)
-
-    console.log(`Cleanup: deleted ${staleIds.length} stale meetings older than 90 days`)
   }
 }

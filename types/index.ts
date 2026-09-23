@@ -1,12 +1,13 @@
-import type { Database, KeyDecision, ActionItem } from './database'
+import type { Database, KeyDecision, ActionItem, MotionOutcome, MotionType } from './database'
 
 // Re-export database types
-export type { Database, KeyDecision, ActionItem }
+export type { Database, KeyDecision, ActionItem, MotionOutcome, MotionType }
 
 // Table row types (for reading data)
 export type Meeting = Database['public']['Tables']['meetings']['Row']
 export type Summary = Database['public']['Tables']['summaries']['Row']
 export type AgendaItemRow = Database['public']['Tables']['agenda_items']['Row']
+export type AgendaItemMotion = Database['public']['Tables']['agenda_item_motions']['Row']
 export type MeetingDocument = Database['public']['Tables']['meeting_documents']['Row']
 export type Topic = Database['public']['Tables']['topics']['Row']
 export type AgendaItemTopic = Database['public']['Tables']['agenda_item_topics']['Row']
@@ -38,6 +39,7 @@ export type AlertHistoryUpdate = Database['public']['Tables']['alert_history']['
 export type MeetingWithSummary = Meeting & {
   summary: Summary | null
   approvedTopics: Topic[]
+  motions?: AgendaItemMotion[]
 }
 
 // Meeting body type

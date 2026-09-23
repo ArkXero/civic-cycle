@@ -17,6 +17,7 @@ interface BoardDocsConfig {
 
 export interface SchoolDistrictConfig {
   id: SchoolDistrictId
+  timeZone: string
   uiLabel: string
   schoolSystemLabel: string
   boardBodyLabel: string
@@ -40,6 +41,7 @@ function boardDocsSourceUrl(boardDocs: BoardDocsConfig, itemId?: string) {
 export const SCHOOL_DISTRICTS: Record<SchoolDistrictId, SchoolDistrictConfig> = {
   fairfax: {
     id: 'fairfax',
+    timeZone: 'America/New_York',
     uiLabel: 'Fairfax',
     schoolSystemLabel: 'Fairfax County Public Schools',
     boardBodyLabel: 'FCPS School Board',
@@ -57,6 +59,7 @@ export const SCHOOL_DISTRICTS: Record<SchoolDistrictId, SchoolDistrictConfig> = 
   },
   loudoun: {
     id: 'loudoun',
+    timeZone: 'America/New_York',
     uiLabel: 'Loudoun',
     schoolSystemLabel: 'Loudoun County Public Schools',
     boardBodyLabel: 'Loudoun County School Board',
@@ -74,6 +77,7 @@ export const SCHOOL_DISTRICTS: Record<SchoolDistrictId, SchoolDistrictConfig> = 
   },
   'prince-william': {
     id: 'prince-william',
+    timeZone: 'America/New_York',
     uiLabel: 'Prince William',
     schoolSystemLabel: 'Prince William County Public Schools',
     boardBodyLabel: 'Prince William County School Board',
@@ -91,6 +95,7 @@ export const SCHOOL_DISTRICTS: Record<SchoolDistrictId, SchoolDistrictConfig> = 
   },
   arlington: {
     id: 'arlington',
+    timeZone: 'America/New_York',
     uiLabel: 'Arlington',
     schoolSystemLabel: 'Arlington Public Schools',
     boardBodyLabel: 'Arlington School Board',
@@ -128,6 +133,21 @@ export function parseSchoolDistrictId(
 
 export function getSchoolDistrict(id: SchoolDistrictId): SchoolDistrictConfig {
   return SCHOOL_DISTRICTS[id]
+}
+
+export function dateInSchoolDistrict(timeZone: string, now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now)
+  const values = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, part.value])
+  )
+  return `${values.year}-${values.month}-${values.day}`
 }
 
 export function getBoardDocsBaseUrl(districtId: SchoolDistrictId) {

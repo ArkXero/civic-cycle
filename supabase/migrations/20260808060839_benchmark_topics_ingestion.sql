@@ -2,7 +2,7 @@
 -- Raw files are never persisted; only bounded extraction output and provenance are stored.
 
 create table public.agenda_items (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   meeting_id uuid not null references public.meetings(id) on delete cascade,
   external_id text not null,
   item_order text not null,
@@ -20,7 +20,7 @@ create index agenda_items_meeting_order_idx
   on public.agenda_items (meeting_id, item_order);
 
 create table public.meeting_documents (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   meeting_id uuid not null references public.meetings(id) on delete cascade,
   agenda_item_id uuid not null references public.agenda_items(id) on delete cascade,
   external_file_id text not null,
@@ -69,7 +69,7 @@ create unique index meeting_documents_failed_file_idx
   where checksum_sha256 is null;
 
 create table public.topics (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   slug text not null unique,
   display_name text not null,
   description text not null default '',
@@ -127,7 +127,7 @@ create index meeting_topics_topic_meeting_idx
   on public.meeting_topics (topic_id, meeting_id);
 
 create table public.topic_suggestions (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   proposed_slug text not null,
   proposed_name text not null,
   rationale text not null default '',

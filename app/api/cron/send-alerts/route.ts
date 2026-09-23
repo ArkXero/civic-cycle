@@ -51,8 +51,7 @@ async function recordAlertHistory(
   payload: AlertHistoryInsert
 ) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('alert_history') as any).insert(payload)
+    const { error } = await supabase.from('alert_history').insert(payload)
 
     if (error) {
       console.error('Error recording alert history:', error)
@@ -238,8 +237,8 @@ export async function POST(request: NextRequest) {
         if (alreadySent) continue
 
         // Check alert_history to prevent resend across cron runs
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: existingHistory } = await (supabase.from('alert_history') as any)
+        const { data: existingHistory } = await supabase
+          .from('alert_history')
           .select('id')
           .eq('user_id', alert.user_id)
           .eq('meeting_id', meeting.id)

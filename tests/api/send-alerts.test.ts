@@ -444,6 +444,23 @@ describe('POST /api/cron/send-alerts', () => {
     expect(body.sent).toBe(1)
   })
 
+  it('does not resend an alert when summary refresh updates meeting timestamp', async () => {
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({
+      data: { id: 'existing-sent-history' },
+      error: null,
+    }))
+
+    const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
+
+    expect(res.status).toBe(200)
+    expect(mockSendAlertEmail).not.toHaveBeenCalled()
+    expect(await res.json()).toMatchObject({ sent: 0 })
+  })
+
   it('sends separate emails to different users for the same meeting', async () => {
     const alert1 = { id: 'alert-1', user_id: 'user-1', keyword: 'budget', bodies: null, unsubscribe_token: 'token-1' }
     const alert2 = { id: 'alert-2', user_id: 'user-2', keyword: 'budget', bodies: null, unsubscribe_token: 'token-2' }

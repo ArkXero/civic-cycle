@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
+import type { Database, Json } from '@/types/database'
 import type { IngestedAgendaItem, MeetingContentResult } from '@/lib/boarddocs'
 
 type DatabaseClient = SupabaseClient<Database>
@@ -32,77 +32,78 @@ export function selectCurrentMeetingDocuments<T extends VersionedMeetingDocument
   return [...currentByExternalId.values()]
 }
 
-async function persistDocument(
-  supabase: DatabaseClient,
-  meetingId: string,
-  agendaItemId: string,
-  document: IngestedAgendaItem['documents'][number]
-) {
-  const row = {
-    meeting_id: meetingId,
-    agenda_item_id: agendaItemId,
-    external_file_id: document.id,
-    title: document.name,
-    source_url: document.url,
-    checksum_sha256: document.checksumSha256,
-    parser_name: document.parserName,
-    parser_version: document.parserVersion,
-    extracted_markdown: document.markdown,
-    page_count: document.pageCount,
-    byte_size: document.byteSize,
-    extraction_status: document.status,
-    error_details: document.error,
-    updated_at: new Date().toISOString(),
-  }
+export function motionRowsForPersistence(item: IngestedAgendaItem) {
+  return item.content.motions.map((motion) => ({
+    source_ordinal: motion.sourceOrdinal,
+    content_hash: motion.contentHash,
+    raw_html: motion.rawHtml,
+    raw_motion_text: motion.rawText,
+    normalized_motion_text: motion.normalizedText,
+    motion_type: motion.motionType,
+    parent_ordinal: motion.parentOrdinal,
+    is_final: motion.isFinal,
+    is_superseded: motion.isSuperseded,
+    outcome: motion.outcome,
+    vote_yes: motion.voteYes,
+    vote_no: motion.voteNo,
+    vote_abstain: motion.voteAbstain,
+    mover: motion.mover,
+    seconder: motion.seconder,
+    roll_call_yes: motion.rollCallYes,
+    roll_call_no: motion.rollCallNo,
+    roll_call_abstain: motion.rollCallAbstain,
+    parser_version: motion.parserVersion,
+  }))
+}
 
-  if (document.checksumSha256) {
-    const { error } = await supabase
-      .from('meeting_documents')
-      .upsert(row, { onConflict: 'meeting_id,external_file_id,checksum_sha256' })
-    if (error) throw error
-    return
-  }
-
-  const { data: existing, error: lookupError } = await supabase
-    .from('meeting_documents')
-    .select('id')
-    .eq('meeting_id', meetingId)
-    .eq('external_file_id', document.id)
-    .is('checksum_sha256', null)
-    .maybeSingle()
-  if (lookupError) throw lookupError
-
-  const result = existing
-    ? await supabase.from('meeting_documents').update(row).eq('id', existing.id)
-    : await supabase.from('meeting_documents').insert(row)
-  if (result.error) throw result.error
+function agendaRowsForPersistence(items: IngestedAgendaItem[]) {
+  return items.map((item) => ({
+    external_id: item.agenda.id,
+    item_order: item.agenda.order,
+    category: item.content.category || item.agenda.category,
+    item_type: item.content.type || item.agenda.type,
+    title: item.content.name || item.agenda.name,
+    recommended_action: item.content.recommendedAction,
+    body_markdown: item.content.bodyMarkdown,
+    motions: motionRowsForPersistence(item),
+    documents: item.documents.map((document) => ({
+      external_file_id: document.id,
+      title: document.name,
+      source_url: document.url,
+      checksum_sha256: document.checksumSha256,
+      parser_name: document.parserName,
+      parser_version: document.parserVersion,
+      extracted_markdown: document.markdown,
+      page_count: document.pageCount,
+      byte_size: document.byteSize,
+      extraction_status: document.status,
+      error_details: document.error,
+    })),
+  }))
 }
 
 export async function persistMeetingIngestion(
   supabase: DatabaseClient,
   meetingId: string,
-  content: Pick<MeetingContentResult, 'agendaItems'>
-) {
-  for (const item of content.agendaItems) {
-    const { data: agendaItem, error: agendaItemError } = await supabase
-      .from('agenda_items')
-      .upsert({
-        meeting_id: meetingId,
-        external_id: item.agenda.id,
-        item_order: item.agenda.order,
-        category: item.content.category || item.agenda.category,
-        item_type: item.content.type || item.agenda.type,
-        title: item.content.name || item.agenda.name,
-        recommended_action: item.content.recommendedAction,
-        body_markdown: item.content.bodyMarkdown,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'meeting_id,external_id' })
-      .select('id')
-      .single()
-
-    if (agendaItemError) throw agendaItemError
-    for (const document of item.documents) {
-      await persistDocument(supabase, meetingId, agendaItem.id, document)
-    }
+  refreshToken: string,
+  content: Pick<MeetingContentResult, 'title' | 'contentHash' | 'agendaItems'>,
+  options: {
+    meetingDate: string
+    transcript: string | null
+    checkedAt: string
+    resultsSeenAt: string | null
   }
+) {
+  const { error } = await supabase.rpc('replace_boarddocs_meeting_content', {
+    target_meeting_id: meetingId,
+    target_refresh_token: refreshToken,
+    new_title: content.title,
+    new_meeting_date: options.meetingDate,
+    new_content_hash: content.contentHash,
+    new_transcript_text: options.transcript,
+    new_last_checked_at: options.checkedAt,
+    new_results_seen_at: options.resultsSeenAt,
+    new_agenda_items: agendaRowsForPersistence(content.agendaItems) as Json,
+  })
+  if (error) throw error
 }

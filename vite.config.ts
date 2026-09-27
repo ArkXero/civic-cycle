@@ -14,6 +14,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: [],
+    exclude: ['**/node_modules/**', '**/.git/**', '.next/**', '.ariadne/**'],
   },
   lint: {
     ignorePatterns: ['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'components/ui/**'],

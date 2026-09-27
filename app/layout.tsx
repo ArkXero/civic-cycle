@@ -25,8 +25,6 @@ export const metadata: Metadata = {
   },
   description: APP_DESCRIPTION,
   keywords: [
-    "Fairfax County",
-    "FCPS",
     "School Board",
     "meetings",
     "local government",

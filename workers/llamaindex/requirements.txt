@@ -1,0 +1,3 @@
+anthropic==0.121.0
+llama-index-core==0.14.23
+liteparse==2.11.1

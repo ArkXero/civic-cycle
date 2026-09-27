@@ -141,6 +141,7 @@ export interface DigestEmailParams {
   digestHtml: string;
   digestText: string;
   weekRange: string;
+  districtLabel?: string;
 }
 
 export async function sendDigestEmail({
@@ -149,6 +150,7 @@ export async function sendDigestEmail({
   digestHtml,
   digestText,
   weekRange,
+  districtLabel = "FCPS School Board",
 }: DigestEmailParams) {
   const safeUnsubscribeUrl =
     unsubscribeUrl.startsWith("https://") || unsubscribeUrl.startsWith("http://")
@@ -161,7 +163,7 @@ export async function sendDigestEmail({
   return resend.emails.send({
     from: `Civic Cycle <${FROM_EMAIL}>`,
     to,
-    subject: `FCPS School Board Weekly Digest — ${weekRange}`,
+    subject: `${districtLabel} Weekly Digest — ${weekRange}`,
     html,
     text,
   });

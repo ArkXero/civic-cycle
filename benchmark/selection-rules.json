@@ -1,0 +1,12 @@
+{
+  "minimumDocuments": 80,
+  "minimumMeetings": 20,
+  "requiredDistricts": ["fairfax", "loudoun", "prince-william", "arlington"],
+  "autoPublishMinimumPrecision": 0.9,
+  "minimumMacroF1": 0.85,
+  "requiredEvidenceTraceability": 1,
+  "maximumWorkerPeakRssBytes": 1073741824,
+  "defaultToNodeWithinMacroF1Points": 2,
+  "pythonMinimumMacroF1ImprovementPoints": 5,
+  "pythonMinimumRepeatCostOrLatencyReduction": 0.3
+}

@@ -57,6 +57,7 @@ const fakeMeeting = {
   id: 'meeting-1',
   title: 'March 2026 Board Meeting',
   body: 'FCPS School Board',
+  district_id: 'fairfax',
   meeting_date: '2026-03-04',
 }
 
@@ -79,6 +80,7 @@ const fakeAlert = {
 const fakeUserProfile = {
   id: 'user-1',
   email: 'voter@example.com',
+  preferred_district_id: 'fairfax',
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -395,6 +397,26 @@ describe('POST /api/cron/send-alerts', () => {
     expect(body.sent).toBe(0)
   })
 
+  it('skips email when the meeting district does not match the user preference', async () => {
+    const loudounMeeting = {
+      ...fakeMeeting,
+      district_id: 'loudoun',
+      body: 'Loudoun County School Board',
+    }
+
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [loudounMeeting], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+
+    const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
+
+    expect(res.status).toBe(200)
+    expect(mockSendAlertEmail).not.toHaveBeenCalled()
+    const body = await res.json()
+    expect(body.sent).toBe(0)
+  })
+
   // ── Duplicate prevention ──────────────────────────────────────────────────
 
   it('sends at most one email per user per meeting even with multiple matching alerts', async () => {
@@ -420,6 +442,23 @@ describe('POST /api/cron/send-alerts', () => {
     expect(mockSendAlertEmail).toHaveBeenCalledOnce()
     const body = await res.json()
     expect(body.sent).toBe(1)
+  })
+
+  it('does not resend an alert when summary refresh updates meeting timestamp', async () => {
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeAlert], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeUserProfile], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({
+      data: { id: 'existing-sent-history' },
+      error: null,
+    }))
+
+    const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
+
+    expect(res.status).toBe(200)
+    expect(mockSendAlertEmail).not.toHaveBeenCalled()
+    expect(await res.json()).toMatchObject({ sent: 0 })
   })
 
   it('sends separate emails to different users for the same meeting', async () => {

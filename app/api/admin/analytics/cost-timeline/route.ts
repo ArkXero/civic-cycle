@@ -7,6 +7,7 @@ const rangeSchema = z.enum(['7d', '30d', '90d', 'all']).default('30d')
 type Range = z.infer<typeof rangeSchema>
 type CostUsageRow = {
   created_at: string
+  meeting_id: string | null
   cost_cents: number
 }
 
@@ -56,7 +57,7 @@ function eachMonthKey(start: Date, end: Date) {
 
 type CostBucket = {
   cost_cents: number
-  summaries: number
+  meetingIds: Set<string>
 }
 
 export async function GET(request: NextRequest) {
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
     const adminClient = createAdminClient()
     const query = adminClient
       .from('api_usage')
-      .select('created_at, cost_cents')
+      .select('created_at, meeting_id, cost_cents')
       .eq('success', true)
       .order('created_at', { ascending: true })
 
@@ -92,9 +93,11 @@ export async function GET(request: NextRequest) {
     const rows = (data ?? []) as CostUsageRow[]
     const buckets = rows.reduce((acc, row) => {
       const key = range === 'all' ? toMonthKey(row.created_at) : toDateKey(row.created_at)
-      const bucket = acc.get(key) ?? { cost_cents: 0, summaries: 0 }
+      const bucket = acc.get(key) ?? { cost_cents: 0, meetingIds: new Set<string>() }
       bucket.cost_cents += row.cost_cents
-      bucket.summaries += 1
+      if (row.meeting_id) {
+        bucket.meetingIds.add(row.meeting_id)
+      }
       acc.set(key, bucket)
       return acc
     }, new Map<string, CostBucket>())
@@ -106,8 +109,8 @@ export async function GET(request: NextRequest) {
       : eachDayKey(rangeStart(range), startOfUtcDay(new Date()))
 
     const points = keys.map((date) => {
-      const bucket = buckets.get(date) ?? { cost_cents: 0, summaries: 0 }
-      return { date, cost_cents: bucket.cost_cents, summaries: bucket.summaries }
+      const bucket = buckets.get(date) ?? { cost_cents: 0, meetingIds: new Set<string>() }
+      return { date, cost_cents: bucket.cost_cents, summaries: bucket.meetingIds.size }
     })
 
     return NextResponse.json({

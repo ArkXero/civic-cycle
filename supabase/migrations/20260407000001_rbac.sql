@@ -109,7 +109,10 @@ CREATE POLICY "users_crud_own_alerts" ON public.alert_preferences
 -- Run this manually with a real UUID from auth.users:
 --
 INSERT INTO public.user_roles (user_id, role)
-VALUES ('0cb82f82-5b20-49a0-b182-a46baef88c84', 'admin');
+SELECT auth_user.id, 'admin'::public.app_role
+FROM auth.users AS auth_user
+WHERE auth_user.id = '0cb82f82-5b20-49a0-b182-a46baef88c84'
+ON CONFLICT (user_id, role) DO NOTHING;
 --
 -- After inserting, the user must log out and back in (or wait
 -- for their token to refresh) for the new role to appear in the JWT.

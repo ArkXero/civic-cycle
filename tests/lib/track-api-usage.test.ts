@@ -11,7 +11,10 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import { trackApiUsage } from '@/lib/track-api-usage'
-import { calculateAnthropicCostCents } from '@/lib/anthropic-models'
+import {
+  calculateAnthropicCostCents,
+  calculateAnthropicCostUsdMicros,
+} from '@/lib/anthropic-models'
 
 describe('calculateAnthropicCostCents', () => {
   it('calculates Haiku 4.5 pricing', () => {
@@ -36,6 +39,14 @@ describe('calculateAnthropicCostCents', () => {
       inputTokens: 1_000_000,
       outputTokens: 1_000_000,
     })).toBe(0)
+  })
+
+  it('preserves sub-cent costs in micro-dollars', () => {
+    expect(calculateAnthropicCostUsdMicros({
+      model: 'claude-haiku-4-5-20251001',
+      inputTokens: 1_000,
+      outputTokens: 100,
+    })).toBe(1_500)
   })
 })
 
@@ -64,6 +75,7 @@ describe('trackApiUsage', () => {
     expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
       model: 'claude-haiku-4-5-20251001',
       cost_cents: 600,
+      cost_usd_micros: 6_000_000,
     }))
   })
 
@@ -80,6 +92,7 @@ describe('trackApiUsage', () => {
     expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
       model: 'unknown-model',
       cost_cents: 0,
+      cost_usd_micros: 0,
       success: false,
       error_message: 'bad model',
     }))

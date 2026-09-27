@@ -578,6 +578,7 @@ export type Database = {
           input_tokens: number
           output_tokens: number
           cost_cents: number
+          cost_usd_micros: number
           success: boolean
           error_message: string | null
           created_at: string
@@ -589,6 +590,7 @@ export type Database = {
           input_tokens: number
           output_tokens: number
           cost_cents: number
+          cost_usd_micros?: number
           success?: boolean
           error_message?: string | null
           created_at?: string
@@ -600,6 +602,7 @@ export type Database = {
           input_tokens?: number
           output_tokens?: number
           cost_cents?: number
+          cost_usd_micros?: number
           success?: boolean
           error_message?: string | null
           created_at?: string
@@ -662,6 +665,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_dashboard_analytics: {
+        Args: { p_range?: string; p_timezone?: string }
+        Returns: Json
+      }
       replace_agenda_item_motions: {
         Args: { target_meeting_id: string; target_agenda_item_id: string; new_motions: Json }
         Returns: number

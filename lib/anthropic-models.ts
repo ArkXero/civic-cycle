@@ -42,12 +42,27 @@ export function calculateAnthropicCostCents({
   inputTokens: number
   outputTokens: number
 }) {
+  return Math.round(calculateAnthropicCostUsdMicros({
+    model,
+    inputTokens,
+    outputTokens,
+  }) / 10_000)
+}
+
+export function calculateAnthropicCostUsdMicros({
+  model,
+  inputTokens,
+  outputTokens,
+}: {
+  model: string
+  inputTokens: number
+  outputTokens: number
+}) {
   const pricing = getAnthropicModelPricing(model)
   if (!pricing) return 0
 
   return Math.round(
-    ((inputTokens / 1_000_000) * pricing.inputUsdPerMTok +
-      (outputTokens / 1_000_000) * pricing.outputUsdPerMTok) *
-      100
+    inputTokens * pricing.inputUsdPerMTok +
+      outputTokens * pricing.outputUsdPerMTok
   )
 }

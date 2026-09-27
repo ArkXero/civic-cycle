@@ -66,4 +66,17 @@ describe('Supabase migration chain', () => {
     )
     expect(migration).not.toContain('summaries_meeting_id_idx;')
   })
+
+  it('aggregates admin analytics in Postgres without exposing the RPC to users', () => {
+    const migration = readMigration(
+      '20260923120621_admin_dashboard_analytics.sql'
+    )
+
+    expect(migration).toContain('cost_usd_micros bigint')
+    expect(migration).toContain('create or replace function public.get_admin_dashboard_analytics')
+    expect(migration).toContain('security invoker')
+    expect(migration).toContain('revoke all on function public.get_admin_dashboard_analytics(text, text) from authenticated')
+    expect(migration).toContain('grant execute on function public.get_admin_dashboard_analytics(text, text) to service_role')
+    expect(migration).not.toMatch(/^\s*(begin|rollback);/im)
+  })
 })

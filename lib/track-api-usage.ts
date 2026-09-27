@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import {
   calculateAnthropicCostCents,
+  calculateAnthropicCostUsdMicros,
   getAnthropicModelPricing,
 } from '@/lib/anthropic-models'
 
@@ -27,6 +28,7 @@ export async function trackApiUsage({
   }
 
   const costCents = calculateAnthropicCostCents({ model, inputTokens, outputTokens })
+  const costUsdMicros = calculateAnthropicCostUsdMicros({ model, inputTokens, outputTokens })
 
   try {
     const adminClient = createAdminClient()
@@ -37,6 +39,7 @@ export async function trackApiUsage({
       input_tokens: inputTokens,
       output_tokens: outputTokens,
       cost_cents: costCents,
+      cost_usd_micros: costUsdMicros,
       success,
       error_message: errorMessage ?? null,
     })

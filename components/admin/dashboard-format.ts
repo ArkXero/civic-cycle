@@ -1,5 +1,13 @@
-export function fmtCost(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`
+export function fmtUsdMicros(micros: number) {
+  const dollars = micros / 1_000_000
+  const maximumFractionDigits = dollars > 0 && dollars < 0.01 ? 4 : 2
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits,
+  }).format(dollars)
 }
 
 export function fmtTokens(n: number) {

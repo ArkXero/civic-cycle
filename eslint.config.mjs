@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     ".ariadne/**",
     // shadcn generated components — never edited manually
     "components/ui/**",
+    // Bklit registry components — vendored and validated by typecheck/build
+    "components/charts/**",
   ]),
   // eslint-plugin-react bundled in eslint-config-next uses context.getFilename()
   // which was removed in ESLint v10. Disable all react/* rules to prevent crash.

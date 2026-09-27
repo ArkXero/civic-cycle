@@ -11,14 +11,32 @@ jobs:
     steps:
       - name: Trigger import
         run: |
-          RESPONSE=$(curl -s -w '\n%{http_code}' -X POST \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json" \
-            "${{ secrets.APP_URL }}/api/cron/import-meetings")
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n-1)
-          echo "HTTP $HTTP_CODE"
-          echo "$BODY"
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+          MAX_ATTEMPTS=5
+
+          for ATTEMPT in $(seq 1 "$MAX_ATTEMPTS"); do
+            if ! RESPONSE=$(curl -sS --connect-timeout 10 --max-time 30 \
+              -w '\n%{http_code}' -X POST \
+              -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+              -H "Content-Type: application/json" \
+              "${{ secrets.APP_URL }}/api/cron/import-meetings"); then
+              echo "Import request failed before receiving an HTTP response."
+              exit 1
+            fi
+
+            HTTP_CODE=${RESPONSE##*$'\n'}
+            BODY=${RESPONSE%$'\n'*}
+            echo "Attempt $ATTEMPT: HTTP $HTTP_CODE"
+            echo "$BODY"
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              exit 0
+            fi
+
+            if [ "$HTTP_CODE" = "530" ] && echo "$BODY" | grep -q "error code: 1033" && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; then
+              echo "Cloudflare tunnel unavailable; retrying in 15 seconds..."
+              sleep 15
+              continue
+            fi
+
             exit 1
-          fi
+          done

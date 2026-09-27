@@ -1,0 +1,153 @@
+{
+  "title": "General Translation costs",
+  "subtitle": "Simple annual cost estimate for Civic Cycle",
+  "generated_at": "2026-08-21 13:52 EDT",
+  "status": {
+    "label": "Current estimate",
+    "tone": "success"
+  },
+  "summary": "Budget about $49.48 per year for translation and meeting-summary AI at current usage: one full four-language website translation, AI summaries for 123 meetings, and each meeting summary translated once into all four target languages. General Translation's Starter platform fee is $0. Hosting, database plans, human review, taxes, and engineering labor are excluded.",
+  "theme": {
+    "label": "Civic Cycle",
+    "mark": "CC",
+    "colors": {
+      "paper": "#F4F8F9",
+      "surface": "#FFFFFF",
+      "ink": "#0A3038",
+      "muted": "#5B8A94",
+      "line": "#D8E8EA",
+      "accent": "#1A8A9A",
+      "accent_soft": "#E8F0F1",
+      "code": "#0A1A1F",
+      "code_ink": "#F4F8F9"
+    }
+  },
+  "meta": [
+    {
+      "label": "Pricing checked",
+      "value": "August 21, 2026"
+    },
+    {
+      "label": "Languages",
+      "value": "Spanish, French, Korean, Simplified Chinese"
+    },
+    {
+      "label": "Annual volume",
+      "value": "123 meetings"
+    }
+  ],
+  "highlights": [
+    {
+      "label": "Whole website",
+      "value": "$15.60",
+      "detail": "One complete four-language run"
+    },
+    {
+      "label": "AI per meeting",
+      "value": "$0.068",
+      "detail": "Actual average from usage records"
+    },
+    {
+      "label": "Translation per meeting",
+      "value": "$0.207",
+      "detail": "All four languages, translated once"
+    },
+    {
+      "label": "Yearly total",
+      "value": "$49.48",
+      "detail": "Includes one full website refresh"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Cost breakdown",
+      "eyebrow": "General Translation + meeting AI",
+      "summary": "Current public prices combined with Civic Cycle's actual meeting volume and AI usage.",
+      "blocks": [
+        {
+          "type": "table",
+          "columns": [
+            "Item",
+            "How it is priced",
+            "Estimated cost"
+          ],
+          "rows": [
+            [
+              "General Translation Starter",
+              "$0 platform fee; translations are usage-priced",
+              "$0/year"
+            ],
+            [
+              "Translate entire website",
+              "Recorded 15,600-token job × $1 per 1,000 TypeScript/JavaScript input tokens",
+              "$15.60 per complete four-language run"
+            ],
+            [
+              "Generate one meeting summary with Claude",
+              "Actual average: 10,078 input + 2,537 output tokens across 5.2 calls; historical traffic is almost entirely Sonnet 4.6",
+              "$0.068 per meeting"
+            ],
+            [
+              "Translate one meeting summary",
+              "Estimated 518 input tokens × four languages × $0.10 per 1,000 GT Runtime tokens",
+              "$0.207 per meeting"
+            ],
+            [
+              "Annual AI summaries",
+              "123 meetings × $0.068",
+              "$8.39/year"
+            ],
+            [
+              "Annual meeting translations",
+              "123 meetings × $0.207; each summary translated into all four languages once",
+              "$25.49/year"
+            ],
+            [
+              "Recurring yearly usage",
+              "AI summaries + meeting translations; no full website rerun",
+              "$33.88/year"
+            ],
+            [
+              "Year with one full website refresh",
+              "$33.88 recurring usage + $15.60 website translation",
+              "$49.48/year"
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "tone": "info",
+          "title": "Simple assumptions",
+          "text": "123 meetings is Civic Cycle's observed meeting volume over the last 365 days; 96 are currently summarized. AI average comes from 13,035 recorded calls across 2,506 meetings. Meeting-translation size is estimated from 1,745 stored summaries at about four characters per token. Cache hits cost no additional GT Runtime translation, so repeat page views are not charged again."
+        },
+        {
+          "type": "callout",
+          "tone": "warning",
+          "title": "Not included",
+          "text": "Hosting, Supabase plan fees, taxes, human language review, engineering maintenance, retries, and optional GT Platform Context. Actual General Translation allowance and invoice credits remain account-specific."
+        },
+        {
+          "type": "links",
+          "items": [
+            {
+              "label": "General Translation pricing",
+              "url": "https://generaltranslation.com/en-US/pricing",
+              "description": "$0 Starter platform fee"
+            },
+            {
+              "label": "General Translation workflow rates",
+              "url": "https://generaltranslation.com/en-US/pricing/usage",
+              "description": "$1 per 1,000 buildtime tokens and $0.10 per 1,000 runtime tokens"
+            },
+            {
+              "label": "Anthropic model pricing",
+              "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+              "description": "Sonnet 4.6 and Haiku 4.5 input/output rates"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footer": "Operating estimate, not invoice. Prices and usage checked August 21, 2026."
+}

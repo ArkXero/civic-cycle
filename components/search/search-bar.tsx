@@ -10,12 +10,14 @@ interface SearchBarProps {
   initialQuery?: string
   placeholder?: string
   className?: string
+  districtId?: string
 }
 
 export function SearchBar({
   initialQuery = '',
   placeholder = 'Search meetings...',
-  className = ''
+  className = '',
+  districtId,
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery)
   const router = useRouter()
@@ -23,7 +25,9 @@ export function SearchBar({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+      const params = new URLSearchParams({ q: query.trim() })
+      if (districtId) params.set('districtId', districtId)
+      router.push(`/search?${params.toString()}`)
     }
   }
 

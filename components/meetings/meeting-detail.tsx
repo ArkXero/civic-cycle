@@ -3,18 +3,29 @@ import { Calendar, Building2, ExternalLink, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { KeyDecisions } from './key-decisions'
+import { MotionTimeline } from './motion-timeline'
 import { ActionItems } from './action-items'
 import { SummarizeButton } from './summarize-button'
+import { RetagButton } from './retag-button'
 import { formatDate } from '@/lib/utils'
 import type { MeetingWithSummary } from '@/types'
+import type { MotionTimelineItem } from '@/lib/data/motions'
 
 interface MeetingDetailProps {
   meeting: MeetingWithSummary
   isAuthenticated?: boolean
+  isAdmin?: boolean
+  motions?: MotionTimelineItem[]
+  motionError?: string | null
 }
 
-export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetailProps) {
+export function MeetingDetail({
+  meeting,
+  isAuthenticated = false,
+  isAdmin = false,
+  motions = [],
+  motionError = null,
+}: MeetingDetailProps) {
   return (
     <div className="space-y-6">
       {/* Back button */}
@@ -39,11 +50,13 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
         </h1>
 
         {/* Topics */}
-        {meeting.summary?.topics && meeting.summary.topics.length > 0 && (
+        {meeting.approvedTopics.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
-            {meeting.summary.topics.map((topic) => (
-              <Badge key={topic} variant="secondary">
-                {topic}
+            {meeting.approvedTopics.map((topic) => (
+              <Badge key={topic.id} variant="secondary" asChild>
+                <Link href={`/meetings?topic=${encodeURIComponent(topic.slug)}`}>
+                  {topic.display_name}
+                </Link>
               </Badge>
             ))}
           </div>
@@ -58,6 +71,7 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
               hasTranscript={!!meeting.transcript_text}
               status={meeting.status}
             />
+            {isAdmin && <RetagButton meetingId={meeting.id} />}
           </div>
         )}
       </div>
@@ -97,8 +111,12 @@ export function MeetingDetail({ meeting, isAuthenticated = false }: MeetingDetai
             </CardContent>
           </Card>
 
-          {/* Key Decisions */}
-          <KeyDecisions decisions={meeting.summary.key_decisions} />
+          <MotionTimeline
+            motions={motions}
+            legacyDecisions={meeting.summary.key_decisions}
+            boardDocsUrl={meeting.source_url}
+            error={motionError}
+          />
 
           {/* Action Items */}
           <ActionItems items={meeting.summary.action_items} />

@@ -4,11 +4,13 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { getSchoolDistrict, type SchoolDistrictId } from "@/lib/school-districts";
 
 const easing = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
-export function HeroClean() {
+export function HeroClean({ districtId }: { districtId: SchoolDistrictId }) {
   const [bgVisible, setBgVisible] = useState(true);
+  const district = getSchoolDistrict(districtId);
 
   return (
     <section className="relative overflow-hidden border-b border-border flex min-h-[580px] hero-gradient">
@@ -27,7 +29,7 @@ export function HeroClean() {
             className="eyebrow mb-5"
             style={{ color: "var(--foreground)", opacity: 0.6 }}
           >
-            Fairfax County Public Schools · School Board
+            {district.schoolSystemLabel} · School Board
           </motion.p>
 
           {/* Headline */}
@@ -69,7 +71,7 @@ export function HeroClean() {
               fontSize: "17px",
             }}
           >
-            Every FCPS board meeting is automatically summarized — key votes,
+            Every {district.uiLabel} board meeting is automatically summarized — key votes,
             budget items, and policy changes surfaced for residents who
             don&apos;t have three hours.
           </motion.p>

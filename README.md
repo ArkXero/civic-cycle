@@ -55,6 +55,7 @@ Copy `.env.example` to `.env.local` and fill in all values.
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (bypasses RLS) |
+| `BOARDDOCS_RESULTS_GRACE_DAYS` | Days to poll completed meetings for delayed official results (default `21`, range `1`-`90`) |
 | `NEXT_PUBLIC_APP_URL` | Public URL of the app, e.g. `https://civiccycle.app` |
 | `ANTHROPIC_API_KEY` | Anthropic API key for Claude |
 | `RESEND_API_KEY` | Resend API key for email delivery |
@@ -91,7 +92,7 @@ production:
 - Vite+ CLI (`vp`)
 - pnpm 11+
 - Docker + Docker Compose
-- Supabase CLI (`supabase`)
+- Supabase CLI (installed as a pinned project dev dependency)
 
 ### Steps
 
@@ -104,15 +105,19 @@ vp install
 cp .env.example .env.local
 
 # 3. Start local Supabase
-supabase start
+pnpm exec supabase start
 
-# 4. Apply migrations
-supabase db push
-
-# 5. Start dev server
+# 4. Start dev server
 vp run dev
 # or: pnpm dev
 ```
+
+`supabase start` applies the local migration chain automatically. To verify a
+clean replay, run `pnpm exec supabase db reset --local --no-seed`. Before any
+linked database deployment, inspect `pnpm exec supabase migration list
+--linked` and review `pnpm exec supabase db push --linked --dry-run
+--include-all`; do not substitute a non-dry-run push without reviewing the
+listed migrations.
 
 The app runs at `http://localhost:3000`. Use `vp run dev:clean` if you hit
 local cache issues, and use `vp run dev:turbo` only when specifically testing

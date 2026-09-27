@@ -5,6 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function parseDateAsLocal(date: string | Date): Date {
+  if (date instanceof Date) {
+    return new Date(date);
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  return new Date(date);
+}
+
 /**
  * Format a date string for display
  */

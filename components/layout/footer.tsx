@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { APP_NAME, EXTERNAL_LINKS } from '@/lib/constants'
+import { APP_NAME } from '@/lib/constants'
+import { ACTIVE_SCHOOL_DISTRICTS } from '@/lib/school-districts'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -36,8 +37,8 @@ export function Footer() {
                 fontFamily: 'var(--font-body-var), ui-sans-serif, system-ui, sans-serif',
               }}
             >
-              Helping Fairfax County residents stay informed about local
-              government decisions through AI-powered meeting summaries.
+              Helping residents stay informed about school board decisions
+              through AI-powered meeting summaries.
             </p>
           </div>
 
@@ -86,11 +87,10 @@ export function Footer() {
               Official Sources
             </p>
             <ul className="space-y-2.5">
-              {[
-                { href: EXTERNAL_LINKS.fcpsWebsite, label: 'FCPS Official Website' },
-                { href: EXTERNAL_LINKS.fcpsBoardDocs, label: 'FCPS BoardDocs' },
-                { href: EXTERNAL_LINKS.fairfaxCounty, label: 'Fairfax County Government' },
-              ].map((link) => (
+              {ACTIVE_SCHOOL_DISTRICTS.map((district) => ({
+                href: district.sourceUrl(),
+                label: `${district.uiLabel} BoardDocs`,
+              })).map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
@@ -115,15 +115,27 @@ export function Footer() {
           className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"
           style={{ borderTop: '1px solid rgba(26,138,154,0.15)' }}
         >
-          <p
-            className="text-[12px]"
-            style={{
-              color: 'rgba(244,248,249,0.3)',
-              fontFamily: 'var(--font-body-var), ui-sans-serif, system-ui, sans-serif',
-            }}
-          >
-            © {currentYear} {APP_NAME}. Built by a TJHSST student for the Fairfax County community.
-          </p>
+          <div className="space-y-2">
+            <p
+              className="text-[12px]"
+              style={{
+                color: 'rgba(244,248,249,0.3)',
+                fontFamily: 'var(--font-body-var), ui-sans-serif, system-ui, sans-serif',
+              }}
+            >
+              © {currentYear} {APP_NAME}. Built by a TJHSST student for local communities.
+            </p>
+            <Link
+              href="/privacy"
+              className="text-[12px] transition-colors hover:text-[#F4F8F9]"
+              style={{
+                color: 'rgba(244,248,249,0.4)',
+                fontFamily: 'var(--font-body-var), ui-sans-serif, system-ui, sans-serif',
+              }}
+            >
+              Privacy Policy
+            </Link>
+          </div>
           <p
             className="text-[11.5px]"
             style={{
@@ -131,7 +143,7 @@ export function Footer() {
               fontFamily: 'var(--font-body-var), ui-sans-serif, system-ui, sans-serif',
             }}
           >
-            Independent project — not affiliated with FCPS or Fairfax County Government.
+            Independent project — not affiliated with the listed school systems or BoardDocs.
           </p>
         </div>
       </div>

@@ -1,11 +1,18 @@
-import type { Database, KeyDecision, ActionItem } from './database'
+import type { Database, KeyDecision, ActionItem, MotionOutcome, MotionType } from './database'
 
 // Re-export database types
-export type { Database, KeyDecision, ActionItem }
+export type { Database, KeyDecision, ActionItem, MotionOutcome, MotionType }
 
 // Table row types (for reading data)
 export type Meeting = Database['public']['Tables']['meetings']['Row']
 export type Summary = Database['public']['Tables']['summaries']['Row']
+export type AgendaItemRow = Database['public']['Tables']['agenda_items']['Row']
+export type AgendaItemMotion = Database['public']['Tables']['agenda_item_motions']['Row']
+export type MeetingDocument = Database['public']['Tables']['meeting_documents']['Row']
+export type Topic = Database['public']['Tables']['topics']['Row']
+export type AgendaItemTopic = Database['public']['Tables']['agenda_item_topics']['Row']
+export type MeetingTopic = Database['public']['Tables']['meeting_topics']['Row']
+export type TopicSuggestion = Database['public']['Tables']['topic_suggestions']['Row']
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type AlertPreference = Database['public']['Tables']['alert_preferences']['Row']
 export type AlertHistory = Database['public']['Tables']['alert_history']['Row']
@@ -31,10 +38,12 @@ export type AlertHistoryUpdate = Database['public']['Tables']['alert_history']['
 // Composite types (for joined queries)
 export type MeetingWithSummary = Meeting & {
   summary: Summary | null
+  approvedTopics: Topic[]
+  motions?: AgendaItemMotion[]
 }
 
 // Meeting body type
-export type MeetingBody = 'FCPS School Board' | 'Board of Supervisors'
+export type MeetingBody = string
 
 // Meeting status type
 export type MeetingStatus = 'pending' | 'processing' | 'summarized' | 'failed'

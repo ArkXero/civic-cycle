@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getMeetingList } from '@/lib/data/meetings'
+import { getPreferredDistrictId } from '@/lib/account-profile'
 import { redirect } from 'next/navigation'
 import { HeroClean } from '@/components/ui/hero-clean'
 import FeaturesSection from '@/components/features/FeaturesBento'
@@ -39,16 +40,18 @@ export default async function Home({ searchParams }: HomeProps) {
   }
 
   const supabase = await createClient()
+  const districtId = await getPreferredDistrictId(supabase, firstParam(params.districtId))
   const { meetings } = await getMeetingList(supabase, {
     page: 1,
     pageSize: 3,
     statusFilter: 'summarized',
+    districtId,
   })
 
   return (
     <div className="bg-background">
-      <HeroClean />
-      <RecentMeetingsSection meetings={meetings} />
+      <HeroClean districtId={districtId} />
+      <RecentMeetingsSection meetings={meetings} districtId={districtId} />
       <FeaturesSection />
       <HomeCtaSection />
     </div>

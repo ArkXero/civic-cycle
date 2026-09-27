@@ -54,6 +54,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
       <LoginForm redirectTo={redirectTo} />
 
+      <p className="text-center text-xs text-muted-foreground mt-5 leading-6">
+        By signing in, you acknowledge the{' '}
+        <Link href="/privacy" className="text-primary hover:underline font-medium">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
       <p className="text-center text-sm text-muted-foreground mt-6">
         Don&apos;t have an account?{" "}
         <Link

@@ -292,6 +292,20 @@ describe('sendDigestEmail', () => {
     expect(call.subject).toBe('FCPS School Board Weekly Digest — March 4, 2026 – March 11, 2026')
   })
 
+  it('uses the district label in digest subjects', async () => {
+    await sendDigestEmail({
+      to: 'user@example.com',
+      unsubscribeUrl: 'https://example.com/unsubscribe/digest-123',
+      digestHtml: '<p>Digest</p>',
+      digestText: 'Digest',
+      weekRange: 'March 4, 2026',
+      districtLabel: 'Loudoun School Board',
+    })
+
+    const call = mockSend.mock.calls[0][0]
+    expect(call.subject).toBe('Loudoun School Board Weekly Digest — March 4, 2026')
+  })
+
   it('falls back to # when unsubscribe URL is not http or https', async () => {
     await sendDigestEmail({
       to: 'user@example.com',

@@ -50,10 +50,29 @@ yarn-error.log*
 next-env.d.ts
 
 # supabase
-/supabase/
+/supabase/*
+!/supabase/.gitignore
+!/supabase/config.toml
+!/supabase/migrations/
+/supabase/migrations/*
+!/supabase/migrations/*.sql
+!/supabase/tests/
+/supabase/tests/*
+!/supabase/tests/*.sql
 
 /scripts/*
 !/scripts/pre-commit-secrets-check.sh
+!/scripts/build-boarddocs-benchmark-manifest.ts
+!/scripts/benchmark-parsers.ts
+!/scripts/backfill-boarddocs-motions.ts
+
+# local benchmark outputs and Python caches
+/benchmark/parser-report.json
+/benchmark/llamaindex-report.json
+/.cache/
+/.venv/
+__pycache__/
+*.pyc
 
 # IDE
 .idea/
@@ -64,3 +83,7 @@ CLAUDE.md
 .mcp.json
 
 AGENTS.md
+
+# Ariadne
+/.ariadne/
+/ariadne.yml

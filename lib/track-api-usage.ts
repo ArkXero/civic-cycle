@@ -1,7 +1,10 @@
 import { createAdminClient } from '@/lib/supabase/server'
+import {
+  calculateAnthropicCostCents,
+  getAnthropicModelPricing,
+} from '@/lib/anthropic-models'
 
 // Server-side only — never import this from a client component.
-// Pricing for claude-sonnet-4-6: $3/M input tokens, $15/M output tokens.
 // Costs are stored in cents (integer) to avoid floating-point rounding.
 
 export async function trackApiUsage({
@@ -19,9 +22,11 @@ export async function trackApiUsage({
   success: boolean
   errorMessage?: string
 }): Promise<void> {
-  const inputCostCents = (inputTokens / 1_000_000) * 3 * 100
-  const outputCostCents = (outputTokens / 1_000_000) * 15 * 100
-  const costCents = Math.round(inputCostCents + outputCostCents)
+  if (!getAnthropicModelPricing(model)) {
+    console.warn(`Unknown pricing for model ${model}`)
+  }
+
+  const costCents = calculateAnthropicCostCents({ model, inputTokens, outputTokens })
 
   try {
     const adminClient = createAdminClient()

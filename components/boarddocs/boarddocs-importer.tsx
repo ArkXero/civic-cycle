@@ -1,14 +1,31 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { RefreshCw, Loader2, AlertCircle, Calendar, FileText, CheckCircle2, Download, Sparkles } from 'lucide-react'
+import { RefreshCw, Loader2, AlertCircle, Calendar, FileText, CheckCircle2, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StatusBadge } from '@/components/meetings/status-badge'
 import { apiCall } from '@/lib/api/fetch'
+import {
+  ACTIVE_SCHOOL_DISTRICTS,
+  DEFAULT_SCHOOL_DISTRICT_ID,
+  getSchoolDistrict,
+  isSchoolDistrictId,
+  type SchoolDistrictId,
+} from '@/lib/school-districts'
 import type { MeetingStatus } from '@/types'
 
 type FilterMode = 'all' | 'imported' | 'available'
+type RefreshStatus = 'unchanged' | 'awaiting_results' | 'refreshed' | 'refresh_failed'
+
+const REFRESH_LEASE_MS = 15 * 60 * 1000
+
+function hasActiveRefreshLease(startedAt: string | null, now: number) {
+  if (!startedAt) return false
+  const started = new Date(startedAt).getTime()
+  return Number.isFinite(started) && started > now - REFRESH_LEASE_MS
+}
 
 interface BoardDocsMeeting {
   id: string
@@ -18,23 +35,58 @@ interface BoardDocsMeeting {
   isImported: boolean
   dbId: string | null
   dbStatus: MeetingStatus | null
+  isRegularMeeting: boolean
+  boarddocsLastCheckedAt: string | null
+  boarddocsResultsSeenAt: string | null
+  boarddocsRefreshError: string | null
+  boarddocsRefreshStartedAt: string | null
+}
+
+interface BoardDocsResponse {
+  data: BoardDocsMeeting[]
+  importedCount: number
+  regularMeetingCount: number
+  district: {
+    id: SchoolDistrictId
+    label: string
+    schoolSystemLabel: string
+    boardBodyLabel: string
+    sourceUrl: string
+    regularMeetingFilterDescription: string
+  }
 }
 
 export function BoardDocsImporter() {
+  const [renderedAt] = useState(() => Date.now())
+  const [districtId, setDistrictId] = useState<SchoolDistrictId>(DEFAULT_SCHOOL_DISTRICT_ID)
   const [meetings, setMeetings] = useState<BoardDocsMeeting[]>([])
+  const [districtMeta, setDistrictMeta] = useState<BoardDocsResponse['district']>(
+    {
+      id: DEFAULT_SCHOOL_DISTRICT_ID,
+      label: getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).uiLabel,
+      schoolSystemLabel: getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).schoolSystemLabel,
+      boardBodyLabel: getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).boardBodyLabel,
+      sourceUrl: getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).sourceUrl(),
+      regularMeetingFilterDescription:
+        getSchoolDistrict(DEFAULT_SCHOOL_DISTRICT_ID).regularMeetingFilterDescription,
+    }
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [importingId, setImportingId] = useState<string | null>(null)
-  const [summarizingId, setSummarizingId] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [lastResult, setLastResult] = useState<{ id: string; status: RefreshStatus } | null>(null)
   const [filter, setFilter] = useState<FilterMode>('all')
 
   const fetchMeetings = async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await apiCall<{ data: BoardDocsMeeting[] }>('/api/boarddocs/meetings')
+      const data = await apiCall<BoardDocsResponse>(
+        `/api/boarddocs/districts/${districtId}/meetings`
+      )
       setMeetings(data.data)
+      setDistrictMeta(data.district)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load meetings')
     } finally {
@@ -44,17 +96,25 @@ export function BoardDocsImporter() {
 
   useEffect(() => {
     void fetchMeetings()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [districtId])
 
   const handleImport = async (meetingId: string) => {
     setImportingId(meetingId)
     setImportError(null)
     try {
       const data = await apiCall<{
-        data?: { id: string; status?: MeetingStatus }
-        autoSummarizeStarted?: boolean
+        data?: {
+          id: string
+          status?: MeetingStatus
+          boarddocs_last_checked_at?: string | null
+          boarddocs_results_seen_at?: string | null
+          boarddocs_refresh_error?: string | null
+        }
+        refreshStatus: RefreshStatus
+        error?: string
       }>(
-        `/api/boarddocs/meetings/${meetingId}/import`,
+        `/api/boarddocs/districts/${districtId}/meetings/${meetingId}/import`,
         { method: 'POST' }
       )
       setMeetings((prev) =>
@@ -64,31 +124,22 @@ export function BoardDocsImporter() {
                 ...m,
                 isImported: true,
                 dbId: data.data?.id ?? null,
-                dbStatus: data.autoSummarizeStarted ? 'processing' : data.data?.status ?? 'processing',
+                dbStatus: data.data?.status ?? m.dbStatus ?? 'pending',
+                boarddocsLastCheckedAt: data.data?.boarddocs_last_checked_at ?? m.boarddocsLastCheckedAt,
+                boarddocsResultsSeenAt: data.data?.boarddocs_results_seen_at ?? m.boarddocsResultsSeenAt,
+                boarddocsRefreshError: data.data?.boarddocs_refresh_error ?? data.error ?? null,
               }
             : m
         )
       )
+      setLastResult({ id: meetingId, status: data.refreshStatus })
+      if (data.refreshStatus === 'refresh_failed') {
+        setImportError(data.error ?? 'Refresh failed; previous complete version was preserved')
+      }
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Import failed')
     } finally {
       setImportingId(null)
-    }
-  }
-
-  const handleSummarize = async (boardDocsId: string, dbId: string) => {
-    setSummarizingId(boardDocsId)
-    setImportError(null)
-    try {
-      await apiCall(`/api/meetings/${dbId}/summarize`, { method: 'POST' })
-      setMeetings((prev) =>
-        prev.map((m) => (m.id === boardDocsId ? { ...m, dbStatus: 'summarized' } : m))
-      )
-    } catch (err) {
-      setImportError(err instanceof Error ? err.message : 'Summary generation failed')
-      void fetchMeetings()
-    } finally {
-      setSummarizingId(null)
     }
   }
 
@@ -117,6 +168,7 @@ export function BoardDocsImporter() {
 
   const importedCount = meetings.filter((m) => m.isImported).length
   const availableCount = meetings.length - importedCount
+  const regularMeetingCount = meetings.filter((m) => m.isRegularMeeting).length
 
   const visibleMeetings = meetings.filter((m) => {
     if (filter === 'imported') return m.isImported
@@ -126,18 +178,44 @@ export function BoardDocsImporter() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 mb-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Select
+            value={districtId}
+            onValueChange={(value) => {
+              if (isSchoolDistrictId(value)) {
+                setDistrictId(value)
+                setMeetings([])
+                setFilter('all')
+              }
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-[280px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ACTIVE_SCHOOL_DISTRICTS.map((district) => (
+                <SelectItem key={district.id} value={district.id}>
+                  {district.schoolSystemLabel}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-sm text-muted-foreground">
             {meetings.length} meetings found &middot;{' '}
             <span className="text-green-500 font-medium">{importedCount} imported</span>
-            {' '}&middot; {availableCount} available
+            {' '}&middot; {availableCount} available &middot; {regularMeetingCount} regular
           </p>
         </div>
         <Button variant="outline" onClick={fetchMeetings} disabled={isLoading}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-4 mb-6 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">{districtMeta.boardBodyLabel}</p>
+        <p className="mt-1">{districtMeta.regularMeetingFilterDescription}</p>
       </div>
 
       <div className="flex gap-2 mb-6">
@@ -174,11 +252,8 @@ export function BoardDocsImporter() {
             day: 'numeric',
           })
           const isImporting = importingId === meeting.id
-          const isSummarizing = summarizingId === meeting.id
-          const canSummarize =
-            meeting.isImported &&
-            meeting.dbId &&
-            (meeting.dbStatus === 'pending' || meeting.dbStatus === 'failed')
+          const isFuture = new Date(meeting.date).getTime() > renderedAt
+          const actionResult = lastResult?.id === meeting.id ? lastResult.status : null
 
           return (
             <Card key={meeting.id} className="overflow-hidden relative">
@@ -198,6 +273,11 @@ export function BoardDocsImporter() {
                     </div>
                   )}
                 </div>
+                {!meeting.isRegularMeeting && (
+                  <div className="mb-3 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
+                    Not matched by cron regular-meeting filter
+                  </div>
+                )}
                 <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
@@ -209,61 +289,55 @@ export function BoardDocsImporter() {
                   </span>
                 </div>
 
-                {!meeting.isImported ? (
+                {meeting.boarddocsLastCheckedAt && (
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Last checked {new Date(meeting.boarddocsLastCheckedAt).toLocaleString()}
+                  </p>
+                )}
+                {meeting.boarddocsRefreshError && (
+                  <p className="mb-3 rounded-md bg-destructive/10 px-2 py-1.5 text-xs text-destructive" role="alert">
+                    {meeting.boarddocsRefreshError}
+                  </p>
+                )}
+                {actionResult && actionResult !== 'refresh_failed' && (
+                  <p className="mb-3 rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground" aria-live="polite">
+                    {actionResult === 'unchanged' && 'Official content unchanged; AI skipped.'}
+                    {actionResult === 'awaiting_results' && 'Agenda saved; awaiting official results.'}
+                    {actionResult === 'refreshed' && 'Official content and summary refreshed.'}
+                  </p>
+                )}
+
+                <div className="flex flex-col gap-2">
                   <Button
                     size="sm"
                     className="w-full"
+                    variant={meeting.isImported ? 'outline' : 'default'}
                     onClick={() => handleImport(meeting.id)}
-                    disabled={isImporting}
+                    disabled={isImporting || hasActiveRefreshLease(meeting.boarddocsRefreshStartedAt, renderedAt)}
                   >
                     {isImporting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Importing...
+                        Refreshing...
+                      </>
+                    ) : meeting.isImported ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh from BoardDocs
                       </>
                     ) : (
                       <>
                         <Download className="h-4 w-4 mr-2" />
-                        Import + Summarize
+                        {isFuture ? 'Import Agenda' : 'Import from BoardDocs'}
                       </>
                     )}
                   </Button>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {meeting.dbStatus === 'summarized' ? (
-                      <Button size="sm" variant="outline" className="w-full" asChild>
-                        <a href={`/meetings/${meeting.dbId}`}>View Summary</a>
-                      </Button>
-                    ) : canSummarize ? (
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        onClick={() => handleSummarize(meeting.id, meeting.dbId!)}
-                        disabled={isSummarizing}
-                      >
-                        {isSummarizing ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-4 w-4 mr-2" />
-                            Regenerate Summary
-                          </>
-                        )}
-                      </Button>
-                    ) : meeting.dbStatus === 'processing' ? (
-                      <Button size="sm" className="w-full" disabled>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Processing...
-                      </Button>
-                    ) : null}
+                  {meeting.isImported && meeting.dbId && (
                     <Button size="sm" variant="ghost" className="w-full" asChild>
                       <a href={`/meetings/${meeting.dbId}`}>View Meeting</a>
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </CardContent>
             </Card>
           )

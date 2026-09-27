@@ -51,6 +51,7 @@ const fakeMeeting = {
   id: 'meeting-1',
   title: 'March 2026 Board Meeting',
   body: 'FCPS School Board',
+  district_id: 'fairfax',
   meeting_date: '2026-03-04',
 }
 
@@ -63,6 +64,7 @@ const fakeSubscriber = {
   id: 'subscriber-1',
   email: 'voter@example.com',
   unsubscribe_token: 'unsubscribe-token-1',
+  district_id: 'fairfax',
 }
 
 describe('POST /api/digest/send', () => {
@@ -145,6 +147,7 @@ describe('POST /api/digest/send', () => {
   })
 
   it('returns 500 MEETINGS_QUERY_FAILED when meetings query fails', async () => {
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: new Error('db error') }))
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -157,6 +160,7 @@ describe('POST /api/digest/send', () => {
   })
 
   it('returns 200 when no eligible meetings exist', async () => {
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [], error: null }))
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -169,6 +173,7 @@ describe('POST /api/digest/send', () => {
   })
 
   it('returns 500 SUMMARIES_QUERY_FAILED when summaries query fails', async () => {
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: new Error('summary err') }))
 
@@ -182,6 +187,7 @@ describe('POST /api/digest/send', () => {
   })
 
   it('returns 200 when meetings exist but none have summaries', async () => {
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [], error: null }))
 
@@ -195,8 +201,6 @@ describe('POST /api/digest/send', () => {
   })
 
   it('returns 500 SUBSCRIBERS_QUERY_FAILED when subscribers query fails', async () => {
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: new Error('subscriber err') }))
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -209,8 +213,6 @@ describe('POST /api/digest/send', () => {
   })
 
   it('returns 200 when no active subscribers exist', async () => {
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [], error: null }))
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -223,9 +225,9 @@ describe('POST /api/digest/send', () => {
   })
 
   it('returns 200 with correct sent count when sends succeed', async () => {
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -237,6 +239,12 @@ describe('POST /api/digest/send', () => {
       message: 'Digest sent',
       sent: 1,
       meetings: 1,
+      districts: {
+        fairfax: {
+          sent: 1,
+          meetings: 1,
+        },
+      },
     })
   })
 
@@ -245,16 +253,17 @@ describe('POST /api/digest/send', () => {
       id: 'subscriber-2',
       email: 'voter2@example.com',
       unsubscribe_token: 'unsubscribe-token-2',
+      district_id: 'fairfax',
     }
     mockSendDigestEmail
       .mockRejectedValueOnce(new Error('send failed'))
       .mockResolvedValueOnce({ data: { id: 'email-ok-2' }, error: null })
 
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(
       makeChain({ data: [fakeSubscriber, secondSubscriber], error: null })
     )
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -269,9 +278,9 @@ describe('POST /api/digest/send', () => {
   it('returns 200 even when marking meetings as sent fails', async () => {
     const updateChain = makeChain({ data: null, error: new Error('update failed') })
 
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(updateChain)
 
     const res = await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -283,9 +292,9 @@ describe('POST /api/digest/send', () => {
   })
 
   it('passes the expected params to sendDigestEmail', async () => {
+    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeMeeting], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSummary], error: null }))
-    mockAdminFrom.mockReturnValueOnce(makeChain({ data: [fakeSubscriber], error: null }))
     mockAdminFrom.mockReturnValueOnce(makeChain({ data: null, error: null }))
 
     await POST(makeRequest(`Bearer ${CRON_SECRET}`))
@@ -299,5 +308,6 @@ describe('POST /api/digest/send', () => {
     expect(call.digestHtml).toContain(fakeMeeting.title)
     expect(call.digestText).toContain(fakeMeeting.id)
     expect(call.weekRange).toBe('March 4, 2026')
+    expect(call.districtLabel).toBe('FCPS School Board')
   })
 })

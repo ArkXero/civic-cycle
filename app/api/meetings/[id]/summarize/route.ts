@@ -3,7 +3,10 @@ import { isAdminUser } from '@/lib/auth/is-admin-server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
 import { runSummarize } from '@/lib/run-summarize'
+import { officialMotionsFromRows } from '@/lib/data/motions'
+import { dateInSchoolDistrict, getSchoolDistrict, parseSchoolDistrictId } from '@/lib/school-districts'
 import { z } from 'zod'
+import type { AgendaItemMotion } from '@/types'
 
 const uuidSchema = z.string().uuid()
 const STUCK_PROCESSING_THRESHOLD_MS = 3 * 60 * 1000
@@ -14,6 +17,10 @@ interface Meeting {
   transcript_text: string | null
   status: string
   updated_at: string
+  meeting_date: string
+  source: string | null
+  district_id: string | null
+  boarddocs_content_hash: string | null
 }
 
 // POST /api/meetings/[id]/summarize - Generate AI summary for a meeting
@@ -50,7 +57,7 @@ export async function POST(
 
     const meetingResult = await adminClient
       .from('meetings')
-      .select('id, title, transcript_text, status, updated_at')
+      .select('id, title, transcript_text, status, updated_at, meeting_date, source, district_id, boarddocs_content_hash')
       .eq('id', id)
       .single()
     const { data: meeting, error: fetchError } = meetingResult as unknown as {
@@ -65,10 +72,18 @@ export async function POST(
       )
     }
 
-    if (!meeting.transcript_text) {
+    if (!meeting.transcript_text?.trim()) {
       return NextResponse.json(
         { error: 'No transcript', message: 'This meeting has no transcript to summarize' },
         { status: 400 }
+      )
+    }
+
+    const district = getSchoolDistrict(parseSchoolDistrictId(meeting.district_id))
+    if (meeting.meeting_date > dateInSchoolDistrict(district.timeZone)) {
+      return NextResponse.json(
+        { error: 'Awaiting meeting', message: 'Future meetings cannot be summarized' },
+        { status: 409 }
       )
     }
 
@@ -80,10 +95,11 @@ export async function POST(
       const stuckThreshold = new Date(Date.now() - STUCK_PROCESSING_THRESHOLD_MS)
       if (forceReset || updatedAt < stuckThreshold) {
         // Stuck or explicitly force-reset — reset so we can retry.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (adminClient.from('meetings') as any)
+        const { error: resetError } = await adminClient
+          .from('meetings')
           .update({ status: 'pending', error_message: null })
           .eq('id', id)
+        if (resetError) throw resetError
       } else {
         return NextResponse.json(
           {
@@ -95,26 +111,45 @@ export async function POST(
       }
     }
 
-    // Check if already summarized
-    const existingSummaryResult = await adminClient
-      .from('summaries')
-      .select('id')
-      .eq('meeting_id', id)
-      .single()
-    const { data: existingSummary } = existingSummaryResult as unknown as {
-      data: { id: string } | null
+    let motionRows: AgendaItemMotion[] = []
+    if (meeting.source === 'boarddocs') {
+      const { data, error: motionsError } = await adminClient
+        .from('agenda_item_motions')
+        .select('*')
+        .eq('meeting_id', id)
+        .order('source_ordinal')
+      if (motionsError) throw motionsError
+      motionRows = data ?? []
+
+      const hasPublishedBoardDocsResult = motionRows.some((motion) => motion.outcome !== 'unknown')
+      if (!hasPublishedBoardDocsResult) {
+        return NextResponse.json(
+          { error: 'Awaiting results', message: 'Official BoardDocs motion results are not available yet' },
+          { status: 409 }
+        )
+      }
     }
 
-    if (existingSummary) {
-      return NextResponse.json(
-        { error: 'Already summarized', message: 'This meeting already has a summary. Delete it first to regenerate.' },
-        { status: 409 }
-      )
-    }
+    const result = await runSummarize(
+      id,
+      meeting.transcript_text,
+      meeting.title,
+      adminClient,
+      {
+        sourceContentHash: meeting.boarddocs_content_hash ?? undefined,
+        officialMotions: officialMotionsFromRows(motionRows),
+        expectedBoardDocsContentHash: meeting.source === 'boarddocs'
+          ? meeting.boarddocs_content_hash ?? undefined
+          : undefined,
+      }
+    )
 
-    await runSummarize(id, meeting.transcript_text, meeting.title, adminClient)
-
-    return NextResponse.json({ message: 'Summary generated successfully' })
+    return NextResponse.json({
+      message: result.replacedExisting
+        ? 'Summary replaced successfully'
+        : 'Summary generated successfully',
+      revision: result.revision,
+    })
   } catch (error) {
     console.error('Unexpected error in summarize:', error)
     return NextResponse.json(

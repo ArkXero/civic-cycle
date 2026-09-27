@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { sendAlertEmail } from '@/lib/resend'
 import { formatDate, truncate } from '@/lib/utils'
+import {
+  DEFAULT_SCHOOL_DISTRICT_ID,
+  isSchoolDistrictId,
+  type SchoolDistrictId,
+} from '@/lib/school-districts'
 
 interface Meeting {
   id: string
   title: string
   body: string
+  district_id: SchoolDistrictId | null
   meeting_date: string
 }
 
@@ -29,6 +35,7 @@ interface Alert {
 interface UserProfile {
   id: string
   email: string
+  preferred_district_id: SchoolDistrictId | null
 }
 
 interface AlertHistoryInsert {
@@ -44,8 +51,7 @@ async function recordAlertHistory(
   payload: AlertHistoryInsert
 ) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('alert_history') as any).insert(payload)
+    const { error } = await supabase.from('alert_history').insert(payload)
 
     if (error) {
       console.error('Error recording alert history:', error)
@@ -90,6 +96,7 @@ export async function POST(request: NextRequest) {
         id,
         title,
         body,
+        district_id,
         meeting_date
       `)
       .eq('status', 'summarized')
@@ -165,7 +172,7 @@ export async function POST(request: NextRequest) {
     const userIds = [...new Set(alerts.map(a => a.user_id))]
     const userProfilesResult = await supabase
       .from('user_profiles')
-      .select('id, email')
+      .select('id, email, preferred_district_id')
       .in('id', userIds)
     const {
       data: userProfiles,
@@ -180,7 +187,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const userEmailMap = new Map(userProfiles?.map(u => [u.id, u.email]) || [])
+    const userProfileMap = new Map(userProfiles?.map(u => [u.id, u]) || [])
 
     // Track sent emails to avoid duplicates
     const sentEmails: { userId: string; meetingId: string; alertId: string }[] = []
@@ -190,6 +197,9 @@ export async function POST(request: NextRequest) {
     for (const meeting of recentMeetings) {
       const summary = summaryMap.get(meeting.id)
       if (!summary) continue
+      const meetingDistrictId = isSchoolDistrictId(meeting.district_id)
+        ? meeting.district_id
+        : DEFAULT_SCHOOL_DISTRICT_ID
 
       // Create searchable text from summary
       const searchableText = [
@@ -200,6 +210,15 @@ export async function POST(request: NextRequest) {
       ].join(' ').toLowerCase()
 
       for (const alert of alerts) {
+        const userProfile = userProfileMap.get(alert.user_id)
+        const preferredDistrictId = isSchoolDistrictId(userProfile?.preferred_district_id)
+          ? userProfile.preferred_district_id
+          : DEFAULT_SCHOOL_DISTRICT_ID
+
+        if (meetingDistrictId !== preferredDistrictId) {
+          continue
+        }
+
         // Check if alert applies to this meeting body
         if (alert.bodies && alert.bodies.length > 0 && !alert.bodies.includes(meeting.body)) {
           continue
@@ -218,8 +237,8 @@ export async function POST(request: NextRequest) {
         if (alreadySent) continue
 
         // Check alert_history to prevent resend across cron runs
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: existingHistory } = await (supabase.from('alert_history') as any)
+        const { data: existingHistory } = await supabase
+          .from('alert_history')
           .select('id')
           .eq('user_id', alert.user_id)
           .eq('meeting_id', meeting.id)
@@ -228,7 +247,7 @@ export async function POST(request: NextRequest) {
         if (existingHistory) continue
 
         // Get user email
-        const userEmail = userEmailMap.get(alert.user_id)
+        const userEmail = userProfile?.email
         if (!userEmail) continue
 
         // Find excerpt containing the keyword

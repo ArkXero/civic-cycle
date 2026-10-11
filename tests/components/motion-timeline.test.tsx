@@ -49,7 +49,7 @@ describe('MotionTimeline', () => {
     expect(html).toContain('Moved by Mateo Dunne')
     expect(html).toContain('<details')
     expect(html).toContain('Member Three')
-    expect(html).toContain('sm:flex-row')
+    expect(html).toContain('sm:grid-cols-[1fr_auto]')
     expect(html).toContain('BoardDocs source')
   })
 

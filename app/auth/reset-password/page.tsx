@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
 import { ResetPasswordForm } from "./reset-password-form";
+import { AMBER_CTA } from '@/components/record/accent'
 
 export const metadata: Metadata = {
   title: "Set New Password",
@@ -53,7 +54,7 @@ export default async function ResetPasswordPage({
           </div>
 
           <div className="space-y-3">
-            <Button asChild className="w-full">
+            <Button asChild className={`w-full ${AMBER_CTA}`}>
               <Link
                 href={`/auth/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}`}
               >

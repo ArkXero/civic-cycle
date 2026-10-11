@@ -12,6 +12,8 @@ import {
   isSchoolDistrictId,
   type SchoolDistrictId,
 } from '@/lib/school-districts'
+import { NavDisplaySettings } from './nav-display-settings'
+import { AMBER_CTA } from '@/components/record/accent'
 
 interface SettingsFormProps {
   email: string
@@ -120,6 +122,8 @@ export function SettingsForm({
         </div>
       )}
 
+      <NavDisplaySettings />
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">
@@ -180,7 +184,7 @@ export function SettingsForm({
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving} className={AMBER_CTA}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save county
             </Button>

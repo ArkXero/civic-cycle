@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { FileQuestion } from 'lucide-react'
+import { AMBER_CTA } from '@/components/record/accent'
 
 export default function MeetingNotFound() {
   return (
@@ -10,7 +11,7 @@ export default function MeetingNotFound() {
       <p className="text-muted-foreground mb-6">
         The meeting you&apos;re looking for doesn&apos;t exist or may have been removed.
       </p>
-      <Button asChild>
+      <Button asChild className={AMBER_CTA}>
         <Link href="/meetings">Browse All Meetings</Link>
       </Button>
     </div>

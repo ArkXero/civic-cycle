@@ -344,8 +344,10 @@ function officialMotionContext(officialMotions: OfficialMotion[] = []) {
   )}\n\n`
 }
 
-function dedupeDecisionCandidates(decisions: Partial<SummaryDecision>[]) {
-  const seen = new Set<string>()
+function dedupeDecisionCandidates<T extends Partial<SummaryDecision>>(
+  decisions: T[],
+  seen = new Set<string>()
+) {
   return decisions.filter((decision) => {
     if (!decision.source_motion_hash) return true
     if (seen.has(decision.source_motion_hash)) return false
@@ -542,12 +544,7 @@ export async function synthesizeChunkSummaries(
   const seenMotionHashes = new Set<string>()
   const deduplicatedChunkSummaries = chunkSummaries.map((summary) => ({
     ...summary,
-    key_decisions: summary.key_decisions.filter((decision) => {
-      if (!decision.source_motion_hash) return true
-      if (seenMotionHashes.has(decision.source_motion_hash)) return false
-      seenMotionHashes.add(decision.source_motion_hash)
-      return true
-    }),
+    key_decisions: dedupeDecisionCandidates(summary.key_decisions, seenMotionHashes),
   }))
   const synthesisInput = JSON.stringify(deduplicatedChunkSummaries, null, 2)
 

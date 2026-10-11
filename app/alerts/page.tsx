@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { AlertsClient } from './alerts-client'
+import { AMBER_CTA } from '@/components/record/accent'
 
 const publicAlertSelect = 'id, keyword, bodies, is_active, created_at'
 
@@ -42,7 +43,7 @@ export default async function AlertsPage() {
             Get notified when keywords you care about are mentioned in meetings.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className={AMBER_CTA}>
           <Link href="/alerts/new">
             <Plus className="h-4 w-4 mr-2" />
             New Alert

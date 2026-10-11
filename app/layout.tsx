@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Manrope } from "next/font/google";
+import { Public_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-display-var",
-  weight: ["400"],
-});
-
-const manrope = Manrope({
+const publicSans = Public_Sans({
   subsets: ["latin"],
   variable: "--font-body-var",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono-var",
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${playfair.variable} ${manrope.variable} antialiased min-h-screen flex flex-col pb-[calc(86px+env(safe-area-inset-bottom))] md:pb-0`}
+        className={`${publicSans.variable} ${plexMono.variable} antialiased min-h-screen flex flex-col pb-[calc(86px+env(safe-area-inset-bottom))] md:pb-0`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
           <Header />

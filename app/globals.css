@@ -7,8 +7,8 @@
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --font-sans: var(--font-body-var), ui-sans-serif, system-ui, sans-serif;
-    --font-mono: ui-monospace, 'Courier New', monospace;
-    --font-display: var(--font-display-var), Georgia, serif;
+    --font-mono: var(--font-mono-var), ui-monospace, 'Courier New', monospace;
+    --font-display: var(--font-body-var), ui-sans-serif, system-ui, sans-serif;
     --font-body: var(--font-body-var), ui-sans-serif, system-ui, sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
@@ -26,6 +26,7 @@
     --color-ring: var(--ring);
     --color-input: var(--input);
     --color-border: var(--border);
+    --color-rule: var(--rule);
     --color-destructive: var(--destructive);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
@@ -79,8 +80,9 @@
 :root {
     --radius: 0.625rem;
 
-    --font-body-var: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-    --font-display-var: 'Playfair Display', serif;
+    --font-body-var: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+    /* The Record: one heavy grotesque for display + body; mono for docket data */
+    --font-display-var: var(--font-body-var);
 
     /* Civic Cycle Color System */
     --color-teal-primary: #1A8A9A;
@@ -118,8 +120,14 @@
 
     --border: rgba(26, 138, 154, 0.18);
     --border-strong: rgba(26, 138, 154, 0.35);
+    --rule: #0A3038;                    /* heavy ledger rule under section heads */
     --input: rgba(26, 138, 154, 0.12);
     --ring: #1A8A9A;
+    --stamp-passed: #0D5E6B;            /* PASSED stamp text */
+    /* How it works band (bg-secondary/40 over the page), resolved here so the teal
+       band's token overrides don't affect it; fills the home page's closing wave */
+    --home-band-after: color-mix(in srgb, var(--secondary) 40%, var(--background));
+    --stamp-held: #C47D0E;              /* POSTPONED / TABLED stamp text */
 
     --chart-1: #1A8A9A;
     --chart-2: #2BBDD4;
@@ -159,65 +167,74 @@
 }
 
 /* ── Dark mode (opt-in via .dark class) ─────────────────────────────── */
+/*
+ * Soft charcoal dark (in the spirit of claude.ai): a warm gray base instead of pure
+ * black, elevation shown by lighter grays (chrome → base → raised → elevated),
+ * translucent warm-white separators, and text in tiers. Teal and amber stay as
+ * accents only — no tinted surfaces.
+ */
 .dark {
-    --background: #0A1A1F;
-    --foreground: #F4F8F9;
+    --background: #262624;              /* base */
+    --foreground: #FAF9F5;              /* primary label */
 
-    --card: rgba(13, 94, 107, 0.15);
-    --card-foreground: #F4F8F9;
+    --card: #30302E;                    /* raised surface */
+    --card-foreground: #FAF9F5;
 
-    --popover: #0D2B33;
-    --popover-foreground: #F4F8F9;
+    --popover: #3A3A37;                 /* elevated: menus, popovers, sheets */
+    --popover-foreground: #FAF9F5;
 
     --primary: #1A8A9A;
     --primary-foreground: #FFFFFF;
 
-    --secondary: #0D5E6B;
-    --secondary-foreground: #F4F8F9;
+    --secondary: #30302E;
+    --secondary-foreground: #FAF9F5;
 
-    --muted: #0D5E6B;
-    --muted-foreground: #5B8A94;
+    --muted: #3A3A37;
+    --muted-foreground: #A6A49B;        /* secondary label */
 
     --accent: #F5A623;
     --accent-foreground: #0A3038;
 
     --destructive: #ef4444;
 
-    --border: rgba(26, 138, 154, 0.25);
-    --border-strong: rgba(26, 138, 154, 0.45);
-    --input: rgba(26, 138, 154, 0.2);
-    --ring: #1A8A9A;
+    --border: rgba(222, 220, 209, 0.14);        /* separator */
+    --border-strong: rgba(222, 220, 209, 0.24); /* opaque-feeling separator */
+    --rule: rgba(222, 220, 209, 0.40);
+    --input: rgba(222, 220, 209, 0.10);
+    --ring: #2BBDD4;
+    --stamp-passed: var(--primary);
+    --stamp-held: #F5A623;
 
     --chart-1: #1A8A9A;
     --chart-2: #2BBDD4;
     --chart-3: #F5A623;
-    --chart-4: #0D5E6B;
-    --chart-5: #5B8A94;
+    --chart-4: #64625C;
+    --chart-5: #A6A49B;
 
-    --sidebar: #061820;
-    --sidebar-foreground: #F4F8F9;
+    --sidebar: #1F1E1D;                 /* chrome below the base (footer) */
+    --sidebar-foreground: #FAF9F5;
     --sidebar-primary: #1A8A9A;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #0D5E6B;
-    --sidebar-accent-foreground: #F4F8F9;
-    --sidebar-border: rgba(26, 138, 154, 0.25);
-    --sidebar-ring: #1A8A9A;
-    --chart-background: oklch(0.145 0 0);
-    --chart-foreground: oklch(0.45 0 0);
-    --chart-foreground-muted: oklch(0.65 0.01 260);
-    --chart-crosshair: oklch(0.45 0 0);
+    --sidebar-accent: #30302E;
+    --sidebar-accent-foreground: #FAF9F5;
+    --sidebar-border: rgba(222, 220, 209, 0.14);
+    --sidebar-ring: #2BBDD4;
+    --chart-background: #262624;
+    --chart-foreground: oklch(0.6 0 0);
+    --chart-foreground-muted: oklch(0.65 0 0);
+    --chart-crosshair: oklch(0.55 0 0);
     --chart-grid: oklch(0.25 0 0);
     --chart-brush-border: var(--chart-grid);
-    --chart-marker-background: oklch(0.25 0.01 260);
-    --chart-marker-border: oklch(0.4 0.01 260);
+    --chart-marker-background: oklch(0.25 0 0);
+    --chart-marker-border: oklch(0.4 0 0);
     --chart-marker-foreground: oklch(0.9 0 0);
-    --chart-label: oklch(0.75 0.01 260);
-    --chart-scale-01: oklch(0.28 0.03 270);
-    --chart-scale-02: oklch(0.38 0.04 270);
-    --chart-scale-03: oklch(0.48 0.05 270);
-    --chart-scale-04: oklch(0.58 0.06 270);
-    --chart-scale-05: oklch(0.68 0.07 270);
-    --chart-scale-pattern-color: oklch(0.145 0 0);
+    --chart-label: oklch(0.75 0 0);
+    --chart-scale-01: oklch(0.28 0.03 205);
+    --chart-scale-02: oklch(0.38 0.05 205);
+    --chart-scale-03: oklch(0.48 0.07 205);
+    --chart-scale-04: oklch(0.58 0.09 205);
+    --chart-scale-05: oklch(0.68 0.1 205);
+    --chart-scale-pattern-color: #262624;
 }
 
 @layer base {
@@ -229,11 +246,15 @@
     }
     body {
         @apply bg-background text-foreground;
+        /* re-resolve here: next/font defines --font-body-var on <body>, not :root */
+        --font-display-var: var(--font-body-var);
         font-family: var(--font-body-var), ui-sans-serif, system-ui, sans-serif;
     }
     h1, h2, h3, h4, h5, h6 {
-        font-family: var(--font-display-var), Georgia, serif;
-        font-weight: 400;
+        font-family: var(--font-body-var), ui-sans-serif, system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
     }
 }
 
@@ -258,9 +279,9 @@ html, body {
 .dark .hero-gradient {
     background: linear-gradient(
         160deg,
-        #0D3A42 0%,
-        #061820 55%,
-        #0A1A1F 100%
+        #30302E 0%,
+        #262624 55%,
+        #1F1E1D 100%
     );
 }
 
@@ -283,8 +304,8 @@ html, body {
 
 /* Dark variant */
 .dark .card-hover:hover {
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
-    border-color: rgba(26, 138, 154, 0.45);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+    border-color: var(--border-strong);
 }
 
 /* Page header band (meetings, alerts, search) */
@@ -307,4 +328,95 @@ html, body {
 .focus-ring:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
+}
+
+/* ── The Record ──────────────────────────────────────────────────────── */
+
+/* Docket line: mono, uppercase metadata (body · type · date · counts) */
+.docket {
+    font-family: var(--font-mono-var), ui-monospace, monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+}
+
+/* BoardDocs agenda item number (1.03, 4.01) */
+.item-num {
+    font-family: var(--font-mono-var), ui-monospace, monospace;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--primary);
+}
+
+/* Outcome stamp: PASSED 8–4 / FAILED */
+.stamp {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono-var), ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 3px 8px;
+    border: 1.5px solid currentColor;
+    border-radius: 3px;
+    font-variant-numeric: tabular-nums;
+}
+
+
+/*
+ * Content sitting on the solid teal band (home page "Recent meetings"). Same teal in
+ * both themes, so tokens are re-pointed to light values for legibility: white text,
+ * white "yes" seats and item numbers, a light red for "no"/failed, white rules.
+ */
+.on-teal {
+    --foreground: #FFFFFF;
+    --muted-foreground: rgba(255, 255, 255, 0.86);
+    --primary: #FFFFFF;
+    --destructive: #FFA8A8;
+    --secondary: rgba(255, 255, 255, 0.12);
+    --border: rgba(255, 255, 255, 0.28);
+    --rule: rgba(255, 255, 255, 0.75);
+    --ring: #FFFFFF;
+    --stamp-passed: #FFFFFF;
+    --stamp-held: #FFE2AD;
+}
+
+/* Translucent chrome (header, mobile tab bar): content scrolls under a material */
+.material-bar {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+.dark .material-bar {
+    background: rgba(38, 38, 36, 0.8);
+}
+@media (prefers-reduced-transparency: reduce) {
+    .material-bar { background: var(--background); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+    .dark { --border: rgba(222, 220, 209, 0.32); --muted-foreground: #D1CFC5; }
+}
+
+/* How it works: progress rule under the active step during autoplay */
+@keyframes how-progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+.how-progress {
+    animation-name: how-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+/* Home hero: the amber underline draws in under "in minutes." once, on load */
+.hero-underline {
+    transform-origin: left;
+    animation: how-progress 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
+}
+@media (prefers-reduced-motion: reduce) {
+    .hero-underline { animation: none; }
 }

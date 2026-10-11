@@ -1,9 +1,6 @@
 import Link from 'next/link'
-import { Calendar, Building2, ExternalLink, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { MotionTimeline } from './motion-timeline'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { MotionTimeline, groupMotionsByAgendaItem, agendaAnchor } from './motion-timeline'
 import { ActionItems } from './action-items'
 import { SummarizeButton } from './summarize-button'
 import { RetagButton } from './retag-button'
@@ -26,114 +23,147 @@ export function MeetingDetail({
   motions = [],
   motionError = null,
 }: MeetingDetailProps) {
+  const groups = groupMotionsByAgendaItem(motions)
+  const operative = motions.filter((motion) => !motion.is_superseded)
+  const failedCount = operative.filter((motion) => motion.outcome === 'failed').length
+  const paragraphs = meeting.summary?.summary_text.split('\n\n').filter(Boolean) ?? []
+  const weekday = new Date(meeting.meeting_date).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+
   return (
-    <div className="space-y-6">
-      {/* Back button */}
-      <Button variant="ghost" asChild className="mb-4">
-        <Link href="/meetings">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Meetings
-        </Link>
-      </Button>
-
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <Building2 className="h-4 w-4" />
-          <span>{meeting.body}</span>
-          <span className="text-border">•</span>
-          <Calendar className="h-4 w-4" />
-          <span>{formatDate(meeting.meeting_date)}</span>
+    <div className="lg:grid lg:grid-cols-[13rem_1fr] lg:gap-12">
+      {/* Agenda index */}
+      <aside className="hidden lg:block">
+        <div className="sticky top-24 space-y-6">
+          <Link
+            href="/meetings"
+            className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            All meetings
+          </Link>
+          {groups.length > 0 && (
+            <nav aria-label="Agenda items">
+              <p className="docket mb-2">Agenda</p>
+              <ol className="max-h-[60vh] space-y-0.5 overflow-y-auto pr-1">
+                {groups.map((group) => (
+                  <li key={`${group.order}-${group.motions[0].id}`}>
+                    <a
+                      href={`#${agendaAnchor(group.order)}`}
+                      className="flex gap-2.5 rounded-sm px-1.5 py-1 text-[13px] leading-snug text-foreground/80 hover:bg-secondary hover:text-foreground"
+                    >
+                      <span className="item-num w-9 shrink-0 text-[12px]">{group.order || '—'}</span>
+                      <span className="line-clamp-2">{group.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
+          {operative.length > 0 && (
+            <dl className="grid grid-cols-2 gap-3 border-t border-border pt-4">
+              <div>
+                <dt className="docket">Motions</dt>
+                <dd className="mt-0.5 font-mono text-xl font-semibold tabular-nums">{operative.length}</dd>
+              </div>
+              <div>
+                <dt className="docket">Failed</dt>
+                <dd className={`mt-0.5 font-mono text-xl font-semibold tabular-nums ${failedCount > 0 ? 'text-destructive' : ''}`}>
+                  {failedCount}
+                </dd>
+              </div>
+            </dl>
+          )}
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-          {meeting.title}
-        </h1>
+      </aside>
 
-        {/* Topics */}
-        {meeting.approvedTopics.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
+      <div className="min-w-0 space-y-10">
+        {/* Docket header */}
+        <header className="space-y-4">
+          <Link
+            href="/meetings"
+            className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground lg:hidden"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            All meetings
+          </Link>
+          <p className="docket">
+            {meeting.body} · {weekday} · {operative.length > 0 ? `${operative.length} motions` : 'Agenda'}
+          </p>
+          <h1 className="text-[clamp(2rem,4.5vw,2.75rem)] font-extrabold leading-[1.05] tracking-[-0.025em] text-foreground">
+            {meeting.title}
+            <span className="block text-muted-foreground">{formatDate(meeting.meeting_date)}</span>
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {meeting.source_url && (
+              <a
+                href={meeting.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-primary hover:underline"
+              >
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                Full agenda on BoardDocs
+              </a>
+            )}
             {meeting.approvedTopics.map((topic) => (
-              <Badge key={topic.id} variant="secondary" asChild>
-                <Link href={`/meetings?topic=${encodeURIComponent(topic.slug)}`}>
-                  {topic.display_name}
-                </Link>
-              </Badge>
+              <Link
+                key={topic.id}
+                href={`/meetings?topic=${encodeURIComponent(topic.slug)}`}
+                className="rounded-sm border border-border px-2 py-0.5 text-[12px] font-medium text-foreground/75 hover:border-primary hover:text-primary"
+              >
+                {topic.display_name}
+              </Link>
             ))}
           </div>
-        )}
 
-        {/* Actions for authenticated users */}
-        {isAuthenticated && (
-          <div className="mt-4 flex flex-wrap gap-4">
-            <SummarizeButton
-              meetingId={meeting.id}
-              hasSummary={!!meeting.summary}
-              hasTranscript={!!meeting.transcript_text}
-              status={meeting.status}
+          {isAuthenticated && (
+            <div className="flex flex-wrap gap-4 pt-1">
+              <SummarizeButton
+                meetingId={meeting.id}
+                hasSummary={!!meeting.summary}
+                hasTranscript={!!meeting.transcript_text}
+                status={meeting.status}
+              />
+              {isAdmin && <RetagButton meetingId={meeting.id} />}
+            </div>
+          )}
+        </header>
+
+        {meeting.summary ? (
+          <>
+            {/* Summary as standfirst */}
+            <section aria-label="Summary" className="max-w-[68ch] space-y-4 border-l-2 border-accent pl-5">
+              {paragraphs.map((paragraph, index) => (
+                <p
+                  key={index}
+                  className={index === 0
+                    ? 'text-[17px] leading-[1.65] text-foreground'
+                    : 'text-[15px] leading-relaxed text-foreground/80'}
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </section>
+
+            <MotionTimeline
+              motions={motions}
+              legacyDecisions={meeting.summary.key_decisions}
+              boardDocsUrl={meeting.source_url}
+              error={motionError}
             />
-            {isAdmin && <RetagButton meetingId={meeting.id} />}
+
+            <ActionItems items={meeting.summary.action_items} />
+          </>
+        ) : (
+          <div className="rounded-md border border-dashed border-border px-6 py-10 text-center">
+            <NoSummaryState meeting={meeting} isAuthenticated={isAuthenticated} />
           </div>
         )}
-      </div>
 
-      {/* BoardDocs source link */}
-      {meeting.source_url && (
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-4">
-            <a
-              href={meeting.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-primary hover:underline"
-            >
-              <ExternalLink className="h-4 w-4 flex-shrink-0" />
-              <span>View the full agenda on BoardDocs</span>
-            </a>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Summary */}
-      {meeting.summary ? (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-sm max-w-none text-foreground">
-                {meeting.summary.summary_text.split('\n\n').map((paragraph, index) => (
-                  <p key={index} className="mb-4 last:mb-0">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <MotionTimeline
-            motions={motions}
-            legacyDecisions={meeting.summary.key_decisions}
-            boardDocsUrl={meeting.source_url}
-            error={motionError}
-          />
-
-          {/* Action Items */}
-          <ActionItems items={meeting.summary.action_items} />
-        </>
-      ) : (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <NoSummaryState meeting={meeting} isAuthenticated={isAuthenticated} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Source info */}
-      <div className="text-sm text-muted-foreground border-t border-border pt-4">
-        <p>
-          This summary was generated using AI from the official meeting agenda.
-          Always refer to the{' '}
+        <p className="border-t border-border pt-4 text-[13px] text-muted-foreground">
+          Summaries are generated with AI from the official agenda. Vote tallies and motion text
+          come directly from BoardDocs. Always check the{' '}
           {meeting.source_url ? (
             <a
               href={meeting.source_url}
@@ -141,7 +171,7 @@ export function MeetingDetail({
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              original agenda on BoardDocs
+              original agenda
             </a>
           ) : (
             'original source'

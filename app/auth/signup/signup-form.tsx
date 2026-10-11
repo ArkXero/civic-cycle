@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, CheckCircle2 } from 'lucide-react'
+import { AMBER_CTA } from '@/components/record/accent'
 
 const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -264,7 +265,7 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
 
         <Button
           type="submit"
-          className="w-full"
+          className={`w-full ${AMBER_CTA}`}
           disabled={isLoading || isGoogleLoading}
         >
           {isLoading ? (

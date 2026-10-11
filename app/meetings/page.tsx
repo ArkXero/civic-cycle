@@ -8,6 +8,7 @@ import { MeetingListClient } from "./meeting-list-client";
 import { SearchBar } from "@/components/search/search-bar";
 import { MeetingFilters } from "@/components/meetings/meeting-filters";
 import { ViewingDistrict } from "@/components/school-district/viewing-district";
+import { loadMotionDigests } from "@/lib/data/motion-digests";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -62,37 +63,43 @@ export default async function MeetingsPage({
     }),
     getApprovedTopicHierarchy(supabase),
   ]);
+  const digests = await loadMotionDigests(meetings.map((meeting) => meeting.id));
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Meeting Summaries
-        </h1>
-        <p className="text-muted-foreground mb-4">
-          Browse AI-generated summaries of {district.boardBodyLabel} meetings.
-          {count > 0 && ` ${count} meeting${count !== 1 ? "s" : ""} available.`}
+    <div className="mx-auto max-w-[1200px] px-5 py-10 md:px-6 md:py-14">
+      <header className="mb-10 space-y-5">
+        <p className="docket">
+          {district.boardBodyLabel}
+          {count > 0 && ` · ${count.toLocaleString()} meeting${count !== 1 ? "s" : ""} on record`}
         </p>
-        <div className="mb-4">
+        <h1 className="text-[clamp(2.25rem,5vw,3.25rem)] font-extrabold leading-[1.02] tracking-[-0.03em] text-foreground">
+          Meetings
+        </h1>
+        <p className="max-w-[60ch] text-[16px] text-muted-foreground">
+          Every board meeting, newest first, with how the votes went. Open one to read the
+          summary and the full motion record.
+        </p>
+        <div className="flex flex-col gap-3 pt-2 md:flex-row md:items-center md:gap-4">
+          <SearchBar
+            placeholder="Search meetings, motions, topics…"
+            className="w-full max-w-xl"
+            districtId={districtId}
+          />
           <ViewingDistrict districtId={districtId} />
         </div>
-        <SearchBar
-          placeholder="Search meetings..."
-          className="max-w-xl mb-4"
-          districtId={districtId}
-        />
         <MeetingFilters
           currentBody={body}
           topicGroups={topicGroups}
           selectedTopics={selectedTopics}
         />
-      </div>
+      </header>
 
       <Suspense fallback={<MeetingsLoading />}>
         <MeetingListClient
           initialMeetings={meetings}
           initialPage={page}
           initialTotalPages={totalPages}
+          digests={digests}
         />
       </Suspense>
     </div>
@@ -101,12 +108,9 @@ export default async function MeetingsPage({
 
 function MeetingsLoading() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="border-t-2 border-rule">
       {[...Array(6)].map((_, i) => (
-        <div
-          key={i}
-          className="h-64 bg-card rounded-lg border border-border animate-pulse"
-        />
+        <div key={i} className="h-28 animate-pulse border-b border-border bg-muted/40" />
       ))}
     </div>
   );

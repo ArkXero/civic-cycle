@@ -123,6 +123,9 @@
     --rule: #0A3038;                    /* heavy ledger rule under section heads */
     --input: rgba(26, 138, 154, 0.12);
     --ring: #1A8A9A;
+    /* "No" vote squares: resolved here so they keep the full red inside the teal band,
+       where --destructive is lightened for text legibility */
+    --vote-no: var(--destructive);
     --stamp-passed: #0D5E6B;            /* PASSED stamp text */
     /* How it works band (bg-secondary/40 over the page), resolved here so the teal
        band's token overrides don't affect it; fills the home page's closing wave */
@@ -370,13 +373,13 @@ html, body {
 /*
  * Content sitting on the solid teal band (home page "Recent meetings"). Same teal in
  * both themes, so tokens are re-pointed to light values for legibility: white text,
- * white "yes" seats and item numbers, a light red for "no"/failed, white rules.
+ * white "yes" seats and item numbers, a light red for failed text, white rules.
  */
 .on-teal {
     --foreground: #FFFFFF;
     --muted-foreground: rgba(255, 255, 255, 0.86);
     --primary: #FFFFFF;
-    --destructive: #FFA8A8;
+    --destructive: #FFA8A8;             /* text only; vote squares use --vote-no */
     --secondary: rgba(255, 255, 255, 0.12);
     --border: rgba(255, 255, 255, 0.28);
     --rule: rgba(255, 255, 255, 0.75);

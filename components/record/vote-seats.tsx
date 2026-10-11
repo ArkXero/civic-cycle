@@ -32,7 +32,7 @@ export function VoteSeats({ yes, no, abstain, className }: VoteSeatsProps) {
           className={cn(
             'h-[11px] w-[11px] rounded-[2px]',
             kind === 'yes' && 'bg-primary',
-            kind === 'no' && 'bg-destructive',
+            kind === 'no' && 'bg-(--vote-no)',
             kind === 'abstain' && 'bg-muted-foreground/35'
           )}
         />

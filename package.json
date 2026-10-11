@@ -48,7 +48,7 @@
     "d3-shape": "^3.2.0",
     "embla-carousel-auto-scroll": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
-    "framer-motion": "^12.38.0",
+    "framer-motion": "^14.0.0",
     "lightningcss": "^1.32.0",
     "lucide-react": "^1.16.0",
     "motion": "^12.40.0",

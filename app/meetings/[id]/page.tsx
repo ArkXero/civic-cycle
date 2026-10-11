@@ -49,7 +49,7 @@ export default async function MeetingPage({ params }: MeetingPageProps) {
   const isAdmin = user ? await isAdminUser(user) : false;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="mx-auto max-w-[1200px] px-5 py-10 md:px-6 md:py-14">
       <MeetingDetail
         meeting={meeting}
         isAuthenticated={!!user}

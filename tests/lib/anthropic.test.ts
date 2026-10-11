@@ -305,6 +305,25 @@ describe('synthesizeChunkSummaries', () => {
     const call = mockCreate.mock.calls[0][0]
     expect(call.model).toBe('claude-sonnet-4-6')
   })
+
+  it('deduplicates motion hashes across chunks while preserving unlinked decisions and inputs', async () => {
+    const linkedDecision = { ...chunkSummary.key_decisions[0], source_motion_hash: 'a'.repeat(64) }
+    const otherDecision = { ...linkedDecision, source_motion_hash: 'b'.repeat(64) }
+    const chunks = [
+      { ...chunkSummary, key_decisions: [linkedDecision, chunkSummary.key_decisions[0]] },
+      { ...chunkSummary, key_decisions: [linkedDecision, otherDecision, chunkSummary.key_decisions[0]] },
+    ]
+    const originalChunks = structuredClone(chunks)
+    mockCreate.mockResolvedValueOnce(mockResponse(JSON.stringify(chunkSummary)))
+
+    await synthesizeChunkSummaries(chunks)
+
+    const prompt = mockCreate.mock.calls[0][0].messages[0].content as string
+    const summaries = JSON.parse(prompt.split('Here are the partial summaries to merge:\n\n')[1])
+    expect(summaries[0].key_decisions).toEqual(chunks[0].key_decisions)
+    expect(summaries[1].key_decisions).toEqual([otherDecision, chunkSummary.key_decisions[0]])
+    expect(chunks).toEqual(originalChunks)
+  })
 })
 
 describe('official motion validation', () => {

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { AMBER_CTA } from '@/components/record/accent'
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -73,7 +74,7 @@ export function DigestSignup({ className }: DigestSignupProps) {
           style={{ flex: '1', minWidth: '200px' }}
           aria-label="Email address for weekly digest"
         />
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading} className={AMBER_CTA}>
           {isLoading ? 'Subscribing…' : 'Get Weekly Digest'}
         </Button>
       </div>

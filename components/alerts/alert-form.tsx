@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { MEETING_BODIES } from '@/lib/constants'
 import { apiPostJson } from '@/lib/api/fetch'
+import { AMBER_CTA } from '@/components/record/accent'
 
 const alertSchema = z.object({
   keyword: z.string().min(2, 'Keyword must be at least 2 characters').max(100, 'Keyword too long'),
@@ -117,7 +118,7 @@ export function AlertForm({ onSuccess }: AlertFormProps) {
             <p className="text-sm text-destructive">{error}</p>
           )}
 
-          <Button type="submit" disabled={isLoading} className="w-full">
+          <Button type="submit" disabled={isLoading} className={`w-full ${AMBER_CTA}`}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

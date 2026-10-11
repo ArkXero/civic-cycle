@@ -3,17 +3,20 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MeetingList } from '@/components/meetings/meeting-list'
 import type { MeetingWithSummary } from '@/types'
+import type { MeetingMotionDigest } from '@/lib/data/motions'
 
 interface MeetingListClientProps {
   initialMeetings: MeetingWithSummary[]
   initialPage: number
   initialTotalPages: number
+  digests?: Record<string, MeetingMotionDigest>
 }
 
 export function MeetingListClient({
   initialMeetings,
   initialPage,
-  initialTotalPages
+  initialTotalPages,
+  digests
 }: MeetingListClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -29,6 +32,7 @@ export function MeetingListClient({
       meetings={initialMeetings}
       currentPage={initialPage}
       totalPages={initialTotalPages}
+      digests={digests}
       onPageChange={handlePageChange}
     />
   )

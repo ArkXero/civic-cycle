@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Loader2 } from 'lucide-react'
+import { AMBER_CTA } from '@/components/record/accent'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -207,7 +208,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
 
         <Button
           type="submit"
-          className="w-full"
+          className={`w-full ${AMBER_CTA}`}
           disabled={isLoading || isGoogleLoading}
         >
           {isLoading ? (

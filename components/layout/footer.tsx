@@ -7,7 +7,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-[#0A1E24] border-t border-[rgba(26,138,154,0.2)]">
+    <footer className="bg-[#0A1E24] border-t border-[rgba(26,138,154,0.2)] dark:bg-sidebar dark:border-border">
       <div className="max-w-[1200px] mx-auto px-6 py-14">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
 
@@ -24,8 +24,7 @@ export function Footer() {
                 className="rounded-md"
               />
               <span
-                className="text-[15px] text-[#F4F8F9]"
-                style={{ fontFamily: 'var(--font-display-var), Georgia, serif', fontWeight: 400 }}
+                className="text-[15px] font-extrabold tracking-[-0.02em] text-[#F4F8F9]"
               >
                 {APP_NAME}
               </span>
@@ -112,8 +111,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div
-          className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"
-          style={{ borderTop: '1px solid rgba(26,138,154,0.15)' }}
+          className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-[rgba(26,138,154,0.15)] dark:border-white/10"
         >
           <div className="space-y-2">
             <p

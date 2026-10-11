@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { AMBER_CTA } from '@/components/record/accent'
 
 interface SearchBarProps {
   initialQuery?: string
@@ -43,7 +44,7 @@ export function SearchBar({
           className="pl-10"
         />
       </div>
-      <Button type="submit" disabled={!query.trim()}>
+      <Button type="submit" disabled={!query.trim()} className={AMBER_CTA}>
         Search
       </Button>
     </form>

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CheckCircle2, Loader2 } from 'lucide-react'
+import { AMBER_CTA } from '@/components/record/accent'
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().email('Invalid email address'),
@@ -106,7 +107,7 @@ export function ForgotPasswordForm({ redirectTo }: ForgotPasswordFormProps) {
         <p className="text-sm text-destructive">{error}</p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className={`w-full ${AMBER_CTA}`} disabled={isLoading}>
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -4,6 +4,7 @@ import { CheckCircle2, XCircle } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AMBER_CTA } from '@/components/record/accent'
 
 export const metadata: Metadata = {
   title: 'Unsubscribe',
@@ -86,7 +87,7 @@ export default async function UnsubscribePage({ params }: UnsubscribePageProps) 
               The alert may have already been deleted, or the link may be invalid.
             </p>
           )}
-          <Button asChild>
+          <Button asChild className={AMBER_CTA}>
             <Link href="/alerts">Manage Alerts</Link>
           </Button>
         </CardContent>

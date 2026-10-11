@@ -1,5 +1,3 @@
-import { CircleDot, User, Clock } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { ActionItem } from '@/types'
 
 interface ActionItemsProps {
@@ -12,38 +10,28 @@ export function ActionItems({ items }: ActionItemsProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Action Items</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-4">
-          {items.map((item, index) => (
-            <li key={index} className="border-b border-border pb-4 last:border-0 last:pb-0">
-              <div className="flex items-start gap-3">
-                <CircleDot className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-foreground">{item.item}</p>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mt-1">
-                    {item.responsible_party && (
-                      <span className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {item.responsible_party}
-                      </span>
-                    )}
-                    {item.deadline && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {item.deadline}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
+    <section>
+      <div className="border-b-2 border-rule pb-3">
+        <h2 className="text-xl font-extrabold text-foreground">Follow-ups</h2>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">
+          What the board asked for next, and who owns it.
+        </p>
+      </div>
+      <ul>
+        {items.map((item, index) => (
+          <li
+            key={index}
+            className="grid gap-1 border-b border-border py-4 sm:grid-cols-[1fr_auto] sm:gap-6"
+          >
+            <p className="max-w-[68ch] text-[15px] font-medium text-foreground">{item.item}</p>
+            {(item.responsible_party || item.deadline) && (
+              <p className="docket sm:pt-1 sm:text-right">
+                {[item.responsible_party, item.deadline].filter(Boolean).join(' · ')}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

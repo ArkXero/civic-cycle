@@ -65,3 +65,77 @@ export function officialMotionsFromRows(rows: AgendaItemMotion[]): OfficialMotio
     isSuperseded: motion.is_superseded,
   }))
 }
+
+export interface MeetingMotionDigest {
+  motionCount: number
+  failedCount: number
+  /** Closest recorded vote with at least one dissent, if any. */
+  closest: {
+    agendaItemOrder: string
+    agendaItemTitle: string
+    outcome: AgendaItemMotion['outcome']
+    voteYes: number
+    voteNo: number
+    voteAbstain: number
+  } | null
+}
+
+/**
+ * Per-meeting motion counts and the closest split vote, for list views.
+ * Superseded motions are excluded so counts match the operative record.
+ */
+export async function getMotionDigestsByMeetingIds(
+  supabase: DatabaseClient,
+  meetingIds: string[]
+): Promise<Map<string, MeetingMotionDigest>> {
+  const digests = new Map<string, MeetingMotionDigest>()
+  if (meetingIds.length === 0) return digests
+
+  const { data: motions, error } = await supabase
+    .from('agenda_item_motions')
+    .select('meeting_id, agenda_item_id, outcome, vote_yes, vote_no, vote_abstain, is_superseded')
+    .in('meeting_id', meetingIds)
+  if (error) throw error
+
+  const operative = (motions ?? []).filter((motion) => !motion.is_superseded)
+  const agendaIds = [...new Set(operative.map((motion) => motion.agenda_item_id))]
+  const agendaById = new Map<string, { item_order: string; title: string }>()
+
+  if (agendaIds.length > 0) {
+    const { data: agendaItems, error: agendaError } = await supabase
+      .from('agenda_items')
+      .select('id, item_order, title')
+      .in('id', agendaIds)
+    if (agendaError) throw agendaError
+    for (const item of agendaItems ?? []) agendaById.set(item.id, item)
+  }
+
+  for (const motion of operative) {
+    const digest = digests.get(motion.meeting_id) ?? { motionCount: 0, failedCount: 0, closest: null }
+    digest.motionCount += 1
+    if (motion.outcome === 'failed') digest.failedCount += 1
+
+    const yes = motion.vote_yes ?? 0
+    const no = motion.vote_no ?? 0
+    if (motion.vote_yes !== null && no > 0) {
+      const margin = Math.abs(yes - no)
+      const currentMargin = digest.closest
+        ? Math.abs(digest.closest.voteYes - digest.closest.voteNo)
+        : Infinity
+      if (margin < currentMargin) {
+        const agendaItem = agendaById.get(motion.agenda_item_id)
+        digest.closest = {
+          agendaItemOrder: agendaItem?.item_order ?? '',
+          agendaItemTitle: agendaItem?.title ?? 'Agenda item',
+          outcome: motion.outcome,
+          voteYes: yes,
+          voteNo: no,
+          voteAbstain: motion.vote_abstain ?? 0,
+        }
+      }
+    }
+    digests.set(motion.meeting_id, digest)
+  }
+
+  return digests
+}

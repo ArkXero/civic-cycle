@@ -34,7 +34,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
         <p className="text-muted-foreground">
-          Manage your account and default school district.
+          Choose how the navigation bar looks, and manage your account and default school district.
         </p>
       </div>
 

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { DEFAULT_POST_AUTH_REDIRECT_PATH } from '@/lib/auth/redirects'
 import { CheckCircle2, Loader2 } from 'lucide-react'
+import { AMBER_CTA } from '@/components/record/accent'
 
 const resetPasswordSchema = z
   .object({
@@ -116,7 +117,7 @@ export function ResetPasswordForm({ redirectTo }: ResetPasswordFormProps) {
         <p className="text-sm text-destructive">{error}</p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className={`w-full ${AMBER_CTA}`} disabled={isLoading}>
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

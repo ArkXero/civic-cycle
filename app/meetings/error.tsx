@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AMBER_CTA } from '@/components/record/accent'
 
 export default function MeetingsError({
   error,
@@ -28,7 +29,7 @@ export default function MeetingsError({
         There was a problem fetching meeting data. Please try again.
       </p>
       <div className="flex gap-4 justify-center">
-        <Button onClick={reset}>Try again</Button>
+        <Button onClick={reset} className={AMBER_CTA}>Try again</Button>
         <Button variant="outline" asChild>
           <Link href="/">Go home</Link>
         </Button>

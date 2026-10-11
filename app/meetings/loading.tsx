@@ -1,17 +1,15 @@
 export default function MeetingsLoading() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="h-9 w-64 bg-muted rounded animate-pulse mb-2" />
-        <div className="h-5 w-96 bg-muted rounded animate-pulse" />
+    <div className="mx-auto max-w-[1200px] px-5 py-10 md:px-6 md:py-14">
+      <div className="mb-10 space-y-4">
+        <div className="h-3 w-56 rounded bg-muted animate-pulse" />
+        <div className="h-12 w-64 rounded bg-muted animate-pulse" />
+        <div className="h-5 w-96 max-w-full rounded bg-muted animate-pulse" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="border-t-2 border-rule">
         {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="h-64 bg-card rounded-lg border border-border animate-pulse"
-          />
+          <div key={i} className="h-28 animate-pulse border-b border-border bg-muted/40" />
         ))}
       </div>
     </div>
